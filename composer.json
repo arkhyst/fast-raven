@@ -1,0 +1,16 @@
+{
+    "name": "smartgoblin/framework",
+    "description": "Lightweight, fast and minimalistic PHP framework for monolithic apps",
+    "type": "library",
+    "license": "MIT",
+
+    "autoload": {
+        "psr-4": {
+            "SmartGoblin\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=8.1",
+        "vlucas/phpdotenv": "^5.0"
+    }
+}
