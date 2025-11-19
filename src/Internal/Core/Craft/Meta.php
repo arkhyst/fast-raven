@@ -1,8 +1,8 @@
 <?php
 
-namespace SmartGoblin\Core\Craft;
+namespace SmartGoblin\Internal\Core\Craft;
 
-class Meta {
+final class Meta {
     private string $startRequestTime;
     
     public function  __construct() {
