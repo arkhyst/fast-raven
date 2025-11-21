@@ -9,7 +9,7 @@ final class MetaStash {
         return new MetaStash();
     }
 
-    protected function  __construct() {
+    private function  __construct() {
         $this->startRequestTime = microtime(true);
     }
 

@@ -10,7 +10,7 @@ final class HeaderStash {
         return new HeaderStash( $isApi, $allowedHosts, $https, $origin);
     }
 
-    protected function  __construct(bool $isApi, array $allowedHosts, string $https, string $origin) {
+    private function  __construct(bool $isApi, array $allowedHosts, string $https, string $origin) {
         $this->setSecurityHeaders($allowedHosts, $https, $origin);
         $this->setUtilityHeaders($isApi);
     }

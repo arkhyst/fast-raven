@@ -21,7 +21,7 @@ final class Config {
         return new Config($sitePath, $siteName, $restricted);
     }
 
-    protected function  __construct(string $sitePath, string $siteName, bool $restricted) {
+    private function  __construct(string $sitePath, string $siteName, bool $restricted) {
         $this->sitePath = $sitePath;
         $this->siteName = $siteName;
         $this->restricted = $restricted;

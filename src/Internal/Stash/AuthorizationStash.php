@@ -7,7 +7,7 @@ final class AuthorizationStash {
         return new AuthorizationStash();
     }
 
-    protected function  __construct() {
+    private function  __construct() {
         
     }
 }

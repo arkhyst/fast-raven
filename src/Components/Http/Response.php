@@ -18,7 +18,7 @@ final class Response {
         return new Response($success, $code);
     }
     
-    protected function __construct(bool $success, int $code) {
+    private function __construct(bool $success, int $code) {
         $this->status = $success ? "OK" : "ERROR";
         $this->code = $code;
     }
