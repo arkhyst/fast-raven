@@ -11,8 +11,8 @@ enum DataType: string {
 final class Response {
     private string $status;
     private int $code;
-    private string $message;
-    private array $data;
+    private string $message = "";
+    private array $data = [];
 
     public static function new(bool $success, int $code): Response {
         return new Response($success, $code);
