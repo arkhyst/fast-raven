@@ -2,13 +2,13 @@
 
 namespace SmartGoblin\Slaves;
 
-use PHPUnit\Runner\FileDoesNotExistException;
 use SmartGoblin\Exceptions\BadImplementationException;
+use SmartGoblin\Exceptions\EndpointFileDoesNotExist;
+
 use SmartGoblin\Internal\Factory\SlaveFactory;
 use SmartGoblin\Internal\Core\Kernel;
-use SmartGoblin\Components\Core\Config;
 
-use SmartGoblin\Components\Http\DataType;
+use SmartGoblin\Components\Core\Config;
 use SmartGoblin\Components\Http\Response;
 
 final class KernelSlave extends SlaveFactory {
@@ -36,7 +36,7 @@ final class KernelSlave extends SlaveFactory {
                 if(!$response) $response = $this->kernel->processView();
                 if(!$response) $response = Response::new(false, 404);
 
-            } catch(BadImplementationException | FileDoesNotExistException $e) {
+            } catch(BadImplementationException | EndpointFileDoesNotExist $e) {
                 $response = Response::new(false, 500);
                 $response->setBody($e->getMessage());
             }

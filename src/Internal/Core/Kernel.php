@@ -2,8 +2,6 @@
 
 namespace SmartGoblin\Internal\Core;
 
-use PHPUnit\Runner\FileDoesNotExistException;
-
 use SmartGoblin\Components\Core\Config;
 use SmartGoblin\Components\Http\Response;
 use SmartGoblin\Components\Http\Request;
@@ -19,6 +17,7 @@ use SmartGoblin\Internal\Worker\HeaderWorker;
 use SmartGoblin\Internal\Worker\MetaWorker;
 
 use SmartGoblin\Exceptions\BadImplementationException;
+use SmartGoblin\Exceptions\EndpointFileDoesNotExist;
 
 use Dotenv\Dotenv;
 
@@ -77,7 +76,7 @@ final class Kernel {
         if ($foundEndpoint) {
             $filePath = $this->config->getSitePath() . DIRECTORY_SEPARATOR . $foundEndpoint->getFile() . ".php";
             if(!file_exists($filePath)) {
-                throw new FileDoesNotExistException("API file could not be loaded, it does not exist. (Payload: $filePath)");
+                throw new EndpointFileDoesNotExist("API file could not be loaded, it does not exist. (Payload: $filePath)");
             }
             
             $fn = require_once $filePath;
@@ -99,7 +98,7 @@ final class Kernel {
         if ($foundEndpoint) {
             $filePath = $this->config->getSitePath() . DIRECTORY_SEPARATOR . $foundEndpoint['file_path'] . ".html";
             if(!file_exists($filePath)) {
-                throw new FileDoesNotExistException("View file could not be rendered, it does not exist. (Payload: $filePath)");
+                throw new EndpointFileDoesNotExist("View file could not be rendered, it does not exist. (Payload: $filePath)");
             }
 
             readFile($filePath);
