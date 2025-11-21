@@ -9,13 +9,17 @@ final class Endpoint {
     private string $complexPath;
     private string $file;
 
-    public static function new(bool $restricted, string $method, string $path, string $fileName): Endpoint {
-        return new Endpoint($restricted, $method, $path, $fileName);
+    public static function api(bool $restricted, string $httpMethod, string $uri, string $fileName): Endpoint {
+        return new Endpoint($restricted, $httpMethod, $uri, $fileName);
     }
 
-    protected function __construct(bool $restricted, string $method, string $path, string $fileName) {
+    public static function view(bool $restricted, string $uri, string $fileName): Endpoint {
+        return new Endpoint($restricted, "GET", $uri, $fileName);
+    }
+
+    private function __construct(bool $restricted, string $method, string $uri, string $fileName) {
         $this->restricted = $restricted;
-        $this->complexPath = "/".Bee::normalizePath($path)."#".$method;
+        $this->complexPath = "/".Bee::normalizePath($uri)."#".$method;
         $this->file = Bee::normalizePath($fileName, true);
     }
 

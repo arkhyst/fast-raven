@@ -17,10 +17,10 @@ final class ComponentTest extends TestCase
         $config->configureAllowedHosts(["www.mydomain.net"]);
         $config->configureUnauthorizedRedirects("/login", "public");
         $config->configureApi([
-            Endpoint::new(false, "POST", "/sayHello", "SayHello")
+            Endpoint::api(false, "POST", "/sayHello", "SayHello")
         ]);
         $config->configureView([
-            Endpoint::new(false, "GET", "/", "main")
+            Endpoint::view(false, "/", "main")
         ]);
 
         $this->assertInstanceOf(Config::class, $config);
@@ -55,7 +55,7 @@ final class ComponentTest extends TestCase
 
     public function testRouterEndpoint(): void
     {
-        $endpoint = Endpoint::new(true, "POST", "/sayHello", "SayHello.php");
+        $endpoint = Endpoint::api(true, "POST", "/sayHello", "SayHello.php");
 
         $this->assertInstanceOf(Endpoint::class, $endpoint);
         
