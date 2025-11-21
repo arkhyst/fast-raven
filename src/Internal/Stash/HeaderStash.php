@@ -17,9 +17,9 @@ final class HeaderStash {
 
     // TODO: Enable wildcard for allowedHosts
     private function setSecurityHeaders(array $allowedHosts, string $https, string $origin): void {
-        array_merge($this->headerRemoveList, ["X-Powered-By"]);
+        $this->headerRemoveList = array_merge($this->headerRemoveList, ["X-Powered-By"]);
 
-        array_merge($this->headerList, [
+        $this->headerList = array_merge($this->headerList, [
             "X-Content-Type-Options" => "nosniff",
             "Referrer-Policy" => "strict-origin-when-cross-origin",
             "Cross-Origin-Resource-Policy" => "same-origin",
@@ -30,14 +30,14 @@ final class HeaderStash {
         ]);
 
         if (!empty($https) && $https !== 'off') {
-            array_merge($this->headerList, [
+            $this->headerList = array_merge($this->headerList, [
                 "Strict-Transport-Security" => "max-age=31536000; includeSubDomains; preload",
             ]);
         }
         
         $origin = $origin ?? ""; // TODO: Do more research about HTTP_ORIGIN
         if (in_array($origin, $allowedHosts, true)) {
-            array_merge($this->headerList, [
+            $this->headerList = array_merge($this->headerList, [
                 "Access-Control-Allow-Origin" => "https://$origin",
                 "Access-Control-Allow-Credentials" => "true",
                 "Vary" => "Origin",
@@ -48,11 +48,11 @@ final class HeaderStash {
     private function setUtilityHeaders(bool $isApi): void {
         // TODO: Add complexity for better cache control
         if($isApi) { 
-            array_merge($this->headerList, [
+            $this->headerList = array_merge($this->headerList, [
                 "Cache-Control" => "private, no-store, must-revalidate",
             ]);
         } else {
-            array_merge($this->headerList, [
+            $this->headerList = array_merge($this->headerList, [
                 "Cache-Control" => "private, max-age=0, no-cache, must-revalidate",
             ]);
         }
