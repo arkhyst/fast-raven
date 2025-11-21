@@ -32,14 +32,15 @@ final class KernelSlave extends SlaveFactory {
 
             try {
                 
-                if(!$response) $this->kernel->processApi($response);
-                if(!$response) $this->kernel->processView($response);
+                if(!$response) $response = $this->kernel->processApi();
+                if(!$response) $response = $this->kernel->processView();
+                if(!$response) $response = Response::new(false, 404);
 
             } catch(BadImplementationException | FileDoesNotExistException $e) {
                 $response = Response::new(false, 500);
                 $response->setBody($e->getMessage());
             }
-
+            
             $this->kernel->close($response);
         } else {
             http_response_code(500);
