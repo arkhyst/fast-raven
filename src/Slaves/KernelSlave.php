@@ -32,9 +32,7 @@ final class KernelSlave extends SlaveFactory {
 
             try {
                 
-                if(!$response) $response = $this->kernel->processApi();
-                if(!$response) $response = $this->kernel->processView();
-                if(!$response) $response = Response::new(false, 404);
+                $response = $this->kernel->isApiRequest() ? $this->kernel->processApi() : $this->kernel->processView();
 
             } catch(BadImplementationException | EndpointFileDoesNotExist $e) {
                 $response = Response::new(false, 500);

@@ -121,4 +121,5 @@ final class Kernel {
 
 
     public function setConfig(Config $config): void { $this->config = $config; }
+    public function isApiRequest(): bool { return $this->request->isApi(); }
 }
