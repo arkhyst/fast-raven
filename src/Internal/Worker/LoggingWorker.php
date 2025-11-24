@@ -21,7 +21,7 @@ class LoggingWorker {
 
     public static function addOpenLogs(LoggingStash $stash, Request $request): void {
         $type = $request->isApi() ? "API" : "VIEW";
-        $stash->addLog("# {$type} REQUEST({$request->getInternalID()})");
+        $stash->addLog("# OPEN {$type} REQUEST({$request->getInternalID()})");
         $stash->addLog("--- Complex Path: {$request->getComplexPath()}");
         $stash->addLog("--- Remote Address: {$request->getOriginInfo()["IP"]}");
     }
