@@ -42,9 +42,6 @@ final class KernelSlave extends SlaveFactory {
             $this->kernel->close($response);
         } else {
             http_response_code(500);
-            //Add logging system for errors?
-            //$response = Response::new(false,500);
-            //$response->setBody("Kernel Slave does not know what is its purpose yet! Make sure to execute order method first.");
         }
         
         exit(0);
