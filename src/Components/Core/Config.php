@@ -21,7 +21,7 @@ final class Config {
     private string $authSessionName = "PHPSESSID";
         public function getAuthSessionName(): string { return $this->authSessionName; }
     private int $authExpiryDays = 7;
-        public function getAuthExpiryDays(): int { return $this->authExpiryDays; }
+        public function getAuthLifetime(): int { return $this->authExpiryDays * 24 * 60 * 60; }
     private string $authDomain = "localhost";
          public function getAuthDomain(): string { return $this->authDomain; }
 

@@ -2,16 +2,56 @@
 
 namespace SmartGoblin\Internal\Slave;
 
-/*
-class AuthorizationWorker {
-    public static function sync(AuthorizationStash $stash): void {
+use SmartGoblin\Worker\AuthWorker;
+
+final class AuthSlave {
+    #----------------------------------------------------------------------
+    #\ VARIABLES
+
+    private static bool $busy = false;
+
+    #/ VARIABLES
+    #----------------------------------------------------------------------
+
+    #----------------------------------------------------------------------
+    #\ INIT
+
+    public static function zap(): ?AuthSlave {
+        if(!self::$busy) {
+            self::$busy = true;
+            $inst = new AuthSlave();
+            AuthWorker::__getToWork($inst);
+
+            return $inst;
+        }
+    }
+
+    private function __construct() {
+
+    }
+
+    #/ INIT
+    #----------------------------------------------------------------------
+    
+    #----------------------------------------------------------------------
+    #\ PRIVATE FUNCTIONS
+
+
+
+    #/ PRIVATE FUNCTIONS
+    #----------------------------------------------------------------------
+
+    #----------------------------------------------------------------------
+    #\ METHODS
+
+    public function initializeSessionCookie(string $sessionName, int $lifetime, string $domain): void {
         ini_set("session.use_strict_mode", 1);
-        ini_set("session.gc_maxlifetime", $stash->getLifetime());
-        session_name($stash->getSessionName());
+        ini_set("session.gc_maxlifetime", $lifetime);
+        session_name($sessionName);
         session_set_cookie_params([
-            "lifetime" => $stash->getLifetime(),
+            "lifetime" => $lifetime,
             "path" => "/",
-            "domain" => $stash->getDomain(),
+            "domain" => $domain,
             "secure" => true,
             "httponly" => true,
             "samesite" => "Lax"
@@ -20,20 +60,26 @@ class AuthorizationWorker {
         session_start();
     }
 
-    public static function isAuthenticated(AuthorizationStash $stash): bool {
-        if (session_status() === PHP_SESSION_ACTIVE && session_name() === $stash->getSessionName()) {
-            return isset($_SESSION["user_auth"]) && isset($_SESSION["user_id"]) && isset($_SESSION["user_custom"]);
-        }
-
-        return false;
+    public function createAuthorizedSession(int $id, array $customData, string $csrf): void {
+        session_regenerate_id(true);
+        $_SESSION["sgas_uid"] = $id;
+        $_SESSION["sgas_custom"] = $customData;
+        $_SESSION["sgas_csrf"] = $csrf;
     }
 
-    public static function craftAuthComponent(AuthorizationStash $stash): Auth {
-        if (self::isAuthenticated($stash)) {
-            return new Auth($_SESSION["user_id"], $_SESSION["user_custom"], $stash);
-        }
-
-        return new Auth(-1, [], $stash);       
+    public function destroyAuthorizedSession(): void {
+        session_regenerate_id(true);
+        $_SESSION = [];
     }
+
+    public function validateSession(): bool {
+        return isset($_SESSION["sgas_uid"]) && isset($_SESSION["sgas_custom"]) && isset($_SESSION["sgas_csrf"]);
+    }
+
+    public function validateCSRF(?string $sessionToken, ?string $requestToken) {
+        return $sessionToken === $requestToken;
+    }
+
+    #/ METHODS
+    #----------------------------------------------------------------------
 }
-    */

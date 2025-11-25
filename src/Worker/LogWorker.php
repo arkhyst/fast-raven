@@ -3,15 +3,13 @@
 namespace SmartGoblin\Worker;
 
 use SmartGoblin\Internal\Slave\LogSlave;
-use SmartGoblin\Internal\Stash\LogStash;
 
 class LogWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $working = false;
-    private static LogStash $stash;
-        public static function __delegateDumpToSlave(): void { LogSlave::dump(self::$stash); }
+    private static bool $busy = false;
+    private static LogSlave $slave;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -19,10 +17,10 @@ class LogWorker {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public static function call(): void {
-        if(!self::$working) {
-            self::$working = true;
-            self::$stash = new LogStash();
+    public static function __getToWork(LogSlave &$slave): void {
+        if(!self::$busy) {
+            self::$busy = true;
+            self::$slave = $slave;
         }
     }
 
@@ -41,8 +39,8 @@ class LogWorker {
     #\ METHODS
 
     public static function log(string $text): void {
-        if(self::$working) {
-            self::$stash->addLog(date("Y-m-d H:i:s"), $text);
+        if(self::$busy) {
+            self::$slave->insertLogIntoStash("[".date("Y-m-d H:i:s")."] ".$text);
         }
     }
 

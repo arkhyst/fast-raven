@@ -33,11 +33,8 @@ final class LogStash {
     #----------------------------------------------------------------------
     #\ METHODS
 
-    public function addLog(string $prefix, string $text): void {
-        $this->logList[] = [
-            "prefix" => $prefix,
-            "value" => $text
-        ];
+    public function addLog(string $log): void {
+        $this->logList[] = $log;
     }
 
     public function empty(): void {

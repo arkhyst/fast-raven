@@ -5,6 +5,7 @@ namespace SmartGoblin\Components\Core;
 use SmartGoblin\Exceptions\BadImplementationException;
 use SmartGoblin\Exceptions\EndpointFileDoesNotExist;
 
+use SmartGoblin\Exceptions\NotAuthorizedException;
 use SmartGoblin\Internal\Core\Kernel;
 
 use SmartGoblin\Components\Core\Config;
@@ -58,10 +59,14 @@ final class Server {
 
             try {
                 $response = $this->kernel->isApiRequest() ? $this->kernel->processApi() : $this->kernel->processView();
-                LogWorker::log($response ? "Request processed successfully" : "Request did not find matching route");
+                LogWorker::log($response ? "[SG] Request processed successfully" : "[SG] Request did not find matching route");
             } catch(BadImplementationException | EndpointFileDoesNotExist $e) {
                 $response = Response::new(false, 500);
-                LogWorker::log("**ERROR** => " . $e->getMessage());
+                LogWorker::log("[SG] **ERROR** => " . $e->getMessage());
+            } catch(NotAuthorizedException $e) {
+                $response = Response::new(false, 403);
+                $response->setBody($e->getMessage());
+                LogWorker::log("[SG] **ERROR** => " . $e->getMessage());
             }
             
             $this->kernel->close($response);

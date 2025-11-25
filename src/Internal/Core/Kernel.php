@@ -7,14 +7,17 @@ use SmartGoblin\Components\Http\Response;
 use SmartGoblin\Components\Http\Request;
 use SmartGoblin\Components\Http\DataType;
 
+use SmartGoblin\Worker\AuthWorker;
 use SmartGoblin\Worker\HeaderWorker;
 use SmartGoblin\Worker\LogWorker;
 
 use SmartGoblin\Internal\Slave\LogSlave;
 use SmartGoblin\Internal\Slave\HeaderSlave;
+use SmartGoblin\Internal\Slave\AuthSlave;
 
 use SmartGoblin\Exceptions\BadImplementationException;
 use SmartGoblin\Exceptions\EndpointFileDoesNotExist;
+use SmartGoblin\Exceptions\NotAuthorizedException;
 
 use SmartGoblin\Worker\Bee;
 
@@ -29,6 +32,10 @@ final class Kernel {
 
     private Request $request;
     private float $startRequestTime;
+
+    private LogSlave $logSlave;
+    private HeaderSlave $headerSlave;
+    private AuthSlave $authSlave;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -65,16 +72,18 @@ final class Kernel {
         Dotenv::createImmutable($envPath)->load();
         Dotenv::createImmutable($envPath . (Bee::isDev() ? ".env.dev" : ".env.prod"))->safeLoad();
         
-
         // Add security for remote address
         $this->request = new Request($_SERVER["REQUEST_URI"], $_SERVER["REQUEST_METHOD"], file_get_contents("php://input"), $_SERVER["REMOTE_ADDR"]);
         
-        LogSlave::zap();
-        LogSlave::writeOpenLogs($this->request);
+        $this->logSlave = LogSlave::zap();
+        $this->logSlave->writeOpenLogs($this->request);
 
-        HeaderSlave::zap();
-        HeaderSlave::writeSecurityHeaders($this->config->getAllowedHosts(), $_SERVER["HTTPS"], $_SERVER["HTTP_ORIGIN"] ?? "");
-        HeaderSlave::writeUtilityHeaders($this->request->isApi());
+        $this->headerSlave = HeaderSlave::zap();
+        $this->headerSlave->writeSecurityHeaders($this->config->getAllowedHosts(), $_SERVER["HTTPS"], $_SERVER["HTTP_ORIGIN"] ?? "");
+        $this->headerSlave->writeUtilityHeaders($this->request->isApi());
+
+        $this->authSlave = AuthSlave::zap();
+        $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->getAuthDomain());
     }
 
     public function close(?Response $response): void {
@@ -85,15 +94,14 @@ final class Kernel {
                 $response = Response::new(false, 404);
             } else {
                 $response = Response::new(false, 301);
-                HeaderWorker::writeHeader( "Location", $this->config->getDefaultPathRedirect());
+                HeaderWorker::addHeader( "Location", $this->config->getDefaultPathRedirect());
             }
         }
-
+        
         http_response_code($response->getCode());
 
         $type = $this->request->isApi() ? DataType::JSON : DataType::HTML;
-        HeaderWorker::writeHeader( "Content-Type", "{$type->value}; charset=utf-8");
-        HeaderWorker::__delegateDumpToSlave();
+        HeaderWorker::addHeader( "Content-Type", "{$type->value}; charset=utf-8");
 
         if ($type == DataType::JSON) {
             echo json_encode([
@@ -108,46 +116,45 @@ final class Kernel {
         $diff = microtime(true) - $this->startRequestTime;
         $elapsedTime = round(($diff - floor($diff)) * 1000);
 
-        LogSlave::writeCloseLogs($this->request, $elapsedTime);
-        LogWorker::__delegateDumpToSlave();
+        $this->logSlave->writeCloseLogs($this->request, $elapsedTime);
+        $this->logSlave->dumpLogStashIntoFile();
     }
 
     public function processApi(): ?Response {
+        $response = null;
         $foundEndpoint = $this->config->getApiRoutes()[$this->request->getComplexPath()];
 
-        if ($foundEndpoint) {
+        if ($foundEndpoint) { // Uh oh... This is getting big ._.
+            if($foundEndpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException("Not authorized to make this request.");
+
             $filePath = $this->config->getSitePath() . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "api" . DIRECTORY_SEPARATOR . $foundEndpoint->getFile() . ".php";
-            if(!file_exists($filePath)) {
-                throw new EndpointFileDoesNotExist("API file could not be loaded, it does not exist. (Payload: $filePath)");
-            }
+
+            if(!file_exists($filePath)) throw new EndpointFileDoesNotExist("API file could not be loaded, it does not exist. (Payload: $filePath)");
             
             $fn = require_once $filePath;
-            $response = null;
             if (is_callable($fn)) $response = $fn($this->request);
 
-            if ($response instanceof Response) return $response;
-            else { 
-                throw new BadImplementationException("API file {$foundEndpoint->getFile()} expected to return Response object.");
-            }
+            if (!$response instanceof Response) throw new BadImplementationException("API file {$foundEndpoint->getFile()} expected to return Response object.");
         }
 
-        return null;
+        return $response;
     }
 
     public function processView(): ?Response {
+        $response = null;
         $foundEndpoint = $this->config->getViewRoutes()[$this->request->getComplexPath()];
 
         if ($foundEndpoint) {
+            if($foundEndpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException("Not authorized to make this request.");
+
             $filePath = $this->config->getSitePath() . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR  . $foundEndpoint->getFile() . ".html";
-            if(!file_exists($filePath)) {
-                throw new EndpointFileDoesNotExist("View file could not be rendered, it does not exist. (Payload: $filePath)");
-            }
+            if(!file_exists($filePath)) throw new EndpointFileDoesNotExist("View file could not be rendered, it does not exist. (Payload: $filePath)");
 
             readFile($filePath);
-            return Response::new(true, 200);
+            $response = Response::new(true, 200);
         }
 
-        return null;
+        return $response;
     }
 
     #/ METHODS

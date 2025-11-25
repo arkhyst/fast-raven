@@ -16,6 +16,8 @@ final class Request {
 
             return null;
         }
+    private string $method;
+        public function getMethod(): string { return $this->method; }
     private string $complexPath;
         public function getComplexPath(): string { return $this->complexPath; }
     private array $originInfo = [];
@@ -29,8 +31,8 @@ final class Request {
 
     public function __construct(string $uri, string $method, string $dataStream, string $remoteAddress) {
         $this->internalID = bin2hex(random_bytes(8));
-
         $this->data = json_decode($dataStream, true) ?? [];
+        $this->method = $method;
 
         $requestPath = parse_url($uri ?? "/", PHP_URL_PATH) ?: "/";
         $requestPath = ($requestPath !== "/") ? rtrim($requestPath, "/"): "/";

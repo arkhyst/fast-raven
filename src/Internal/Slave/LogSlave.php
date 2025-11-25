@@ -10,7 +10,9 @@ final class LogSlave {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    
+    private static bool $busy = false;
+    private LogStash $stash;
+        public function insertLogIntoStash(string $text): void { $this->stash->addLog($text); }
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -18,8 +20,18 @@ final class LogSlave {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public static function zap(): void {
-        LogWorker::call();
+    public static function zap(): ?LogSlave {
+        if(!self::$busy) {
+            self::$busy = true;
+            $inst = new LogSlave();
+            LogWorker::__getToWork($inst);
+
+            return $inst;
+        }
+    }
+
+    private function __construct() {
+        $this->stash = new LogStash();
     }
 
     #/ INIT
@@ -28,7 +40,7 @@ final class LogSlave {
     #----------------------------------------------------------------------
     #\ PRIVATE FUNCTIONS
 
-    private static function writeIntoFile(string $text): void {
+    private function writeIntoFile(string $text): void {
         $dir = SITE_PATH . DIRECTORY_SEPARATOR . "logs" . DIRECTORY_SEPARATOR;
         if(!is_dir($dir)) mkdir($dir, 0755, true);
 
@@ -41,25 +53,25 @@ final class LogSlave {
     #----------------------------------------------------------------------
     #\ METHODS
 
-    public static function writeOpenLogs(Request $request): void {
+    public function writeOpenLogs(Request $request): void {
         $type = $request->isApi() ? "API" : "VIEW";
         LogWorker::log("# OPEN {$type} REQUEST({$request->getInternalID()})");
-        LogWorker::log("--- Complex Path: {$request->getComplexPath()}");
-        LogWorker::log("--- Remote Address: {$request->getOriginInfo()["IP"]}");
+        LogWorker::log("[SG] -- Complex Path: {$request->getComplexPath()}");
+        LogWorker::log("[SG] -- Remote Address: {$request->getOriginInfo()["IP"]}");
     }
 
     public static function writeCloseLogs(Request $request, float $elapsedTime): void {
-        LogWorker::log("--- Request time: " . $elapsedTime . "ms");
+        LogWorker::log("[SG] -- Request time: " . $elapsedTime . "ms");
         LogWorker::log("# CLOSE REQUEST({$request->getInternalID()})");
         LogWorker::log("=======================================================");
     }
 
-    public static function dump(LogStash &$stash): void {
+    public function dumpLogStashIntoFile(): void { 
         $textBlock = "";
-        foreach($stash->getLogList() as $obj) $textBlock .= "[".$obj["prefix"]."] ".$obj["value"]."\n";
-        self::writeIntoFile($textBlock);
+        foreach($this->stash->getLogList() as $log) $textBlock .= $log."\n";
+        $this->writeIntoFile($textBlock);
 
-        $stash->empty();
+        $this->stash->empty();
     }
 
     #/ METHODS
