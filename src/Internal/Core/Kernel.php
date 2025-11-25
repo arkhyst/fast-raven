@@ -2,8 +2,6 @@
 
 namespace SmartGoblin\Internal\Core;
 
-use Closure;
-use ReflectionFunction;
 use SmartGoblin\Components\Core\Config;
 use SmartGoblin\Components\Http\Response;
 use SmartGoblin\Components\Http\Request;
