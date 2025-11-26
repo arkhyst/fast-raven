@@ -59,14 +59,14 @@ final class Server {
 
             try {
                 $response = $this->kernel->isApiRequest() ? $this->kernel->processApi() : $this->kernel->processView();
-                LogWorker::log($response ? "[SG] Request processed successfully" : "[SG] Request did not find matching route");
+                LogWorker::log($response ? "-SG- Request processed successfully" : "-SG- Request did not find matching route");
             } catch(BadImplementationException | EndpointFileDoesNotExist $e) {
                 $response = Response::new(false, 500);
-                LogWorker::log("[SG] **ERROR** => " . $e->getMessage());
+                LogWorker::error("-SG- " . $e->getMessage());
             } catch(NotAuthorizedException $e) {
                 $response = Response::new(false, 403);
                 $response->setBody($e->getMessage());
-                LogWorker::log("[SG] **ERROR** => " . $e->getMessage());
+                LogWorker::error("-SG- " . $e->getMessage());
             }
             
             $this->kernel->close($response);

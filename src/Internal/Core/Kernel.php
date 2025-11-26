@@ -14,6 +14,7 @@ use SmartGoblin\Worker\LogWorker;
 use SmartGoblin\Internal\Slave\LogSlave;
 use SmartGoblin\Internal\Slave\HeaderSlave;
 use SmartGoblin\Internal\Slave\AuthSlave;
+use SmartGoblin\Internal\Slave\DataSlave;
 
 use SmartGoblin\Exceptions\BadImplementationException;
 use SmartGoblin\Exceptions\EndpointFileDoesNotExist;
@@ -36,6 +37,7 @@ final class Kernel {
     private LogSlave $logSlave;
     private HeaderSlave $headerSlave;
     private AuthSlave $authSlave;
+    private DataSlave $dataSlave;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -69,9 +71,10 @@ final class Kernel {
         define("SITE_PATH", $this->config->getSitePath());
 
         $envPath = $this->config->getSitePath() . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR;
-        Dotenv::createImmutable($envPath)->load();
-        Dotenv::createImmutable($envPath . (Bee::isDev() ? ".env.dev" : ".env.prod"))->safeLoad();
-        
+
+        Dotenv::createImmutable($envPath, ".env")->safeLoad();
+        Dotenv::createImmutable($envPath, Bee::isDev() ? ".env.dev" : ".env.prod")->safeLoad();
+
         // Add security for remote address
         $this->request = new Request($_SERVER["REQUEST_URI"], $_SERVER["REQUEST_METHOD"], file_get_contents("php://input"), $_SERVER["REMOTE_ADDR"]);
         
@@ -84,6 +87,8 @@ final class Kernel {
 
         $this->authSlave = AuthSlave::zap();
         $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->getAuthDomain());
+
+        $this->dataSlave = DataSlave::zap();
     }
 
     public function close(?Response $response): void {

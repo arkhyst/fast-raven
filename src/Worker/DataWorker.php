@@ -2,14 +2,14 @@
 
 namespace SmartGoblin\Worker;
 
-use SmartGoblin\Internal\Slave\LogSlave;
+use SmartGoblin\Internal\Slave\DataSlave;
 
-class LogWorker {
+class DataWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
     private static bool $busy = false;
-    private static LogSlave $slave;
+    private static DataSlave $slave;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -17,7 +17,7 @@ class LogWorker {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public static function __getToWork(LogSlave &$slave): void {
+    public static function __getToWork(DataSlave &$slave): void {
         if(!self::$busy) {
             self::$busy = true;
             self::$slave = $slave;
@@ -38,22 +38,36 @@ class LogWorker {
     #----------------------------------------------------------------------
     #\ METHODS
 
-    public static function log(string $text): void {
+    public static function getOneById(string $table, array $cols, int $id): ?array {
         if(self::$busy) {
-            self::$slave->insertLogIntoStash("[".date("Y-m-d H:i:s")."] ".$text);
+            return self::$slave->getOne($table, $cols, ["id"], [$id]);
         }
+
+        return null;
     }
 
-    public static function error(string $text): void {
+    public static function getOneWhere(string $table, array $cols, array $cond, array $vars): ?array {
         if(self::$busy) {
-            self::$slave->insertLogIntoStash("[".date("Y-m-d H:i:s")."] **ERROR** => ".$text);
+            return self::$slave->getOne($table, $cols, $cond, $vars);
         }
+
+        return null;
     }
 
-    public static function warning(string $text): void {
+    public static function getAllWhere(string $table, array $cols, array $cond, array $vars): ?array {
         if(self::$busy) {
-            self::$slave->insertLogIntoStash("[".date("Y-m-d H:i:s")."] **WARNING** => ".$text);
+            return self::$slave->getAll($table, $cols, $cond, $vars);
         }
+
+        return null;
+    }
+
+    public static function insert(string $table, array $cols, array $values) : bool {
+        if(self::$busy) {
+            return self::$slave->insert($table, $cols, $values);
+        }
+
+        return false;
     }
 
     #/ METHODS

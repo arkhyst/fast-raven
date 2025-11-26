@@ -30,7 +30,7 @@ class Bee {
     #----------------------------------------------------------------------
     #\ METHODS
 
-    public static function isDev() { return getenv("STATE") === "dev"; }
+    public static function isDev() { return $_ENV["STATE"] === "dev"; }
     
     public static function normalizePath(string $path, bool $cleanExtension = false): string {
         $newPath = ltrim($path, "/\\");

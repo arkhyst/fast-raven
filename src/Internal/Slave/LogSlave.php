@@ -56,12 +56,12 @@ final class LogSlave {
     public function writeOpenLogs(Request $request): void {
         $type = $request->isApi() ? "API" : "VIEW";
         LogWorker::log("# OPEN {$type} REQUEST({$request->getInternalID()})");
-        LogWorker::log("[SG] -- Complex Path: {$request->getComplexPath()}");
-        LogWorker::log("[SG] -- Remote Address: {$request->getOriginInfo()["IP"]}");
+        LogWorker::log("-SG- -- Complex Path: {$request->getComplexPath()}");
+        LogWorker::log("-SG- -- Remote Address: {$request->getOriginInfo()["IP"]}");
     }
 
     public static function writeCloseLogs(Request $request, float $elapsedTime): void {
-        LogWorker::log("[SG] -- Request time: " . $elapsedTime . "ms");
+        LogWorker::log("-SG- -- Request time: " . $elapsedTime . "ms");
         LogWorker::log("# CLOSE REQUEST({$request->getInternalID()})");
         LogWorker::log("=======================================================");
     }

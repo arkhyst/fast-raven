@@ -9,7 +9,9 @@
 - [ ] Test php-error-insight
 - [ ] ProcessApi && ProcessView kernel methods are getting big... 
 - [ ] Improve exception usage and customization of messages
+- [X] DataSlave and DataWorker
 
 ## TODO: Bugs
 - [X] Exception throws message to client in response.
 - [X] 404 returns 500 instead?
+- [X] .env loading fails

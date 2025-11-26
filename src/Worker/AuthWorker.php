@@ -44,7 +44,7 @@ class AuthWorker {
         if(self::$busy) {
             if (session_status() === PHP_SESSION_ACTIVE) {
                 self::$slave->createAuthorizedSession($id, $customData, bin2hex(random_bytes(32)));
-                LogWorker::log("[SG] Authorized session created for user {$id}.");
+                LogWorker::log("-SG- Authorized session created for user {$id}.");
             }
         }
     }
@@ -53,7 +53,7 @@ class AuthWorker {
         if(self::$busy) {
             if (session_status() === PHP_SESSION_ACTIVE) {
                 self::$slave->destroyAuthorizedSession();
-                LogWorker::log("[SG] Authorized session destroyed.");
+                LogWorker::log("-SG- Authorized session destroyed.");
             }
         }
     }
@@ -64,11 +64,11 @@ class AuthWorker {
                 if(self::$slave->validateSession()) {
                     if($request && in_array($request->getMethod(), ["POST", "PUT", "DELETE", "PATCH"], true)) {
                         if(!self::$slave->validateCSRF($_SESSION["sgas_csrf"], $request->getDataItem("csrf_token"))) {
-                            LogWorker::log("[SG] **WARNING** => Restricted action for authenticated user was called without a valid csrf_token.");
+                            LogWorker::warning("-SG- Restricted action for authenticated user was called without a valid csrf_token.");
                             return false;
                         }
                     }
-                    LogWorker::log("[SG] Verified authorization for user {$_SESSION["sgas_uid"]}."); // Are we logging user data now??? Anyway...
+                    LogWorker::log("-SG- Verified authorization for user {$_SESSION["sgas_uid"]}."); // Are we logging user data now??? Anyway...
                     return true;
                 } 
             }
