@@ -18,8 +18,8 @@ final class Response {
         public function getCode(): int { return $this->code; }
     private string $message = "";
         public function getMessage(): string { return $this->message; }
-    private array $data = [];
-        public function getData(): array { return $this->data; }
+    private mixed $data = [];
+        public function getData(): mixed { return $this->data; }
     
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -27,10 +27,12 @@ final class Response {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public static function new(bool $success, int $code): Response {
-        return new Response($success, $code);
+    public static function new(bool $success, int $code, string $message = "", mixed $data = []): Response {
+        $response = new Response($success, $code);
+        $response->setBody($message, $data);
+        return $response;
     }
-    
+
     private function __construct(bool $success, int $code) {
         $this->status = $success ? "OK" : "ERROR";
         $this->code = $code;
@@ -50,7 +52,7 @@ final class Response {
     #----------------------------------------------------------------------
     #\ METHODS
 
-    public function setBody(string $message = "", array $data = []): void {
+    public function setBody(string $message = "", mixed $data = []): void {
         $this->message = $message;
         $this->data = $data;
     }

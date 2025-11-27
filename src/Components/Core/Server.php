@@ -64,8 +64,7 @@ final class Server {
                 $response = Response::new(false, 500);
                 LogWorker::error("-SG- " . $e->getMessage());
             } catch(NotAuthorizedException $e) {
-                $response = Response::new(false, 403);
-                $response->setBody($e->getMessage());
+                $response = Response::new(false, 403, $e->getMessage());
                 LogWorker::error("-SG- " . $e->getMessage());
             }
             
