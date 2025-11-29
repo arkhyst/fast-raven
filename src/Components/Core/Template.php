@@ -38,10 +38,17 @@ final class Template {
         return new Template($title, $version, $lang);
     }
 
-    private function  __construct(string $title, string $version, string $lang = "en") {
+    public static function oneline(string $title, string $version, string $lang = "en", array $styles = [], array $scripts = [], array $autofill = []): Template {
+        return new Template($title, $version, $lang, $styles, $scripts, $autofill);
+    }
+
+    private function  __construct(string $title, string $version, string $lang = "en", array $styles = [], array $scripts = [], array $autofill = []) {
         $this->title = $title;
         $this->version = $version;
         $this->lang = $lang;
+        $this->styles = $styles;
+        $this->scripts = $scripts;
+        $this->autofill = $autofill;
     }
 
     #/ INIT

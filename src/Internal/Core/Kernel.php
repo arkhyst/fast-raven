@@ -7,15 +7,16 @@ use SmartGoblin\Components\Http\Response;
 use SmartGoblin\Components\Http\Request;
 use SmartGoblin\Components\Http\DataType;
 use SmartGoblin\Components\Core\Template;
+use SmartGoblin\Components\Routing\Router;
 
 use SmartGoblin\Worker\AuthWorker;
 use SmartGoblin\Worker\HeaderWorker;
-use SmartGoblin\Worker\LogWorker;
 
 use SmartGoblin\Internal\Slave\LogSlave;
 use SmartGoblin\Internal\Slave\HeaderSlave;
 use SmartGoblin\Internal\Slave\AuthSlave;
 use SmartGoblin\Internal\Slave\DataSlave;
+use SmartGoblin\Internal\Slave\RouterSlave;
 
 use SmartGoblin\Exceptions\BadImplementationException;
 use SmartGoblin\Exceptions\EndpointFileDoesNotExist;
@@ -33,6 +34,10 @@ final class Kernel {
         public function setConfig(Config $config): void { $this->config = $config; }
     private Template $template;
         public function setTemplate(Template $template): void { $this->template = $template; }
+    private Router $viewRouter;
+        public function setViewRouter(Router $router): void { $this->viewRouter = $router; }
+    private Router $apiRouter;
+        public function setApiRouter(Router $router): void { $this->apiRouter = $router; }
 
     private Request $request;
     private float $startRequestTime;
@@ -41,6 +46,7 @@ final class Kernel {
     private HeaderSlave $headerSlave;
     private AuthSlave $authSlave;
     private DataSlave $dataSlave;
+    private RouterSlave $routerSlave;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -92,7 +98,39 @@ final class Kernel {
         $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->getAuthDomain());
 
         $this->dataSlave = DataSlave::zap();
+
+        $this->routerSlave = RouterSlave::zap();
     }
+
+    public function process(): ?Response {
+        $api = $this->request->isApi();
+        $mid = $api ? "api" : "views";
+        $endpoint = $this->routerSlave->route($this->request, $api ? $this->apiRouter : $this->viewRouter);
+        $response = null;
+
+        if($endpoint) {
+            if($endpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException("Not authorized to make this request.");
+
+            $filePath = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
+            if(!file_exists($filePath)) throw new EndpointFileDoesNotExist("Request file could not be loaded, it does not exist. (Payload: $filePath)");
+            
+            if($this->request->isApi()) {
+                $fn = require_once $filePath;
+                if (is_callable($fn)) $response = $fn($this->request);
+                if (!$response instanceof Response) throw new BadImplementationException("API file {$endpoint->getFile()} expected to return Response object.");
+            } else {
+                $template = $this->template;
+                $epTemplate = $endpoint->getTemplate();
+                if($epTemplate) $template->merge($epTemplate);
+                $template->setFile($filePath);
+
+                require_once __DIR__ . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
+                $response = Response::new(true, 200);
+            }
+        }
+
+        return $response;
+    }   
 
     public function close(?Response $response): void {
         session_write_close();
@@ -126,46 +164,6 @@ final class Kernel {
 
         $this->logSlave->writeCloseLogs($this->request, $elapsedTime);
         $this->logSlave->dumpLogStashIntoFile();
-    }
-
-    public function processApi(): ?Response {
-        $response = null;
-        $foundEndpoint = $this->config->getApiRoutes()[$this->request->getComplexPath()];
-
-        if ($foundEndpoint) { // Uh oh... This is getting big ._.
-            if($foundEndpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException("Not authorized to make this request.");
-
-            $filePath = $this->config->getSitePath() . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "api" . DIRECTORY_SEPARATOR . $foundEndpoint->getFile() . ".php";
-
-            if(!file_exists($filePath)) throw new EndpointFileDoesNotExist("API file could not be loaded, it does not exist. (Payload: $filePath)");
-            
-            $fn = require_once $filePath;
-            if (is_callable($fn)) $response = $fn($this->request);
-
-            if (!$response instanceof Response) throw new BadImplementationException("API file {$foundEndpoint->getFile()} expected to return Response object.");
-        }
-
-        return $response;
-    }
-
-    public function processView(): ?Response {
-        $response = null;
-        $foundEndpoint = $this->config->getViewRoutes()[$this->request->getComplexPath()];
-
-        if ($foundEndpoint) {
-            if($foundEndpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException("Not authorized to make this request.");
-
-            $template = $this->template;
-
-            $template->setFile($this->config->getSitePath() . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR  . $foundEndpoint->getFile() . ".html");
-            if(!file_exists($template->getFile())) throw new EndpointFileDoesNotExist("View file could not be rendered, it does not exist. (Payload: ".$template->getFile().")");
-
-            require_once __DIR__ . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
-
-            $response = Response::new(true, 200);
-        }
-
-        return $response;
     }
 
     #/ METHODS

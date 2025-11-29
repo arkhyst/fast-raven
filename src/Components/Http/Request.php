@@ -18,6 +18,8 @@ final class Request {
         }
     private string $method;
         public function getMethod(): string { return $this->method; }
+    private string $path;
+        public function getPath(): string { return $this->path; }
     private string $complexPath;
         public function getComplexPath(): string { return $this->complexPath; }
     private array $originInfo = [];
@@ -34,10 +36,8 @@ final class Request {
         $this->data = json_decode($dataStream, true) ?? [];
         $this->method = $method;
 
-        $requestPath = parse_url($uri ?? "/", PHP_URL_PATH) ?: "/";
-        $requestPath = ($requestPath !== "/") ? rtrim($requestPath, "/"): "/";
-        $this->complexPath = $requestPath . "#" . $method;
-
+        $this->path = parse_url($uri ?? "/", PHP_URL_PATH) ?? "/";
+        $this->complexPath = (($this->path !== "/") ? rtrim($this->path, "/"): "/") . "#" . $method;
         $this->originInfo["IP"] = $remoteAddress;
     }
 

@@ -9,6 +9,7 @@ use SmartGoblin\Exceptions\NotAuthorizedException;
 use SmartGoblin\Internal\Core\Kernel;
 
 use SmartGoblin\Components\Core\Config;
+use SmartGoblin\Components\Routing\Router;
 use SmartGoblin\Components\Http\Response;
 use SmartGoblin\Worker\LogWorker;
 
@@ -33,9 +34,11 @@ final class Server {
         $this->kernel = new Kernel();
     }
 
-    public function configure(Config $config, Template $template): void {
+    public function configure(Config $config, Template $template, Router $viewRouter, Router $apiRouter): void {
         $this->kernel->setConfig($config);
         $this->kernel->setTemplate($template);
+        $this->kernel->setViewRouter($viewRouter);
+        $this->kernel->setApiRouter($apiRouter);
         $this->ready = true;
     }
 
@@ -59,7 +62,7 @@ final class Server {
             $this->kernel->open();
 
             try {
-                $response = $this->kernel->isApiRequest() ? $this->kernel->processApi() : $this->kernel->processView();
+                $response = $this->kernel->process();
                 LogWorker::log($response ? "-SG- Request processed successfully" : "-SG- Request did not find matching route");
             } catch(BadImplementationException | EndpointFileDoesNotExist $e) {
                 $response = Response::new(false, 500);

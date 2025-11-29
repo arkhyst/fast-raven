@@ -2,7 +2,6 @@
 
 namespace SmartGoblin\Components\Core;
 
-use SmartGoblin\Components\Router\Endpoint;
 
 final class Config {
     #----------------------------------------------------------------------
@@ -29,11 +28,6 @@ final class Config {
         public function getDefaultPathRedirect(): string { return $this->defaultPathRedirect; }
     private string $defaultSubdomainRedirect = "";
         public function getDefaultSubdomainRedirect(): string { return $this->defaultSubdomainRedirect; }
-
-    private array $apiRoutes = [];
-        public function getApiRoutes(): array { return $this->apiRoutes; }
-    private array $viewRoutes = [];
-        public function getViewRoutes(): array { return $this->viewRoutes; }
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -78,22 +72,6 @@ final class Config {
     public function configureUnauthorizedRedirects(string $path, string $subdomain): void {
         $this->defaultPathRedirect = $path;
         $this->defaultSubdomainRedirect = $subdomain;
-    }
-
-    public function configureApi(array $list): void { 
-        foreach ($list as $e) {
-            if($e instanceof Endpoint) {
-                $this->apiRoutes["/api".$e->getComplexPath()] = $e;
-            }
-        }
-    }
-
-    public function configureView(array $list): void { 
-        foreach ($list as $e) {
-            if($e instanceof Endpoint) {
-                $this->viewRoutes[$e->getComplexPath()] = $e;
-            }
-        }
     }
 
     #/ METHODS

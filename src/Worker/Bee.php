@@ -32,18 +32,10 @@ class Bee {
 
     public static function isDev() { return $_ENV["STATE"] === "dev"; }
     
-    public static function normalizePath(string $path, bool $cleanExtension = false): string {
+    public static function normalizePath(string $path): string {
         $newPath = ltrim($path, "/\\");
         $newPath = preg_replace("#[\\/]+#", "/", $newPath);
-
-        if($cleanExtension) {
-            $extensions = [".php", ".html", ".phtml", ".txt". ".md", ".log"];
-            foreach($extensions as $ext) {
-                if(str_ends_with($newPath, $ext)) {
-                    $newPath = substr($newPath, 0, -strlen($ext));
-                }
-            }
-        }
+        $newPath = rtrim($newPath, "/");
 
         return $newPath;
     }
