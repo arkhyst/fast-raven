@@ -70,6 +70,7 @@ final class Template {
         $this->favicon = $template->getFavicon();
         $this->styles = array_merge($this->styles, $template->getStyles());
         $this->scripts = array_merge($this->scripts, $template->getScripts());
+        $this->autofill = array_merge($this->autofill, $template->getAutofill());
     }
 
     public function getHtmlTitle(): string { return "<title>{$this->title}</title>"; }
