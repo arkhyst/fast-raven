@@ -2,7 +2,7 @@
 
 namespace SmartGoblin\Internal\Slave;
 
-use SmartGoblin\Worker\HeaderWorker;
+use SmartGoblin\Workers\HeaderWorker;
 
 final class HeaderSlave {
     #----------------------------------------------------------------------
@@ -16,6 +16,15 @@ final class HeaderSlave {
     #----------------------------------------------------------------------
     #\ INIT
 
+    /**
+     * Initializes the HeaderSlave if it is not already busy.
+     * 
+     * This function will create a new HeaderSlave if it is not already busy.
+     * It will then call HeaderWorker::__getToWork() and pass the new HeaderSlave object.
+     * The new HeaderSlave object will be returned.
+     * 
+     * @return ?HeaderSlave The HeaderSlave object if it was successfully created, null otherwise.
+     */
     public static function zap(): ?HeaderSlave {
         if(!self::$busy) {
             self::$busy = true;
@@ -44,11 +53,35 @@ final class HeaderSlave {
     #----------------------------------------------------------------------
     #\ METHODS
 
-    public function addHeader(string $key, string $value): void { header("$key: $value"); }
-    public function removeHeader(string $key): void { header_remove($key); }
+    /**
+     * Adds a header to the response.
+     * 
+     * @param string $key The key of the header.
+     * @param string $value The value of the header.
+     */
+    public function addHeader(string $key, string $value): void {
+        header("$key: $value");
+    }
 
-    // TODO: Enable wildcard for allowedHosts
+    /**
+     * Removes a header from the response.
+     * 
+     * @param string $key The key of the header to remove.
+     */
+    public function removeHeader(string $key): void {
+        header_remove($key);
+    }
+
+    
+    /**
+     * Writes security headers to the response.
+     * 
+     * @param array $allowedHosts An array of allowed hosts.
+     * @param string $https The value of the HTTPS header.
+     * @param string $origin The value of the Origin header.
+     */
     public function writeSecurityHeaders(array $allowedHosts, string $https, string $origin): void {
+        // TODO: Enable wildcard for allowedHosts
         HeaderWorker::removeHeader("X-Powered-By");
 
         HeaderWorker::addHeader("X-Content-Type-Options", "nosniff");
@@ -71,6 +104,11 @@ final class HeaderSlave {
         }
     }
 
+    /**
+     * Writes utility headers to the response.
+     *
+     * @param bool $isApi Whether the request is an API request.
+     */
     public function writeUtilityHeaders(bool $isApi): void {
         // TODO: Add complexity for better cache control
         if($isApi) HeaderWorker::addHeader("Cache-Control", "private, no-store, must-revalidate");

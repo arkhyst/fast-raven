@@ -2,7 +2,7 @@
 
 namespace SmartGoblin\Components\Routing;
 
-use SmartGoblin\Worker\Bee;
+use SmartGoblin\Workers\Bee;
 use SmartGoblin\Components\Core\Template;
 
 class Endpoint {
@@ -24,10 +24,30 @@ class Endpoint {
     #----------------------------------------------------------------------
     #\ INIT
 
+    /**
+     * Creates a new Endpoint instance for an API endpoint.
+     *
+     * @param bool $restricted Whether the endpoint is restricted to authorized users.
+     * @param string $method The HTTP method to use for the endpoint.
+     * @param string $path The path of the endpoint, relative to /api/.
+     * @param string $fileName The filename of the endpoint, relative to the /src/api/ directory.
+     *
+     * @return Endpoint The created Endpoint instance.
+     */
     public static function api(bool $restricted, string $method, string $path, string $fileName): Endpoint {
         return new Endpoint($restricted, $method, "/api/".$path, $fileName);
     }
 
+    /**
+     * Creates a new Endpoint instance for a view endpoint.
+     *
+     * @param bool $restricted Whether the endpoint is restricted to authorized users.
+     * @param string $path The path of the endpoint, relative to the website root.
+     * @param string $fileName The filename of the endpoint, relative to the /src/views/ directory.
+     * @param Template|null $template The template to use for the endpoint, or null to use the default template.
+     *
+     * @return Endpoint The created Endpoint instance.
+     */
     public static function view(bool $restricted, string $path, string $fileName, ?Template $template = null): Endpoint {
         return new Endpoint($restricted, "GET", $path, $fileName, $template);
     }

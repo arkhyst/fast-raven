@@ -27,6 +27,16 @@ final class Response {
     #----------------------------------------------------------------------
     #\ INIT
 
+    /**
+     * Creates a new Response instance.
+     *
+     * @param bool $success Whether the response is a success or not.
+     * @param int $code The HTTP status code of the response.
+     * @param string $message [optional] The message to set on the response.
+     * @param mixed $data [optional] The data to set on the response.
+     * 
+     * @return Response The new Response instance.
+     */
     public static function new(bool $success, int $code, string $message = "", mixed $data = []): Response {
         $response = new Response($success, $code);
         $response->setBody($message, $data);
@@ -52,6 +62,12 @@ final class Response {
     #----------------------------------------------------------------------
     #\ METHODS
 
+    /**
+     * Sets the body of the response.
+     *
+     * @param string $message [optional] The message to set on the response.
+     * @param mixed $data [optional] The data to set on the response.
+     */
     public function setBody(string $message = "", mixed $data = []): void {
         $this->message = $message;
         $this->data = $data;

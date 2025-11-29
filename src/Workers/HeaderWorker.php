@@ -1,6 +1,6 @@
 <?php
 
-namespace SmartGoblin\Worker;
+namespace SmartGoblin\Workers;
 
 use SmartGoblin\Internal\Slave\HeaderSlave;
 
@@ -38,12 +38,23 @@ class HeaderWorker {
     #----------------------------------------------------------------------
     #\ METHODS
 
+    /**
+     * Adds a header to the response.
+     *
+     * @param string $key The key of the header.
+     * @param string $value The value of the header.
+     */
     public static function addHeader(string $key, string $value): void {
         if(self::$busy) {
             self::$slave->addHeader($key, $value);
         }
     }
 
+    /**
+     * Removes a header from the response.
+     *
+     * @param string $key The key of the header to remove.
+     */
     public static function removeHeader(string $key): void {
         if(self::$busy) {
             self::$slave->removeHeader($key);

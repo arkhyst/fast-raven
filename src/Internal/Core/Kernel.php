@@ -9,8 +9,8 @@ use SmartGoblin\Components\Http\DataType;
 use SmartGoblin\Components\Core\Template;
 use SmartGoblin\Components\Routing\Router;
 
-use SmartGoblin\Worker\AuthWorker;
-use SmartGoblin\Worker\HeaderWorker;
+use SmartGoblin\Workers\AuthWorker;
+use SmartGoblin\Workers\HeaderWorker;
 
 use SmartGoblin\Internal\Slave\LogSlave;
 use SmartGoblin\Internal\Slave\HeaderSlave;
@@ -22,7 +22,7 @@ use SmartGoblin\Exceptions\BadImplementationException;
 use SmartGoblin\Exceptions\EndpointFileDoesNotExist;
 use SmartGoblin\Exceptions\NotAuthorizedException;
 
-use SmartGoblin\Worker\Bee;
+use SmartGoblin\Workers\Bee;
 
 use Dotenv\Dotenv;
 
@@ -74,6 +74,14 @@ final class Kernel {
     
     public function isApiRequest(): bool { return $this->request->isApi(); }
 
+    /**
+     * This function initializes the kernel and prepares it for processing the request.
+     *
+     * It sets up the environment variables, loads the configuration from the .env files,
+     * adds security headers, initializes the session cookie, and sets up the router.
+     *
+     * It should be called at the beginning of every request.
+     */
     public function open(): void {
         $this->startRequestTime = microtime(true);
 
@@ -102,6 +110,21 @@ final class Kernel {
         $this->routerSlave = RouterSlave::zap();
     }
 
+    /**
+     * Processes the request and returns a response.
+     *
+     * This function will try to match the request with an endpoint in the router.
+     * If the endpoint is restricted and the request is not authorized, it will throw a NotAuthorizedException.
+     * If the endpoint file does not exist, it will throw an EndpointFileDoesNotExist exception.
+     * If the request is an API request, it will call the function in the endpoint file and expect a Response object to be returned.
+     * If the request is not an API request, it will render the template in the endpoint file.
+     *
+     * @return Response|null The response to return, or null if no response could be generated.
+     * 
+     * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
+     * @throws EndpointFileDoesNotExist If the endpoint file does not exist.
+     * @throws BadImplementationException If the API function does not return a Response object.
+     */
     public function process(): ?Response {
         $api = $this->request->isApi();
         $mid = $api ? "api" : "views";
@@ -132,6 +155,16 @@ final class Kernel {
         return $response;
     }   
 
+    /**
+     * This function is called at the end of every request and is responsible for outputting the response,
+     * writing the close logs, and dumping the log stash into a file.
+     *
+     * If no response is provided, it will generate a default response based on the request type.
+     * If the request is an API request, it will generate a 404 response.
+     * If the request is not an API request, it will generate a 301 response with a default path redirect.
+     *
+     * @param Response|null $response The response to output, or null if no response could be generated.
+     */
     public function close(?Response $response): void {
         session_write_close();
 

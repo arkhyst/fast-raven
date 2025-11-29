@@ -35,6 +35,15 @@ final class Config {
     #----------------------------------------------------------------------
     #\ INIT
 
+    /**
+     * Create a new Config instance.
+     *
+     * @param string $sitePath   The local path of the site. Use __DIR__ unless you know what you are doing.
+     * @param string $siteName   The name of the site.
+     * @param bool $restricted   Whether the site requires authorization or not.
+     *
+     * @return Config
+     */
     public static function new(string $sitePath, string $siteName, bool $restricted): Config {
         return new Config($sitePath, $siteName, $restricted);
     }
@@ -59,17 +68,35 @@ final class Config {
     #----------------------------------------------------------------------
     #\ METHODS
 
+    /**
+     * Configure the allowed hosts for this site.
+     *
+     * @param array $allowedHosts   An array of allowed hosts. Use "*" to allow all hosts.
+     */
     public function configureAllowedHosts(array $allowedHosts): void {
         $this->allowedHosts = $allowedHosts;
     }
 
+    /**
+     * Configure the authorization settings.
+     *
+     * @param string $sessionName   The name of the session to use for authorization.
+     * @param int $expiryDays       The number of days the authorization session should last.
+     * @param string $domain        The domain to use for the authorization session.
+     */
     public function configureAuthorization(string $sessionName, int $expiryDays, string $domain): void {
         $this->authSessionName = $sessionName;
         $this->authExpiryDays = $expiryDays;
         $this->authDomain = $domain;
     }
 
-    public function configureUnauthorizedRedirects(string $path, string $subdomain): void {
+    /**
+     * Configure the default unauthorized redirect settings.
+     *
+     * @param string $path      The path to redirect unauthorized requests to.
+     * @param string $subdomain The subdomain to redirect unauthorized requests to. Leave empty to use the main domain.
+     */
+    public function configureUnauthorizedRedirects(string $path, string $subdomain = ""): void {
         $this->defaultPathRedirect = $path;
         $this->defaultSubdomainRedirect = $subdomain;
     }

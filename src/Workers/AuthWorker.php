@@ -1,6 +1,6 @@
 <?php
 
-namespace SmartGoblin\Worker;
+namespace SmartGoblin\Workers;
 
 use SmartGoblin\Internal\Slave\AuthSlave;
 
@@ -40,6 +40,16 @@ class AuthWorker {
     #----------------------------------------------------------------------
     #\ METHODS
 
+    /**
+     * Creates an authorized session for the given user ID.
+     *
+     * This function will create an authorized session for the given user ID.
+     * It will then call AuthSlave::createAuthorizedSession() and pass the user ID, custom data, and a randomly generated CSRF token.
+     * It will then log a message indicating that an authorized session was created for the user.
+     *
+     * @param int $id The ID of the user to authorize.
+     * @param array $customData Custom data to store in the session.
+     */
     public static function createAuthorization(int $id, array $customData = []): void {
         if(self::$busy) {
             if (session_status() === PHP_SESSION_ACTIVE) {
@@ -49,6 +59,12 @@ class AuthWorker {
         }
     }
 
+    /**
+     * Destroys the authorized session.
+     *
+     * This function will destroy the authorized session if it exists.
+     * It will then log a message indicating that the authorized session was destroyed.
+     */
     public static function destroyAuthorization(): void {
         if(self::$busy) {
             if (session_status() === PHP_SESSION_ACTIVE) {
@@ -58,6 +74,18 @@ class AuthWorker {
         }
     }
 
+    /**
+     * Verifies if the user is authorized and has a valid csrf_token.
+     *
+     * This function will check if the user is authorized and has a valid csrf_token.
+     * If the user is authorized and has a valid csrf_token, it will log a message indicating that the authorization was verified.
+     * If the user is authorized but does not have a valid csrf_token, it will log a warning message indicating that the csrf_token was invalid.
+     * If the user is not authorized, it will return false.
+     *
+     * @param ?Request $request The request object.
+     *
+     * @return bool True if the user is authorized and has a valid csrf_token, false otherwise.
+     */
     public static function isAuthorized(?Request $request): bool {
         if(self::$busy) {
             if (session_status() === PHP_SESSION_ACTIVE) {

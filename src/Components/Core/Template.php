@@ -34,10 +34,32 @@ final class Template {
     #----------------------------------------------------------------------
     #\ INIT
 
+    /**
+     * Create a new Template instance.
+     *
+     * @param string $title       The title of the page.
+     * @param string $version     The version to use for resources.
+     * @param string $lang        [optional] The language of the page. Default is "en".
+     *
+     * @return Template
+     */
     public static function new(string $title, string $version, string $lang = "en"): Template {
         return new Template($title, $version, $lang);
     }
 
+    /**
+     * Creates a new Template instance using all available parameters in a single line.
+     *
+     * @param string $title       The title of the page.
+     * @param string $version     The version to use for resources.
+     * @param string $lang        [optional] The language of the page. Default is "en".
+     * @param array  $styles      [optional] An array of style files to include.
+     * @param array  $scripts     [optional] An array of script files to include.
+     * @param array  $autofill    [optional] An associative array of DOM elements to autofill with API data.
+     *                             Example: ["#name" => "/api/name", "#email" => "/api/email"]
+     *
+     * @return Template
+     */
     public static function oneline(string $title, string $version, string $lang = "en", array $styles = [], array $scripts = [], array $autofill = []): Template {
         return new Template($title, $version, $lang, $styles, $scripts, $autofill);
     }
@@ -65,6 +87,13 @@ final class Template {
     #----------------------------------------------------------------------
     #\ METHODS
 
+    /**
+     * Merges the given Template instance into this instance.
+     *
+     * This will overwrite any existing values with the values from the given Template instance.
+     *
+     * @param Template $template The Template instance to merge into this instance.
+     */
     public function merge(Template $template): void {
         $this->title = $template->getTitle();
         $this->favicon = $template->getFavicon();
@@ -73,10 +102,33 @@ final class Template {
         $this->autofill = array_merge($this->autofill, $template->getAutofill());
     }
 
-    public function getHtmlTitle(): string { return "<title>{$this->title}</title>"; }
+    /**
+     * Returns the HTML title element containing the title of the page.
+     *
+     * @return string The HTML title element.
+     */
+    public function getHtmlTitle(): string {
+        return "<title>{$this->title}</title>"; 
+    }
     
-    public function getHtmlFavicon(): string { return "<link rel=\"icon\" href=\"/public/assets/{$this->favicon}\" type=\"image/png\">"; }
+    /**
+     * Returns the HTML link element containing the favicon of the page.
+     *
+     * The favicon is retrieved from the public/assets directory.
+     *
+     * @return string The HTML link element containing the favicon of the page.
+     */
+    public function getHtmlFavicon(): string {
+        return "<link rel=\"icon\" href=\"/public/assets/{$this->favicon}\" type=\"image/png\">";
+    }
 
+    /**
+     * Returns the HTML link elements containing the stylesheets of the page.
+     *
+     * The stylesheets are retrieved from the public/resources directory.
+     *
+     * @return string The HTML link elements containing the stylesheets of the page.
+     */
     public function getHtmlStyles(): string { 
         $html = "";
         foreach ($this->styles as $style) {
@@ -86,6 +138,13 @@ final class Template {
         return $html;
     }
 
+    /**
+     * Returns the HTML script elements containing the JavaScript files of the page.
+     *
+     * The JavaScript files are retrieved from the public/resources directory.
+     *
+     * @return string The HTML script elements containing the JavaScript files of the page.
+     */
     public function getHtmlScripts(): string { 
         $html = "";
         foreach ($this->scripts as $script) {
@@ -95,6 +154,13 @@ final class Template {
         return $html;
     }
 
+    /**
+     * Returns an array of DOM elements to autofill with API data.
+     *
+     * The JSON object contains a mapping of DOM elements to their corresponding API endpoints.
+     *
+     * @return string The JSON object containing the auto-fill information of the page.
+     */
     public function getHtmlAutofill(): string { 
         return json_encode(array_map(
         fn($k) => (object)["dom" => $k, "api" => $this->autofill[$k]],

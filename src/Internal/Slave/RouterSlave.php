@@ -5,9 +5,9 @@ namespace SmartGoblin\Internal\Slave;
 use SmartGoblin\Components\Http\Request;
 use SmartGoblin\Components\Routing\Router;
 use SmartGoblin\Components\Routing\Endpoint;
-use SmartGoblin\Worker\LogWorker;
+use SmartGoblin\Workers\LogWorker;
 
-use SmartGoblin\Worker\Bee;
+use SmartGoblin\Workers\Bee;
 
 final class RouterSlave {
     #----------------------------------------------------------------------
@@ -21,6 +21,15 @@ final class RouterSlave {
     #----------------------------------------------------------------------
     #\ INIT
 
+    /**
+     * Initializes the RouterSlave if it is not already busy.
+     * 
+     * This function will create a new RouterSlave if it is not already busy.
+     * It will then set the busy flag to true and return the new RouterSlave object.
+     * If the RouterSlave is already busy, it will return null.
+     * 
+     * @return ?RouterSlave The RouterSlave object if it was successfully created, null otherwise.
+     */
     public static function zap(): ?RouterSlave {
         if(!self::$busy) {
             self::$busy = true;
@@ -38,6 +47,18 @@ final class RouterSlave {
     #----------------------------------------------------------------------
     #\ PRIVATE FUNCTIONS
 
+    /**
+     * Attempts to match the request path to a path in the associative file list.
+     * 
+     * It will loop through the associative file list and check if the request path starts with the path in the associative file list.
+     * If it does, it will check if the file exists in the router directory. If it does, it will return the file path.
+     * If it does not, it will log an error.
+     * 
+     * @param Request $request The request object.
+     * @param array $assocFileList The associative array of file endpoints files relative to /config/router/ directory.
+     * 
+     * @return string|null The file path if the request path matches a path in the associative file list, null otherwise.
+     */
     private function matchAssocFileList(Request $request, array $assocFileList): string|null {
         $requestPath = dirname($request->getPath());
         $filePath = null;
@@ -61,6 +82,18 @@ final class RouterSlave {
     #----------------------------------------------------------------------
     #\ METHODS
 
+    /**
+     * Attempts to match the request path to an endpoint in the router.
+     * If the router endpoints are not loaded, it will attempt to load them from the associative file list.
+     * If the router endpoints are loaded, it will loop through the endpoint list and check if the request path matches the complex path of an endpoint.
+     * If a match is found, it will return the matched endpoint.
+     * If no match is found, it will log an error and return null.
+     * 
+     * @param Request $request The request object.
+     * @param Router $router The router to use.
+     * 
+     * @return Endpoint|null The matched endpoint, or null if no match is found.
+     */
     public function route(Request $request, Router $router): ?Endpoint {
         $endpointList = $router->getEndpointList();
         $endpoint = null;

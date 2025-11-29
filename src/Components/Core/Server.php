@@ -11,7 +11,7 @@ use SmartGoblin\Internal\Core\Kernel;
 use SmartGoblin\Components\Core\Config;
 use SmartGoblin\Components\Routing\Router;
 use SmartGoblin\Components\Http\Response;
-use SmartGoblin\Worker\LogWorker;
+use SmartGoblin\Workers\LogWorker;
 
 final class Server {
     #----------------------------------------------------------------------
@@ -26,6 +26,11 @@ final class Server {
     #----------------------------------------------------------------------
     #\ INIT
 
+    /**
+     * Creates a new instance of the Server class.
+     *
+     * @return Server
+     */
     public static function new(): Server {
         return new Server();
     }
@@ -34,6 +39,14 @@ final class Server {
         $this->kernel = new Kernel();
     }
 
+    /**
+     * Configures the server.
+     *
+     * @param Config $config The configuration to use.
+     * @param Template $template The default template for all views.
+     * @param Router $viewRouter The View Router to use.
+     * @param Router $apiRouter The API Router to use.
+     */
     public function configure(Config $config, Template $template, Router $viewRouter, Router $apiRouter): void {
         $this->kernel->setConfig($config);
         $this->kernel->setTemplate($template);
@@ -56,6 +69,13 @@ final class Server {
     #----------------------------------------------------------------------
     #\ METHODS
 
+    /**
+     * Starts the server and handles incoming requests.
+     *
+     * If the server has not been configured, it will return a 500 status code.
+     *
+     * Handles BadImplementationException, EndpointFileDoesNotExist, and NotAuthorizedException.
+     */
     public function run(): void {
         if ($this->ready) {
             $response = null;
