@@ -3,7 +3,7 @@ function request(api, method, data = {}){
         $.ajax({
             url: api,
             method: method,
-            data: data,
+            data: JSON.stringify(data) ?? data,
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': window.CSRF_TOKEN ?? ''
