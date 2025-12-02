@@ -48,18 +48,28 @@ class Bee {
         return Bee::env("STATE") === "dev";
     }
     
-    /**
+   /**
      * Normalize a path by removing redundant slashes and trimming it
      * 
      * @param string $path the path to normalize
-     * @return string the normalized path
+     * @return string the normalized path (e.g., "path/to/endpoint")
      */
-    public static function normalizePath(string $path): string {
-        $newPath = ltrim($path, "/\\");
-        $newPath = preg_replace("#[\\/]+#", "/", $newPath);
-        $newPath = rtrim($newPath, "/");
+    public static function normalizePath(string $path): string
+    {
+        $newPath = str_replace("\0", "", $path);
+        $newPath = ltrim($newPath, "/\\");
+        $newPath = str_replace("\\", "/", $newPath);
+        $newPath = preg_replace("#[\\\\/]+#", "/", $newPath);
+        $newPath = rtrim($newPath, "/\\");
+        $segments = explode("/", $newPath);
+        $normalized = [];
 
-        return $newPath;
+        foreach ($segments as $segment) {
+            if ($segment === "" || $segment === "." || $segment === "..") continue;
+            $normalized[] = $segment;
+        }
+
+        return implode("/", $normalized);
     }
 
     #/ METHODS

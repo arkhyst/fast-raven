@@ -10,6 +10,7 @@
 - Improvement of HTML semantics for main.php.
 - Server component is now a unique class with unique traits. Is not a component anymore.
 - Bee::env method now supports default value if environment variable is not found.
+- Improved URI parsing and path normalization.
 
 #### Fixed
 - Unauthorized redirect path not working for views, throws 403.
