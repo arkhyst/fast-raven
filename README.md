@@ -28,10 +28,10 @@ OR (not recommended)
 - ~~Modification of Server component, adherence to architecture principles.~~
 - Improvement and standardization of exception handling.
 - ~~Improvement of URI parsing.~~
-- Improvement of chache handling.
+- ~~Improvement of chache handling.~~
 - ~~Improvement of dev and prod domain configuration.~~
 - Implementation of typed shared authorization between diferent sites.
-- Implementation of API security headers for allowed hosts.
+- ~~Implementation of API security headers for allowed hosts.~~
 - Implementation of unauthorized flow with redirects after login.
 - Upgrade of AuthWorker: new methods, automatic encryption.
 - Upgrade of DataWorker: new methods and SQL uses.

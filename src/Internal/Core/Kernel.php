@@ -78,6 +78,8 @@ final class Kernel {
      * adds security headers, initializes the session cookie, and sets up the router.
      *
      * It should be called at the beginning of every request.
+     * 
+     * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
      */
     public function open(): void {
         $this->startRequestTime = microtime(true);
@@ -94,7 +96,7 @@ final class Kernel {
         if($this->config->isRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException("Not authorized to make this request.");
 
         $this->headerSlave = HeaderSlave::zap();
-        $this->headerSlave->writeSecurityHeaders($this->config->getAllowedHosts(), $_SERVER["HTTPS"], $_SERVER["HTTP_ORIGIN"] ?? "");
+        $this->headerSlave->writeSecurityHeaders($_SERVER["HTTPS"]);
         $this->headerSlave->writeUtilityHeaders($this->request->isApi());
 
         $this->dataSlave = DataSlave::zap();

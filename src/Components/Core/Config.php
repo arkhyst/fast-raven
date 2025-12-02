@@ -67,6 +67,7 @@ final class Config {
     #\ METHODS
 
     /**
+     * @deprecated This setting is not used and will be removed in the next version
      * Configure the allowed hosts for this site.
      *
      * @param array $allowedHosts   An array of allowed hosts. Use "*" to allow all hosts.

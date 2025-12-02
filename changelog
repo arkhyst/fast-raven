@@ -19,4 +19,4 @@
 - getDataItem() crashes when parsing array or objects.
 
 #### Removed
--
+- Config $allowedHosts parameter. Couldn't find a real security use for this feature.
