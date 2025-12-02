@@ -2,10 +2,8 @@
 
 namespace SmartGoblin;
 
-use SmartGoblin\Exceptions\BadImplementationException;
-use SmartGoblin\Exceptions\EndpointFileDoesNotExist;
-
 use SmartGoblin\Exceptions\NotAuthorizedException;
+use SmartGoblin\Exceptions\SmartException;
 use SmartGoblin\Internal\Core\Kernel;
 
 use SmartGoblin\Components\Core\Config;
@@ -100,30 +98,20 @@ final class Server {
     #----------------------------------------------------------------------
     #\ PRIVATE FUNCTIONS
 
-    // I don't like this...
-    private function getUnauthorizedResponse(bool $domainLevel, string $msg): Response {
-        $response = null;
-        $redirect = $domainLevel
-            ? "https://".Bee::getBuiltDomain($this->kernel->getConfig()->getDefaultUnauthorizedSubdomainRedirect())
-            : $this->kernel->getConfig()->getDefaultUnauthorizedPathRedirect();
-        if($this->kernel->isApiRequest()) {
-            $response = Response::new(false, 401, $msg);
-        } else {
-            $response = Response::new(false, 301, $msg);
-            HeaderWorker::addHeader("Location", $redirect);
-        }
+    private function handleException(SmartException $e): Response {
+        $statusCode = $this->kernel->isApiRequest() ? $e->getStatusCode() : 301;
+        $response = Response::new(false, $statusCode, $e->getPublicMessage());
+        LogWorker::error("-SG- " . $e->getMessage());
 
-        return $response;
-    }
-
-    // Or this ._.
-    private function getNotFoundResponse(): Response {
-        $response = null;
-        if($this->kernel->isApiRequest()) {
-            $response = Response::new(false, 404, "Request not found");
-        } else {
-            $response = Response::new(false, 301);
-            HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultNotFoundPathRedirect());
+        if(!$this->kernel->isApiRequest()) {
+            if($e instanceof NotFoundException) {
+                HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultNotFoundPathRedirect());
+            } else if($e instanceof NotAuthorizedException) {
+                if($e->isDomainLevel())
+                    HeaderWorker::addHeader("Location", "https://".Bee::getBuiltDomain($this->kernel->getConfig()->getDefaultUnauthorizedSubdomainRedirect()));
+                else
+                    HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultUnauthorizedPathRedirect());
+            }
         }
 
         return $response;
@@ -140,36 +128,17 @@ final class Server {
      *
      * If the server has not been configured, it will return a 500 status code.
      *
-     * Handles BadImplementationException, EndpointFileDoesNotExist, and NotAuthorizedException.
+     * Handles NotFoundException, BadImplementationException, EndpointFileDoesNotExist, and NotAuthorizedException.
      */
     public function run(): void {
         if ($this->ready) {
             $response = null;
             try {
                 $this->kernel->open();
-            } catch(NotAuthorizedException $e) {
-                $response = $this->getUnauthorizedResponse(true, $e->getMessage());
-                LogWorker::error("-SG- " . $e->getMessage());
-            }
-            
-
-            try {
                 $response = $this->kernel->process();
-                if($response === null) { 
-                    $response = $this->getNotFoundResponse();
-                    LogWorker::warning("-SG- Request did not find matching route");
-                } else {
-                    LogWorker::log("-SG- Request processed successfully");
-                }
-                
-            } catch(BadImplementationException | EndpointFileDoesNotExist $e) {
-                $response = Response::new(false, 500);
-                LogWorker::error("-SG- " . $e->getMessage());
-            } catch(NotAuthorizedException $e) {
-                $response = $this->getUnauthorizedResponse(false, $e->getMessage());
-                LogWorker::error("-SG- " . $e->getMessage());
+            } catch(SmartException $e) {
+                $response = $this->handleException($e);
             }
-            
             $this->kernel->close($response);
         } else {
             http_response_code(500);

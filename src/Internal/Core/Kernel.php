@@ -9,6 +9,7 @@ use SmartGoblin\Components\Http\DataType;
 use SmartGoblin\Components\Core\Template;
 use SmartGoblin\Components\Routing\Router;
 
+use SmartGoblin\Exceptions\NotFoundException;
 use SmartGoblin\Workers\AuthWorker;
 use SmartGoblin\Workers\HeaderWorker;
 
@@ -93,7 +94,7 @@ final class Kernel {
         $this->authSlave = AuthSlave::zap();
         $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->getAuthDomain());
 
-        if($this->config->isRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException("Not authorized to make this request.");
+        if($this->config->isRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
 
         $this->headerSlave = HeaderSlave::zap();
         $this->headerSlave->writeSecurityHeaders($_SERVER["HTTPS"]);
@@ -113,37 +114,40 @@ final class Kernel {
      * If the request is an API request, it will call the function in the endpoint file and expect a Response object to be returned.
      * If the request is not an API request, it will render the template in the endpoint file.
      *
-     * @return Response|null The response to return, or null if no response could be generated.
+     * @return Response The response to return to the client.
      * 
+     * @throws NotFoundException If no matching route is found for the request.
      * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
      * @throws EndpointFileDoesNotExist If the endpoint file does not exist.
      * @throws BadImplementationException If the API function does not return a Response object.
      */
-    public function process(): ?Response {
+    public function process(): Response {
         $api = $this->request->isApi();
         $mid = $api ? "api" : "views";
         $endpoint = $this->routerSlave->route($this->request, $api ? $this->apiRouter : $this->viewRouter);
         $response = null;
 
-        if($endpoint) {
-            if($endpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException("Not authorized to make this request.");
+        if(!$endpoint) throw new NotFoundException();
 
-            $filePath = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
-            if(!file_exists($filePath)) throw new EndpointFileDoesNotExist("Request file could not be loaded, it does not exist. (Payload: $filePath)");
+        if($endpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
+
+        $filePath = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
+        if(!file_exists($filePath)) throw new EndpointFileDoesNotExist($filePath);
+        
+        if($this->request->isApi()) {
+            $fn = require_once $filePath;
+            if (is_callable($fn)) $response = $fn($this->request);
+
+            if ($response === null || !$response instanceof Response) throw new BadImplementationException($endpoint->getFile());
+        } else {
+            $template = $this->template;
+            $epTemplate = $endpoint->getTemplate();
+            if($epTemplate) $template->merge($epTemplate);
             
-            if($this->request->isApi()) {
-                $fn = require_once $filePath;
-                if (is_callable($fn)) $response = $fn($this->request);
-                if (!$response instanceof Response) throw new BadImplementationException("API file {$endpoint->getFile()} expected to return Response object.");
-            } else {
-                $template = $this->template;
-                $epTemplate = $endpoint->getTemplate();
-                if($epTemplate) $template->merge($epTemplate);
-                $template->setFile($filePath);
+            $template->setFile($filePath);
+            require_once __DIR__ . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
 
-                require_once __DIR__ . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
-                $response = Response::new(true, 200);
-            }
+            $response = Response::new(true, 200);
         }
 
         return $response;
@@ -157,7 +161,7 @@ final class Kernel {
      * If the request is an API request, it will generate a 404 response.
      * If the request is not an API request, it will generate a 301 response with a default path redirect.
      *
-     * @param Response$response The response to output or process
+     * @param Response $response The response to output or process
      */
     public function close(Response $response): void {
         session_write_close();
