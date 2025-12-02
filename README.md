@@ -27,7 +27,7 @@ OR (not recommended)
 ### Roadmap: v0.2-alpha
 - ~~Modification of Server component, adherence to architecture principles.~~
 - Improvement and standardization of exception handling.
-- Improvement of URI parsing.
+- ~~Improvement of URI parsing.~~
 - Improvement of chache handling.
 - ~~Improvement of dev and prod domain configuration.~~
 - Implementation of typed shared authorization between diferent sites.
