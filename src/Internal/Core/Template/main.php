@@ -13,7 +13,7 @@
         <meta name="format-detection" content="telephone=no">
 
         <style>
-            @import"https://fonts.googleapis.com/css2?family=Roboto&display=swap";*{box-sizing:border-box}html{font-size:18px;overflow:hidden;line-height:1.4}body{display:flex;flex-direction:column;justify-content:center;align-items:center;margin:0;padding:0;width:100vw;height:100vh;height:100vh;height:100svh;height:100lvh;height:100dvh;background:#060606;font-family:"Roboto";font-weight:500;color:#f3f3f3}#main{width:100%;display:flex;flex-grow:1;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+            @import"https://fonts.googleapis.com/css2?family=Roboto&display=swap";*{box-sizing:border-box}html{font-size:18px;overflow:hidden;line-height:1.4}body{display:flex;flex-direction:column;justify-content:center;align-items:center;margin:0;padding:0;width:100vw;height:100vh;height:100vh;height:100svh;height:100lvh;height:100dvh;background:#060606;font-family:"Roboto";font-weight:500;color:#f3f3f3}main{width:100%;display:flex;flex-grow:1;flex-direction:column;justify-content:center;align-items:center;text-align:center}
         </style>
 
         <?= $template->getHtmlFavicon(); ?>
@@ -28,9 +28,9 @@
                 include SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . $preFile;
             }
         ?>
-        <div id="main">
+        <main>
             <?php include $template->getFile(); ?>
-        </div>
+        </main>
         <?php 
             foreach ($template->getPostDOMFiles() as $postfile) {
                 include SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . $postfile;
