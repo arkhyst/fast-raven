@@ -43,10 +43,26 @@ final class Server {
     public static function preload(string $sitePath): void {
         define("SITE_PATH", $sitePath);
 
-        $envPath = $sitePath . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR;
+        $envPath = $sitePath . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "env" . DIRECTORY_SEPARATOR;
 
         Dotenv::createImmutable($envPath, ".env")->safeLoad();
         Dotenv::createImmutable($envPath, Bee::isDev() ? ".env.dev" : ".env.prod")->safeLoad();
+    }
+
+    public static function getConfiguration(string $sitePath = SITE_PATH): Config {
+        return require_once $sitePath . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "config.php";
+    }
+
+    public static function getTemplate(string $sitePath = SITE_PATH): Template {
+        return require_once $sitePath . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "template.php";
+    }
+
+    public static function getViewRouter(string $sitePath = SITE_PATH): Router {
+        return require_once $sitePath . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . "views.php";
+    }
+
+    public static function getApiRouter(string $sitePath = SITE_PATH): Router {
+        return require_once $sitePath . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . "api.php";
     }
 
     /**

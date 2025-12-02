@@ -3,6 +3,7 @@
 - Configuration of path redirects for 404 error.
 - Support for .html template injection before and after #main div.
 - Server::preload(__DIR__) for loading environment configuration.
+- Server::getConfiguration(), Server::getTemplate(), Server::getViewRouter(), Server::getApiRouter() for modular loading.
 
 #### Changed
 - Template::oneline() is now Template::flex(), allowing for dynamic creation of templates.
