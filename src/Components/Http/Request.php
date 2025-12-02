@@ -74,12 +74,15 @@ final class Request {
      *
      * @return string|int|bool|null The value of the data item if it exists, null otherwise.
      */
-    public function getDataItem(string $key): string|int|bool|null {
-        if(isset($this->data[$key])) {
-            return trim(strip_tags($this->data[$key]));
-        }
+    public function getDataItem(string $key): string|int|float|bool|null {
+        if (!isset($this->data[$key]))
+            return null;
 
-        return null;
+            $value = $this->data[$key];
+            if (is_string($value)) return trim(strip_tags($value));
+            if (is_scalar($value)) return $value;
+
+            return null;
     }
 
     #/ METHODS

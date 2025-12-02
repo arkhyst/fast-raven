@@ -15,6 +15,7 @@
 #### Fixed
 - Unauthorized redirect path not working for views, throws 403.
 - Default JS function request not sending json data correctly.
+- getDataItem() crashes when parsing array or objects.
 
 #### Removed
 -
