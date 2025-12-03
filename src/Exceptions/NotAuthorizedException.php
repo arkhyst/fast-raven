@@ -15,6 +15,6 @@ class NotAuthorizedException extends SmartException
     public function __construct(bool $domainLevel = false) {
         $this->domainLevel = $domainLevel;
         if($domainLevel) parent::__construct("Unauthorized user tried to access private subdomain.", "Authorization required.", 401);
-        parent::__construct("Unauthorized user tried to access private resource.", "Authorization required.", 401);
+        else parent::__construct("Unauthorized user tried to access private resource.", "Authorization required.", 401);
     }
 }
