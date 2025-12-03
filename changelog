@@ -9,6 +9,7 @@
 - Bee::getBaseDomain() and Bee::getBuiltDomain(...) for getting base domain and subdomain.
 - Bee::hashPassword(...) and AuthWorker::autologin(...) for automatic password hashing and auto-login.
 - AuthWorker::getAuthorizedUserId() for getting authorized user ID.
+- New methods and uses for SQL queries in DataWorker and DataSlave.
 
 #### Changed
 - Template::oneline() is now Template::flex(), allowing for dynamic creation of templates.

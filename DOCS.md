@@ -264,7 +264,7 @@ $user = DataWorker::getOneById("users", ["id", "name"], 1);
 $user = DataWorker::getOneWhere(
     "users",
     ["id", "name", "email"],
-    ["email = ?"],
+    ["email"],
     ["user@example.com"]
 );
 
@@ -272,7 +272,7 @@ $user = DataWorker::getOneWhere(
 $users = DataWorker::getAllWhere(
     "users",
     ["id", "name"],
-    ["active = ?"],
+    ["active"],
     [1]
 );
 
@@ -288,10 +288,61 @@ $success = DataWorker::updateWhere(
     "users",
     ["name", "email"],
     ["Jane", "jane@example.com"],
-    ["id = ?"],
+    ["id"],
     [1]
 );
+
+// Get all without conditions
+$allUsers = DataWorker::getAll("users", ["id", "name", "email"]);
+
+// Get all with ordering and pagination
+$users = DataWorker::getAllWhere(
+    "users",
+    ["id", "name"],
+    ["active"],
+    [1],
+    "created_at DESC",  // ORDER BY
+    10,                 // LIMIT
+    20                  // OFFSET
+);
+
+// Batch insert (transaction-based)
+$success = DataWorker::insertBatch(
+    "users",
+    ["name", "email"],
+    [
+        ["Alice", "alice@example.com"],
+        ["Bob", "bob@example.com"]
+    ]
+);
+
+// Get last insert ID
+$id = DataWorker::getLastInsertId();
+
+// Update by ID
+$success = DataWorker::updateById("users", ["name"], ["John Doe"], 1);
+
+// Delete by ID
+$success = DataWorker::deleteById("users", 1);
+
+// Delete by conditions
+$success = DataWorker::deleteWhere("users", ["active"], [0]);
+
+// Count rows with conditions
+$count = DataWorker::count("users", ["active"], [1]);
+
+// Count all rows
+$total = DataWorker::countAll("users");
+
+// Check if row exists
+$exists = DataWorker::exists("users", ["email"], ["test@example.com"]);
+
+// Check if ID exists
+$exists = DataWorker::existsById("users", 1);
+
 ```
+
+
 
 ### HeaderWorker
 

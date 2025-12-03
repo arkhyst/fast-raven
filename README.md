@@ -34,13 +34,15 @@ OR (not recommended)
 - ~~Implementation of API security headers for allowed hosts.~~
 - Implementation of unauthorized flow with redirects after login.
 - ~~Upgrade of AuthWorker: new methods, automatic encryption.~~
-- Upgrade of DataWorker: new methods and SQL uses.
+- ~~Upgrade of DataWorker: new methods and SQL uses.~~
 - Upgrade of Endpoint component: add dynamic usage and data filtering.
 - ~~Upgrade of Template component: increase template capabilities and flexibility on creation.~~
 - Addition of automation script for Apache deployment.
 - Standarization of JS native libraries for increased compatibility.
 
 ### Roadmap: v0.3
+- Improvement of typed arguments in DataWorker conditions and values.
+- Addition of ValidationWorker.
 
 ### Roadmap: v1.0
 - Upgrade of Router component: refactor to support more complex architectures.
