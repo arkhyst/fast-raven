@@ -105,6 +105,26 @@ class AuthWorker {
     }
 
     /**
+     * Retrieves the ID of the authorized user if an authorized session exists.
+     *
+     * This function will return the ID of the authorized user if an authorized session exists.
+     * If no authorized session exists, it will return null.
+     *
+     * @return ?int The ID of the authorized user if an authorized session exists, null otherwise.
+     */
+    public static function getAuthorizedUserId(): ?int {
+        if(self::$busy) {
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                if(self::$slave->validateSession()) {
+                    return $_SESSION["sgas_uid"];
+                } 
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Automatically logs in a user via their username and password, and creates an authorized session if the login is successful.
      *
      * @param ?string $user The username of the user to login.
