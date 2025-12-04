@@ -32,11 +32,10 @@ OR (not recommended)
 - ~~Improvement of dev and prod domain configuration.~~
 - ~~Implementation of typed shared authorization between diferent sites.~~
 - ~~Implementation of API security headers for allowed hosts.~~
-- Implementation of unauthorized flow with redirects after login.
 - ~~Upgrade of AuthWorker: new methods, automatic encryption.~~
 - ~~Upgrade of DataWorker: new methods and SQL uses.~~
 - ~~Upgrade of Template component: increase template capabilities and flexibility on creation.~~
-- Addition of automation script for Apache deployment.
+- ~~Addition of automation script for Apache deployment.~~
 - ~~Standarization of JS native libraries for increased compatibility.~~
 
 ### Roadmap: v0.3
@@ -45,6 +44,7 @@ OR (not recommended)
 
 ### Roadmap: v1.0
 - Upgrade of Router component: refactor to support more complex architectures.
+- Implementation of unauthorized flow with redirects after login.
 
 ---
 

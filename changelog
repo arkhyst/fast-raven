@@ -10,6 +10,7 @@
 - Bee::hashPassword(...) and AuthWorker::autologin(...) for automatic password hashing and auto-login.
 - AuthWorker::getAuthorizedUserId() for getting authorized user ID.
 - New methods and uses for SQL queries in DataWorker and DataSlave.
+- Deploy script for Apache.
 
 #### Changed
 - Template::oneline() is now Template::flex(), allowing for dynamic creation of templates.
@@ -20,6 +21,7 @@
 - Improved Exception handling for easier maintenance.
 - Standarization of JS native libraries (Lib class) for increased compatibility.
 - Request::getDataItem() method has been optimized for better performance.
+- Skeleton site structure is now insite sites/ folder.
 
 #### Fixed
 - Unauthorized redirect path not working for views, throws 403.
