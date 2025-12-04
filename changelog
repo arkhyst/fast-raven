@@ -19,6 +19,7 @@
 - Improved URI parsing and path normalization.
 - Improved Exception handling for easier maintenance.
 - Standarization of JS native libraries (Lib class) for increased compatibility.
+- Request::getDataItem() method has been optimized for better performance.
 
 #### Fixed
 - Unauthorized redirect path not working for views, throws 403.
