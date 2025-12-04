@@ -18,6 +18,7 @@
 - Bee::env method now supports default value if environment variable is not found.
 - Improved URI parsing and path normalization.
 - Improved Exception handling for easier maintenance.
+- Standarization of JS native libraries (Lib class) for increased compatibility.
 
 #### Fixed
 - Unauthorized redirect path not working for views, throws 403.

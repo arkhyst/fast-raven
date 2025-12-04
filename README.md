@@ -20,7 +20,7 @@ It focuses on simplicity, clarity, and raw performance: no unnecessary layers, n
 
 OR (not recommended)
 
-1. `composer require smartgoblin/library` : Install smart-goblin framework inside existing composer project.
+1. `composer require smart-goblin/library` : Install smart-goblin framework inside existing composer project.
 
 ---
 
@@ -38,7 +38,7 @@ OR (not recommended)
 - Upgrade of Endpoint component: add dynamic usage and data filtering.
 - ~~Upgrade of Template component: increase template capabilities and flexibility on creation.~~
 - Addition of automation script for Apache deployment.
-- Standarization of JS native libraries for increased compatibility.
+- ~~Standarization of JS native libraries for increased compatibility.~~
 
 ### Roadmap: v0.3
 - Improvement of typed arguments in DataWorker conditions and values.

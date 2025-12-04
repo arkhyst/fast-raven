@@ -124,6 +124,79 @@ $template->addAutofill("#username", "/api/user/name");
 $template->merge($anotherTemplate);
 ```
 
+### Lib (JavaScript)
+
+The `Lib` class is automatically included in templates and provides client-side utility methods for interacting with your API endpoints. It's located in the framework's Template folder at `src/Internal/Core/Template/lib.js`.
+
+#### Static Methods
+
+**`Lib.request(api, method, data)`**
+
+Sends an AJAX request to an API endpoint with automatic CSRF token handling.
+
+**Parameters:**
+- `api` (string) - URL of the API endpoint
+- `method` (string) - HTTP method to use (e.g., `"GET"`, `"POST"`, `"PUT"`, `"DELETE"`)
+- `data` (Object, optional) - Data to send with the request (automatically JSON-stringified)
+
+**Returns:**
+- `Promise` - Resolves with the response from the API endpoint, or rejects with an error
+
+**Features:**
+- Automatically includes CSRF token from `window.CSRF_TOKEN` in request headers
+- Sets `Content-Type: application/json` header
+- Uses jQuery's `$.ajax()` under the hood
+- JSON-stringifies request data automatically
+
+**Example Usage:**
+
+```javascript
+// GET request
+Lib.request("/api/user/profile", "GET")
+    .then(response => {
+        console.log("User profile:", response.data);
+    })
+    .catch(error => {
+        console.error("Error:", error);
+    });
+
+// POST request with data
+Lib.request("/api/user/update", "POST", {
+    name: "John Doe",
+    email: "john@example.com"
+})
+    .then(response => {
+        console.log("Update successful:", response);
+    })
+    .catch(error => {
+        console.error("Update failed:", error);
+    });
+```
+
+#### Autofill Integration
+
+The `Lib` class automatically processes autofill configurations added via `Template::addAutofill()`. When the page loads, it fetches data from specified API endpoints and populates DOM elements:
+
+```php
+// In your PHP configuration
+$template->addAutofill("#username", "/api/user/name");
+$template->addAutofill(".user-email", "/api/user/email");
+```
+
+```javascript
+// Automatically executed on page load
+// Fetches from /api/user/name and sets content of #username element
+// Uses Lib.request() internally
+```
+
+The autofill system expects API responses in the format:
+```json
+{
+    "success": true,
+    "data": "value to display"
+}
+```
+
 ### Router
 
 Defines routes for views and APIs.
