@@ -56,5 +56,5 @@ OR (not recommended)
 
 ---
 
-**Author:** r3dg0bl1n  
+**Author:** arkhyst  
 **License:** MIT (see LICENSE)  
