@@ -1,14 +1,12 @@
 <?php
 
-namespace SmartGoblin\Components\Core;
+namespace FastRaven\Components\Core;
 
 
 final class Config {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private string $sitePath;
-        public function getSitePath(): string { return $this->sitePath; }
     private string $siteName;
         public function getSiteName(): string { return $this->siteName; }
     private bool $restricted;
@@ -24,10 +22,12 @@ final class Config {
     private string $authDomain = "localhost";
          public function getAuthDomain(): string { return $this->authDomain; }
 
-    private string $defaultPathRedirect = "/login";
-        public function getDefaultPathRedirect(): string { return $this->defaultPathRedirect; }
-    private string $defaultSubdomainRedirect = "";
-        public function getDefaultSubdomainRedirect(): string { return $this->defaultSubdomainRedirect; }
+    private string $defaultNotFoundPathRedirect = "/";
+        public function getDefaultNotFoundPathRedirect(): string { return $this->defaultNotFoundPathRedirect; }
+    private string $defaultUnauthorizedPathRedirect = "/login";
+        public function getDefaultUnauthorizedPathRedirect(): string { return $this->defaultUnauthorizedPathRedirect; }
+    private string $defaultUnauthorizedSubdomainRedirect = "";
+        public function getDefaultUnauthorizedSubdomainRedirect(): string { return $this->defaultUnauthorizedSubdomainRedirect; }
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -38,18 +38,16 @@ final class Config {
     /**
      * Create a new Config instance.
      *
-     * @param string $sitePath   The local path of the site. Use __DIR__ unless you know what you are doing.
-     * @param string $siteName   The name of the site.
+     * @param string $siteName   The name of the site (e.g., "main", "admin").
      * @param bool $restricted   Whether the site requires authorization or not.
      *
      * @return Config
      */
-    public static function new(string $sitePath, string $siteName, bool $restricted): Config {
-        return new Config($sitePath, $siteName, $restricted);
+    public static function new(string $siteName, bool $restricted): Config {
+        return new Config($siteName, $restricted);
     }
 
-    private function  __construct(string $sitePath, string $siteName, bool $restricted) {
-        $this->sitePath = $sitePath;
+    private function  __construct(string $siteName, bool $restricted) {
         $this->siteName = $siteName;
         $this->restricted = $restricted;
     }
@@ -69,6 +67,7 @@ final class Config {
     #\ METHODS
 
     /**
+     * @deprecated This setting is not used and will be removed in the next version
      * Configure the allowed hosts for this site.
      *
      * @param array $allowedHosts   An array of allowed hosts. Use "*" to allow all hosts.
@@ -83,11 +82,28 @@ final class Config {
      * @param string $sessionName   The name of the session to use for authorization.
      * @param int $expiryDays       The number of days the authorization session should last.
      * @param string $domain        The domain to use for the authorization session.
+     * @param bool $globalAuth      Whether the authorization should be valid across the parent domain and all subdomains.
+     *                              (e.g. "example.com" becomes ".example.com", "lin.sub.example.com" becomes ".sub.example.com")
      */
-    public function configureAuthorization(string $sessionName, int $expiryDays, string $domain): void {
+    public function configureAuthorization(string $sessionName, int $expiryDays, string $domain, bool $globalAuth = false): void {
         $this->authSessionName = $sessionName;
         $this->authExpiryDays = $expiryDays;
-        $this->authDomain = $domain;
+        if ($globalAuth) {
+            $this->authDomain = count(explode(".", $domain)) > 2
+                ? "." . substr($domain, strpos($domain, ".") + 1)
+                : "." . $domain;
+        } else {
+            $this->authDomain = $domain;
+        }
+    }
+
+    /**
+     * Configure the default not found redirect settings.
+     *
+     * @param string $path      The path to redirect not found requests to.
+     */
+    public function configureNotFoundRedirects(string $path): void {
+        $this->defaultNotFoundPathRedirect = $path;
     }
 
     /**
@@ -97,8 +113,8 @@ final class Config {
      * @param string $subdomain The subdomain to redirect unauthorized requests to. Leave empty to use the main domain.
      */
     public function configureUnauthorizedRedirects(string $path, string $subdomain = ""): void {
-        $this->defaultPathRedirect = $path;
-        $this->defaultSubdomainRedirect = $subdomain;
+        $this->defaultUnauthorizedPathRedirect = $path;
+        $this->defaultUnauthorizedSubdomainRedirect = $subdomain;
     }
 
     #/ METHODS

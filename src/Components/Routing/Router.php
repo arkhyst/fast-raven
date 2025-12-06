@@ -1,6 +1,6 @@
 <?php
 
-namespace SmartGoblin\Components\Routing;
+namespace FastRaven\Components\Routing;
 
 final class Router {
     #----------------------------------------------------------------------

@@ -1,36 +1,34 @@
 <?php
 
-namespace SmartGoblin\Internal\Core;
+namespace FastRaven\Internal\Core;
 
-use SmartGoblin\Components\Core\Config;
-use SmartGoblin\Components\Http\Response;
-use SmartGoblin\Components\Http\Request;
-use SmartGoblin\Components\Http\DataType;
-use SmartGoblin\Components\Core\Template;
-use SmartGoblin\Components\Routing\Router;
+use FastRaven\Components\Core\Config;
+use FastRaven\Components\Http\Response;
+use FastRaven\Components\Http\Request;
+use FastRaven\Components\Http\DataType;
+use FastRaven\Components\Core\Template;
+use FastRaven\Components\Routing\Router;
 
-use SmartGoblin\Workers\AuthWorker;
-use SmartGoblin\Workers\HeaderWorker;
+use FastRaven\Exceptions\NotFoundException;
+use FastRaven\Workers\AuthWorker;
+use FastRaven\Workers\HeaderWorker;
 
-use SmartGoblin\Internal\Slave\LogSlave;
-use SmartGoblin\Internal\Slave\HeaderSlave;
-use SmartGoblin\Internal\Slave\AuthSlave;
-use SmartGoblin\Internal\Slave\DataSlave;
-use SmartGoblin\Internal\Slave\RouterSlave;
+use FastRaven\Internal\Slave\LogSlave;
+use FastRaven\Internal\Slave\HeaderSlave;
+use FastRaven\Internal\Slave\AuthSlave;
+use FastRaven\Internal\Slave\DataSlave;
+use FastRaven\Internal\Slave\RouterSlave;
 
-use SmartGoblin\Exceptions\BadImplementationException;
-use SmartGoblin\Exceptions\EndpointFileDoesNotExist;
-use SmartGoblin\Exceptions\NotAuthorizedException;
-
-use SmartGoblin\Workers\Bee;
-
-use Dotenv\Dotenv;
+use FastRaven\Exceptions\BadImplementationException;
+use FastRaven\Exceptions\EndpointFileDoesNotExist;
+use FastRaven\Exceptions\NotAuthorizedException;
 
 final class Kernel {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
     private Config $config;
+        public function getConfig(): Config { return $this->config; }
         public function setConfig(Config $config): void { $this->config = $config; }
     private Template $template;
         public function setTemplate(Template $template): void { $this->template = $template; }
@@ -81,16 +79,11 @@ final class Kernel {
      * adds security headers, initializes the session cookie, and sets up the router.
      *
      * It should be called at the beginning of every request.
+     * 
+     * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
      */
     public function open(): void {
         $this->startRequestTime = microtime(true);
-
-        define("SITE_PATH", $this->config->getSitePath());
-
-        $envPath = $this->config->getSitePath() . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR;
-
-        Dotenv::createImmutable($envPath, ".env")->safeLoad();
-        Dotenv::createImmutable($envPath, Bee::isDev() ? ".env.dev" : ".env.prod")->safeLoad();
 
         // Add security for remote address
         $this->request = new Request($_SERVER["REQUEST_URI"], $_SERVER["REQUEST_METHOD"], file_get_contents("php://input"), $_SERVER["REMOTE_ADDR"]);
@@ -98,12 +91,14 @@ final class Kernel {
         $this->logSlave = LogSlave::zap();
         $this->logSlave->writeOpenLogs($this->request);
 
-        $this->headerSlave = HeaderSlave::zap();
-        $this->headerSlave->writeSecurityHeaders($this->config->getAllowedHosts(), $_SERVER["HTTPS"], $_SERVER["HTTP_ORIGIN"] ?? "");
-        $this->headerSlave->writeUtilityHeaders($this->request->isApi());
-
         $this->authSlave = AuthSlave::zap();
         $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->getAuthDomain());
+
+        if($this->config->isRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
+
+        $this->headerSlave = HeaderSlave::zap();
+        $this->headerSlave->writeSecurityHeaders($_SERVER["HTTPS"]);
+        $this->headerSlave->writeUtilityHeaders($this->request->isApi());
 
         $this->dataSlave = DataSlave::zap();
 
@@ -119,37 +114,40 @@ final class Kernel {
      * If the request is an API request, it will call the function in the endpoint file and expect a Response object to be returned.
      * If the request is not an API request, it will render the template in the endpoint file.
      *
-     * @return Response|null The response to return, or null if no response could be generated.
+     * @return Response The response to return to the client.
      * 
+     * @throws NotFoundException If no matching route is found for the request.
      * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
      * @throws EndpointFileDoesNotExist If the endpoint file does not exist.
      * @throws BadImplementationException If the API function does not return a Response object.
      */
-    public function process(): ?Response {
+    public function process(): Response {
         $api = $this->request->isApi();
         $mid = $api ? "api" : "views";
         $endpoint = $this->routerSlave->route($this->request, $api ? $this->apiRouter : $this->viewRouter);
         $response = null;
 
-        if($endpoint) {
-            if($endpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException("Not authorized to make this request.");
+        if(!$endpoint) throw new NotFoundException();
 
-            $filePath = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
-            if(!file_exists($filePath)) throw new EndpointFileDoesNotExist("Request file could not be loaded, it does not exist. (Payload: $filePath)");
+        if($endpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
+
+        $filePath = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
+        if(!file_exists($filePath)) throw new EndpointFileDoesNotExist($filePath);
+        
+        if($this->request->isApi()) {
+            $fn = require_once $filePath;
+            if (is_callable($fn)) $response = $fn($this->request);
+
+            if ($response === null || !$response instanceof Response) throw new BadImplementationException($endpoint->getFile());
+        } else {
+            $template = $this->template;
+            $epTemplate = $endpoint->getTemplate();
+            if($epTemplate) $template->merge($epTemplate);
             
-            if($this->request->isApi()) {
-                $fn = require_once $filePath;
-                if (is_callable($fn)) $response = $fn($this->request);
-                if (!$response instanceof Response) throw new BadImplementationException("API file {$endpoint->getFile()} expected to return Response object.");
-            } else {
-                $template = $this->template;
-                $epTemplate = $endpoint->getTemplate();
-                if($epTemplate) $template->merge($epTemplate);
-                $template->setFile($filePath);
+            $template->setFile($filePath);
+            require_once __DIR__ . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
 
-                require_once __DIR__ . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
-                $response = Response::new(true, 200);
-            }
+            $response = Response::new(true, 200);
         }
 
         return $response;
@@ -163,20 +161,10 @@ final class Kernel {
      * If the request is an API request, it will generate a 404 response.
      * If the request is not an API request, it will generate a 301 response with a default path redirect.
      *
-     * @param Response|null $response The response to output, or null if no response could be generated.
+     * @param Response $response The response to output or process
      */
-    public function close(?Response $response): void {
+    public function close(Response $response): void {
         session_write_close();
-
-        if(!$response) {
-            if($this->request->isApi()) {
-                $response = Response::new(false, 404);
-            } else {
-                $response = Response::new(false, 301);
-                HeaderWorker::addHeader( "Location", $this->config->getDefaultPathRedirect());
-            }
-        }
-        
         http_response_code($response->getCode());
 
         $type = $this->request->isApi() ? DataType::JSON : DataType::HTML;

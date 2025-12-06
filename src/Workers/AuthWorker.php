@@ -1,10 +1,9 @@
 <?php
 
-namespace SmartGoblin\Workers;
+namespace FastRaven\Workers;
 
-use SmartGoblin\Internal\Slave\AuthSlave;
-
-use SmartGoblin\Components\Http\Request;
+use FastRaven\Internal\Slave\AuthSlave;
+use FastRaven\Components\Http\Request;
 
 class AuthWorker {
     #----------------------------------------------------------------------
@@ -47,7 +46,7 @@ class AuthWorker {
      * It will then call AuthSlave::createAuthorizedSession() and pass the user ID, custom data, and a randomly generated CSRF token.
      * It will then log a message indicating that an authorized session was created for the user.
      *
-     * @param int $id The ID of the user to authorize.
+     * @param int $id The ID of the user to authorize or any other unique identifier.
      * @param array $customData Custom data to store in the session.
      */
     public static function createAuthorization(int $id, array $customData = []): void {
@@ -99,6 +98,60 @@ class AuthWorker {
                     LogWorker::log("-SG- Verified authorization for user {$_SESSION["sgas_uid"]}."); // Are we logging user data now??? Anyway...
                     return true;
                 } 
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Retrieves the ID of the authorized user if an authorized session exists.
+     *
+     * This function will return the ID of the authorized user if an authorized session exists.
+     * If no authorized session exists, it will return null.
+     *
+     * @return ?int The ID of the authorized user if an authorized session exists, null otherwise.
+     */
+    public static function getAuthorizedUserId(): ?int {
+        if(self::$busy) {
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                if(self::$slave->validateSession()) {
+                    return $_SESSION["sgas_uid"];
+                } 
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Automatically logs in a user via their username and password, and creates an authorized session if the login is successful.
+     *
+     * @param ?string $user The username of the user to login.
+     * @param ?string $pass The password of the user to login.
+     * @param string $dbTable The name of the database table to query for login data.
+     * @param string $dbIdCol The name of the column in the database table that contains the user's ID.
+     * @param string $dbNameCol The name of the column in the database table that contains the user's name.
+     * @param string $dbPassCol The name of the column in the database table that contains the user's password.
+     *
+     * @return bool True if the login is successful, false otherwise.
+     */
+    public static function autologin(?string $user, ?string $pass, string $dbTable = "users", string $dbIdCol = "id", string $dbNameCol = "name", string $dbPassCol = "password"): bool {
+        if(self::$busy) {
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                if(!$user || !$pass) return false;
+
+                $id = self::$slave->loginAttempt($user, $pass, $dbTable, $dbIdCol, $dbNameCol, $dbPassCol);
+                
+                if($id) {
+                    LogWorker::log("-SG- User {$user} logged in via autologin.");
+                    AuthWorker::createAuthorization($id);
+                    return true;
+                } else {
+                    LogWorker::warning("-SG- Failed autologin attempt for user {$user}.");
+                    AuthWorker::destroyAuthorization();
+                    return false;
+                }
             }
         }
 

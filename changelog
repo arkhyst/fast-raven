@@ -1,0 +1,33 @@
+### [v0.2] - 2025-12-09
+#### Added
+- Configuration of path redirects for 404 error.
+- Support for .html template injection before and after #main div.
+- Server::preload(__DIR__) for loading environment configuration.
+- Server::getConfiguration(), Server::getTemplate(), Server::getViewRouter(), Server::getApiRouter() for modular loading.
+- Test suite added.
+- Feature to enable authorization across parent domain and all subdomains.
+- Bee::getBaseDomain() and Bee::getBuiltDomain(...) for getting base domain and subdomain.
+- Bee::hashPassword(...) and AuthWorker::autologin(...) for automatic password hashing and auto-login.
+- AuthWorker::getAuthorizedUserId() for getting authorized user ID.
+- New methods and uses for SQL queries in DataWorker and DataSlave.
+- Deploy script for Apache.
+
+#### Changed
+- Template::oneline() is now Template::flex(), allowing for dynamic creation of templates.
+- Improvement of HTML semantics for main.php.
+- Server component is now a unique class with unique traits. Is not a component anymore.
+- Bee::env method now supports default value if environment variable is not found.
+- Improved URI parsing and path normalization.
+- Improved Exception handling for easier maintenance.
+- Standarization of JS native libraries (Lib class) for increased compatibility.
+- Request::getDataItem() method has been optimized for better performance.
+- Skeleton site structure is now insite sites/ folder.
+
+#### Fixed
+- Unauthorized redirect path not working for views, throws 403.
+- Default JS function request not sending json data correctly.
+- getDataItem() crashes when parsing array or objects.
+- Unauthorized sites not redirecting to configured subdomain.
+
+#### Removed
+- Config $allowedHosts parameter. Couldn't find a real security use for this feature.

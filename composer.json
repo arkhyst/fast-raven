@@ -1,11 +1,11 @@
 {
-    "name": "smart-goblin/library",
+    "name": "fast-raven/library",
     "description": "Lightweight, fast and minimalistic PHP framework for monolithic apps.",
     "type": "library",
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "SmartGoblin\\": "src/"
+            "FastRaven\\": "src/"
         }
     },
     "require": {

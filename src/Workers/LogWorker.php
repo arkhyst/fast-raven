@@ -1,8 +1,8 @@
 <?php
 
-namespace SmartGoblin\Workers;
+namespace FastRaven\Workers;
 
-use SmartGoblin\Internal\Slave\LogSlave;
+use FastRaven\Internal\Slave\LogSlave;
 
 class LogWorker {
     #----------------------------------------------------------------------

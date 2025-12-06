@@ -1,7 +1,17 @@
 <?php
 
-namespace SmartGoblin\Exceptions;
+namespace FastRaven\Exceptions;
 
-class EndpointFileDoesNotExist extends \Exception
+class EndpointFileDoesNotExist extends SmartException
 {
+    /**
+     * Initializes a new instance of the EndpointFileDoesNotExist class.
+     *
+     * This exception is thrown when the kernel is unable to locate the file associated with an endpoint.
+     *
+     * @param string $filePath The path of the file that was not found.
+     */
+    public function __construct(string $filePath) {
+        parent::__construct("¡Endpoint file does not exist! ($filePath)", "This resource is not available at this time.", 500);
+    }
 }

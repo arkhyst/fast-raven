@@ -1,6 +1,6 @@
 <?php
 
-namespace SmartGoblin\Components\Http;
+namespace FastRaven\Components\Http;
 
 final class Request {
     #----------------------------------------------------------------------
@@ -9,6 +9,7 @@ final class Request {
     private string $internalID;
         public function getInternalID(): string { return $this->internalID; }
     private array $data;
+        public function getDataItem(string $key): string|int|float|bool|null { return $this->data[$key] ?? null; }
     private string $method;
         public function getMethod(): string { return $this->method; }
     private string $path;
@@ -35,10 +36,12 @@ final class Request {
     public function __construct(string $uri, string $method, string $dataStream, string $remoteAddress) {
         $this->internalID = bin2hex(random_bytes(8));
         $this->data = json_decode($dataStream, true) ?? [];
-        $this->method = $method;
+        $this->data = $this->sanitizeData($this->data);
+        
+        $this->method = strtoupper($method);
 
         $this->path = parse_url($uri ?? "/", PHP_URL_PATH) ?? "/";
-        $this->complexPath = (($this->path !== "/") ? rtrim($this->path, "/"): "/") . "#" . $method;
+        $this->complexPath = (($this->path !== "/") ? rtrim($this->path, "/"): "/") . "#" . $this->method;
         $this->originInfo["IP"] = $remoteAddress;
     }
 
@@ -48,7 +51,27 @@ final class Request {
     #----------------------------------------------------------------------
     #\ PRIVATE FUNCTIONS
 
+    /**
+     * Recursively sanitizes an array of data.
+     *
+     * This method cleans string values within the array by trimming whitespace,
+     * stripping HTML tags, and converting special characters to HTML entities.
+     *
+     * @param array $data The data array to sanitize.
+     *
+     * @return array The sanitized data array.
+     */
+    private function sanitizeData(array $data): array {
+        foreach ($data as $key => $item) {
+            if(is_string($item)) {
+                $data[$key] = trim(strip_tags(htmlspecialchars($item, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+            } elseif(is_array($item)) {
+                $data[$key] = $this->sanitizeData($item);
+            } 
+        }
 
+        return $data;
+    }
 
     #/ PRIVATE FUNCTIONS
     #----------------------------------------------------------------------
@@ -65,21 +88,6 @@ final class Request {
      */
     public function isApi(): bool {
         return str_starts_with($this->complexPath,"/api/");
-    }
-
-    /**
-     * Get a data item from the request body.
-     *
-     * @param string $key The key of the data item to retrieve.
-     *
-     * @return string|int|bool|null The value of the data item if it exists, null otherwise.
-     */
-    public function getDataItem(string $key): string|int|bool|null {
-        if(isset($this->data[$key])) {
-            return trim(strip_tags($this->data[$key]));
-        }
-
-        return null;
     }
 
     #/ METHODS

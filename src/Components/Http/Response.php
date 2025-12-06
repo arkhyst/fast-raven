@@ -1,6 +1,6 @@
 <?php
 
-namespace SmartGoblin\Components\Http;
+namespace FastRaven\Components\Http;
 
 enum DataType: string {
     case JSON = "application/json";
@@ -33,11 +33,12 @@ final class Response {
      * @param bool $success Whether the response is a success or not.
      * @param int $code The HTTP status code of the response.
      * @param string $message [optional] The message to set on the response.
-     * @param mixed $data [optional] The data to set on the response.
+     * @param string|array $data [optional] The data to set on the response.
      * 
      * @return Response The new Response instance.
      */
-    public static function new(bool $success, int $code, string $message = "", mixed $data = []): Response {
+    public static function new(bool $success, int $code, string $message = "", string|array $data = []): Response
+    {
         $response = new Response($success, $code);
         $response->setBody($message, $data);
         return $response;

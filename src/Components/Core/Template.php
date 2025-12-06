@@ -1,16 +1,20 @@
 <?php
 
-namespace SmartGoblin\Components\Core;
+namespace FastRaven\Components\Core;
 
 final class Template {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private string $file = "main";
+    private string $file = "";
         public function getFile(): string { return $this->file; }
         public function setFile(string $file): void { $this->file = $file; }
-    private string $title = "Smart Goblin Framework";
+    private string $title = "";
         public function getTitle(): string { return $this->title; }
+    private string $version = "";
+        public function getVersion(): string { return $this->version; }
+    private string $lang = "";
+        public function getLang(): string { return $this->lang; }
     private string $favicon = "favicon.png";
         public function getFavicon(): string { return $this->favicon; }
         public function setFavicon(string $favicon): void { $this->favicon = $favicon; }
@@ -23,10 +27,12 @@ final class Template {
     private array $autofill = [];
         public function getAutofill(): array { return $this->autofill; }
         public function addAutofill(string $dom, string $api): void { $this->autofill[$dom] = $api; }
-    private string $version = "1.0.0";
-        public function getVersion(): string { return $this->version; }
-    private string $lang = "en";
-        public function getLang(): string { return $this->lang; }
+    private array $preDOMFiles = [];
+        public function getPreDOMFiles(): array { return $this->preDOMFiles; }
+        public function setPreDOMFiles(array $files): void { $this->preDOMFiles = $files; }
+    private array $postDOMFiles = [];
+        public function getPostDOMFiles(): array { return $this->postDOMFiles; }
+        public function setPostDOMFiles(array $files): void { $this->postDOMFiles = $files; }
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -43,15 +49,15 @@ final class Template {
      *
      * @return Template
      */
-    public static function new(string $title, string $version, string $lang = "en"): Template {
-        return new Template($title, $version, $lang);
+    public static function new(string $title, string $version, string $lang = "en", string $favicon = "favicon.png"): Template {
+        return new Template($title, $version, $lang, $favicon);
     }
 
     /**
      * Creates a new Template instance using all available parameters in a single line.
      *
-     * @param string $title       The title of the page.
-     * @param string $version     The version to use for resources.
+     * @param string $title       [optional] The title of the page.
+     * @param string $version     [optional] The version to use for resources.
      * @param string $lang        [optional] The language of the page. Default is "en".
      * @param array  $styles      [optional] An array of style files to include.
      * @param array  $scripts     [optional] An array of script files to include.
@@ -60,14 +66,15 @@ final class Template {
      *
      * @return Template
      */
-    public static function oneline(string $title, string $version, string $lang = "en", array $styles = [], array $scripts = [], array $autofill = []): Template {
-        return new Template($title, $version, $lang, $styles, $scripts, $autofill);
+    public static function flex(string $title = "", string $version = "", string $lang = "", string $favicon = "", array $styles = [], array $scripts = [], array $autofill = []): Template {
+        return new Template($title, $version, $lang, $favicon, $styles, $scripts, $autofill);
     }
 
-    private function  __construct(string $title, string $version, string $lang = "en", array $styles = [], array $scripts = [], array $autofill = []) {
+    private function  __construct(string $title, string $version, string $lang, string $favicon, array $styles = [], array $scripts = [], array $autofill = []) {
         $this->title = $title;
         $this->version = $version;
         $this->lang = $lang;
+        $this->favicon = $favicon;
         $this->styles = $styles;
         $this->scripts = $scripts;
         $this->autofill = $autofill;
@@ -95,8 +102,9 @@ final class Template {
      * @param Template $template The Template instance to merge into this instance.
      */
     public function merge(Template $template): void {
-        $this->title = $template->getTitle();
-        $this->favicon = $template->getFavicon();
+        $this->title = $template->getTitle() ? $template->getTitle() : $this->title;
+        $this->lang = $template->getLang() ? $template->getLang() : $this->lang;
+        $this->favicon = $template->getFavicon() ? $template->getFavicon() : $this->favicon;
         $this->styles = array_merge($this->styles, $template->getStyles());
         $this->scripts = array_merge($this->scripts, $template->getScripts());
         $this->autofill = array_merge($this->autofill, $template->getAutofill());
@@ -162,10 +170,14 @@ final class Template {
      * @return string The JSON object containing the auto-fill information of the page.
      */
     public function getHtmlAutofill(): string { 
-        return json_encode(array_map(
-        fn($k) => (object)["dom" => $k, "api" => $this->autofill[$k]],
-        array_keys($this->autofill)
-        ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); 
+        $autofillList = [];
+        foreach ($this->autofill as $dom => $api) {
+            $autofillList[] = [
+                "dom" => $dom,
+                "api" => $api
+            ];
+        }
+        return json_encode($autofillList, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
     }
 
     #/ METHODS

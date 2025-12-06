@@ -1,8 +1,9 @@
 <?php
 
-namespace SmartGoblin\Internal\Slave;
+namespace FastRaven\Internal\Slave;
 
-use SmartGoblin\Workers\AuthWorker;
+use FastRaven\Workers\AuthWorker;
+use FastRaven\Workers\DataWorker;
 
 final class AuthSlave {
     #----------------------------------------------------------------------
@@ -133,6 +134,32 @@ final class AuthSlave {
      */
     public function validateCSRF(?string $sessionToken, ?string $requestToken): bool {
         return $sessionToken === $requestToken;
+    }
+
+    /**
+     * Attempts to login a user via their username and password.
+     *
+     * This function will query the given database table for a user with the given username.
+     * If a user is found, it will then verify the given password against the password stored in the database.
+     * If the password is valid, it will return the user's ID, otherwise it will return null.
+     *
+     * @param string $user The username of the user to login.
+     * @param string $pass The password of the user to login.
+     * @param string $dbTable The name of the database table to query for login data.
+     * @param string $dbIdCol The name of the column in the database table that contains the user's ID.
+     * @param string $dbNameCol The name of the column in the database table that contains the user's name.
+     * @param string $dbPassCol The name of the column in the database table that contains the user's password.
+     *
+     * @return ?int The user's ID if the login is successful, null otherwise.
+     */
+    public function loginAttempt(string $user, string $pass, string $dbTable, string $dbIdCol, string $dbNameCol, string $dbPassCol): ?int {
+        $data = DataWorker::getOneWhere($dbTable, [$dbIdCol, $dbNameCol, $dbPassCol], [$dbNameCol], [$user]);
+
+        if($data && password_verify($pass, $data[$dbPassCol])) {
+            return (int)$data[$dbIdCol];
+        }
+
+        return null;
     }
 
     #/ METHODS

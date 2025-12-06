@@ -1,10 +1,10 @@
 <?php
 
-namespace SmartGoblin\Internal\Slave;
+namespace FastRaven\Internal\Slave;
 
-use SmartGoblin\Components\Http\Request;
-use SmartGoblin\Workers\LogWorker;
-use SmartGoblin\Internal\Stash\LogStash;
+use FastRaven\Components\Http\Request;
+use FastRaven\Workers\LogWorker;
+use FastRaven\Internal\Stash\LogStash;
 
 final class LogSlave {
     #----------------------------------------------------------------------

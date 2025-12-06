@@ -1,13 +1,13 @@
 <?php
 
-namespace SmartGoblin\Internal\Slave;
+namespace FastRaven\Internal\Slave;
 
-use SmartGoblin\Components\Http\Request;
-use SmartGoblin\Components\Routing\Router;
-use SmartGoblin\Components\Routing\Endpoint;
-use SmartGoblin\Workers\LogWorker;
+use FastRaven\Components\Http\Request;
+use FastRaven\Components\Routing\Router;
+use FastRaven\Components\Routing\Endpoint;
+use FastRaven\Workers\LogWorker;
 
-use SmartGoblin\Workers\Bee;
+use FastRaven\Workers\Bee;
 
 final class RouterSlave {
     #----------------------------------------------------------------------
