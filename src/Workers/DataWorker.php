@@ -1,8 +1,8 @@
 <?php
 
-namespace SmartGoblin\Workers;
+namespace FastRaven\Workers;
 
-use SmartGoblin\Internal\Slave\DataSlave;
+use FastRaven\Internal\Slave\DataSlave;
 
 class DataWorker {
     #----------------------------------------------------------------------

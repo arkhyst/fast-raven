@@ -1,8 +1,8 @@
 <?php
 
-namespace SmartGoblin\Workers;
+namespace FastRaven\Workers;
 
-use SmartGoblin\Internal\Slave\HeaderSlave;
+use FastRaven\Internal\Slave\HeaderSlave;
 
 class HeaderWorker {
     #----------------------------------------------------------------------

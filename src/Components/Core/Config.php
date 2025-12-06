@@ -1,6 +1,6 @@
 <?php
 
-namespace SmartGoblin\Components\Core;
+namespace FastRaven\Components\Core;
 
 
 final class Config {

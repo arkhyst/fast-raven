@@ -1,27 +1,27 @@
 <?php
 
-namespace SmartGoblin\Internal\Core;
+namespace FastRaven\Internal\Core;
 
-use SmartGoblin\Components\Core\Config;
-use SmartGoblin\Components\Http\Response;
-use SmartGoblin\Components\Http\Request;
-use SmartGoblin\Components\Http\DataType;
-use SmartGoblin\Components\Core\Template;
-use SmartGoblin\Components\Routing\Router;
+use FastRaven\Components\Core\Config;
+use FastRaven\Components\Http\Response;
+use FastRaven\Components\Http\Request;
+use FastRaven\Components\Http\DataType;
+use FastRaven\Components\Core\Template;
+use FastRaven\Components\Routing\Router;
 
-use SmartGoblin\Exceptions\NotFoundException;
-use SmartGoblin\Workers\AuthWorker;
-use SmartGoblin\Workers\HeaderWorker;
+use FastRaven\Exceptions\NotFoundException;
+use FastRaven\Workers\AuthWorker;
+use FastRaven\Workers\HeaderWorker;
 
-use SmartGoblin\Internal\Slave\LogSlave;
-use SmartGoblin\Internal\Slave\HeaderSlave;
-use SmartGoblin\Internal\Slave\AuthSlave;
-use SmartGoblin\Internal\Slave\DataSlave;
-use SmartGoblin\Internal\Slave\RouterSlave;
+use FastRaven\Internal\Slave\LogSlave;
+use FastRaven\Internal\Slave\HeaderSlave;
+use FastRaven\Internal\Slave\AuthSlave;
+use FastRaven\Internal\Slave\DataSlave;
+use FastRaven\Internal\Slave\RouterSlave;
 
-use SmartGoblin\Exceptions\BadImplementationException;
-use SmartGoblin\Exceptions\EndpointFileDoesNotExist;
-use SmartGoblin\Exceptions\NotAuthorizedException;
+use FastRaven\Exceptions\BadImplementationException;
+use FastRaven\Exceptions\EndpointFileDoesNotExist;
+use FastRaven\Exceptions\NotAuthorizedException;
 
 final class Kernel {
     #----------------------------------------------------------------------

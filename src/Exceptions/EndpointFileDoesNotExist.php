@@ -1,6 +1,6 @@
 <?php
 
-namespace SmartGoblin\Exceptions;
+namespace FastRaven\Exceptions;
 
 class EndpointFileDoesNotExist extends SmartException
 {

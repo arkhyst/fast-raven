@@ -1,11 +1,11 @@
 <?php
 
-namespace SmartGoblin\Internal\Slave;
+namespace FastRaven\Internal\Slave;
 
-use SmartGoblin\Workers\DataWorker;
-use SmartGoblin\Workers\LogWorker;
+use FastRaven\Workers\DataWorker;
+use FastRaven\Workers\LogWorker;
 
-use SmartGoblin\Workers\Bee;
+use FastRaven\Workers\Bee;
 
 enum QueryType: string {
     case SELECT = "SELECT";

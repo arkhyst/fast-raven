@@ -1,9 +1,9 @@
 <?php
 
-namespace SmartGoblin\Tests\Internal\Stash;
+namespace FastRaven\Tests\Internal\Stash;
 
 use PHPUnit\Framework\TestCase;
-use SmartGoblin\Internal\Stash\LogStash;
+use FastRaven\Internal\Stash\LogStash;
 
 class LogStashTest extends TestCase
 {

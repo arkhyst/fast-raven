@@ -1,9 +1,9 @@
 <?php
 
-namespace SmartGoblin\Tests\Components\Core;
+namespace FastRaven\Tests\Components\Core;
 
 use PHPUnit\Framework\TestCase;
-use SmartGoblin\Components\Core\Config;
+use FastRaven\Components\Core\Config;
 
 class ConfigTest extends TestCase
 {

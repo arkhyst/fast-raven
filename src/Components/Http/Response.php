@@ -1,6 +1,6 @@
 <?php
 
-namespace SmartGoblin\Components\Http;
+namespace FastRaven\Components\Http;
 
 enum DataType: string {
     case JSON = "application/json";

@@ -1,12 +1,12 @@
 <?php
 
-namespace SmartGoblin\Tests\Exceptions;
+namespace FastRaven\Tests\Exceptions;
 
 use PHPUnit\Framework\TestCase;
-use SmartGoblin\Exceptions\BadImplementationException;
-use SmartGoblin\Exceptions\EndpointFileDoesNotExist;
-use SmartGoblin\Exceptions\NotAuthorizedException;
-use SmartGoblin\Exceptions\NotFoundException;
+use FastRaven\Exceptions\BadImplementationException;
+use FastRaven\Exceptions\EndpointFileDoesNotExist;
+use FastRaven\Exceptions\NotAuthorizedException;
+use FastRaven\Exceptions\NotFoundException;
 
 class ExceptionsTest extends TestCase
 {

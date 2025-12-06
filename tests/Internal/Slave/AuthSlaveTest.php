@@ -1,9 +1,9 @@
 <?php
 
-namespace SmartGoblin\Tests\Internal\Slave;
+namespace FastRaven\Tests\Internal\Slave;
 
 use PHPUnit\Framework\TestCase;
-use SmartGoblin\Internal\Slave\AuthSlave;
+use FastRaven\Internal\Slave\AuthSlave;
 use ReflectionClass;
 
 class AuthSlaveTest extends TestCase

@@ -1,6 +1,6 @@
 <?php
 
-namespace SmartGoblin\Internal\Stash;
+namespace FastRaven\Internal\Stash;
 
 final class LogStash {
     #----------------------------------------------------------------------

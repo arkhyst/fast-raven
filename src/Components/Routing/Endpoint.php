@@ -1,9 +1,9 @@
 <?php
 
-namespace SmartGoblin\Components\Routing;
+namespace FastRaven\Components\Routing;
 
-use SmartGoblin\Workers\Bee;
-use SmartGoblin\Components\Core\Template;
+use FastRaven\Workers\Bee;
+use FastRaven\Components\Core\Template;
 
 class Endpoint {
     #----------------------------------------------------------------------

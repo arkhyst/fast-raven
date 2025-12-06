@@ -1,9 +1,9 @@
 <?php
 
-namespace SmartGoblin\Internal\Slave;
+namespace FastRaven\Internal\Slave;
 
-use SmartGoblin\Workers\AuthWorker;
-use SmartGoblin\Workers\DataWorker;
+use FastRaven\Workers\AuthWorker;
+use FastRaven\Workers\DataWorker;
 
 final class AuthSlave {
     #----------------------------------------------------------------------

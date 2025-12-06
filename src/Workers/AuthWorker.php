@@ -1,9 +1,9 @@
 <?php
 
-namespace SmartGoblin\Workers;
+namespace FastRaven\Workers;
 
-use SmartGoblin\Internal\Slave\AuthSlave;
-use SmartGoblin\Components\Http\Request;
+use FastRaven\Internal\Slave\AuthSlave;
+use FastRaven\Components\Http\Request;
 
 class AuthWorker {
     #----------------------------------------------------------------------

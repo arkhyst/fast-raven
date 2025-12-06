@@ -1,20 +1,20 @@
 <?php
 
-namespace SmartGoblin;
+namespace FastRaven;
 
-use SmartGoblin\Exceptions\NotAuthorizedException;
-use SmartGoblin\Exceptions\SmartException;
-use SmartGoblin\Internal\Core\Kernel;
+use FastRaven\Exceptions\NotAuthorizedException;
+use FastRaven\Exceptions\SmartException;
+use FastRaven\Internal\Core\Kernel;
 
-use SmartGoblin\Components\Core\Config;
-use SmartGoblin\Components\Core\Template;
-use SmartGoblin\Components\Routing\Router;
-use SmartGoblin\Components\Http\Response;
+use FastRaven\Components\Core\Config;
+use FastRaven\Components\Core\Template;
+use FastRaven\Components\Routing\Router;
+use FastRaven\Components\Http\Response;
 
-use SmartGoblin\Workers\LogWorker;
-use SmartGoblin\Workers\HeaderWorker;
+use FastRaven\Workers\LogWorker;
+use FastRaven\Workers\HeaderWorker;
 
-use SmartGoblin\Workers\Bee;
+use FastRaven\Workers\Bee;
 use Dotenv\Dotenv;
 
 final class Server {

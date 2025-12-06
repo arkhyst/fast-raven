@@ -1,10 +1,10 @@
 <?php
 
-namespace SmartGoblin\Tests\Components\Routing;
+namespace FastRaven\Tests\Components\Routing;
 
 use PHPUnit\Framework\TestCase;
-use SmartGoblin\Components\Routing\Endpoint;
-use SmartGoblin\Components\Core\Template;
+use FastRaven\Components\Routing\Endpoint;
+use FastRaven\Components\Core\Template;
 
 class EndpointTest extends TestCase
 {

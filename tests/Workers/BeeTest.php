@@ -1,9 +1,9 @@
 <?php
 
-namespace SmartGoblin\Tests\Workers;
+namespace FastRaven\Tests\Workers;
 
 use PHPUnit\Framework\TestCase;
-use SmartGoblin\Workers\Bee;
+use FastRaven\Workers\Bee;
 
 class BeeTest extends TestCase
 {

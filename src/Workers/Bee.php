@@ -1,6 +1,6 @@
 <?php
 
-namespace SmartGoblin\Workers;
+namespace FastRaven\Workers;
 
 class Bee {
     #----------------------------------------------------------------------

@@ -1,9 +1,9 @@
 <?php
 
-namespace SmartGoblin\Tests\Components\Http;
+namespace FastRaven\Tests\Components\Http;
 
 use PHPUnit\Framework\TestCase;
-use SmartGoblin\Components\Http\Request;
+use FastRaven\Components\Http\Request;
 
 class RequestTest extends TestCase
 {
