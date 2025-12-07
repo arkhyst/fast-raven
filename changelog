@@ -14,7 +14,7 @@
 - Skeleton: .htaccess fallback not working.
 
 #### Removed
-- 
+- htmlspecialchars method from Request::sanitizeData().
 
 ---
 

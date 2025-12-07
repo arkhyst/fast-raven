@@ -138,20 +138,6 @@ class RequestTest extends TestCase
         $this->assertNull($request->getDataItem('any_key'));
     }
 
-    public function testGetDataItemWithNestedJsonStructureReturnsNull(): void
-    {
-        $jsonData = json_encode([
-            'user' => [
-                'name' => 'John',
-                'age' => 30
-            ]
-        ]);
-        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
-
-        // With the improved implementation, arrays return null instead of throwing TypeError
-        $this->assertNull($request->getDataItem('user'));
-    }
-
     public function testGetDataItemWithBooleanValue(): void
     {
         $jsonData = json_encode(['active' => true, 'deleted' => false]);

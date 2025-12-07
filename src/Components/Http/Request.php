@@ -64,7 +64,7 @@ final class Request {
     private function sanitizeData(array $data): array {
         foreach ($data as $key => $item) {
             if(is_string($item)) {
-                $data[$key] = trim(strip_tags(htmlspecialchars($item, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+                $data[$key] = trim(strip_tags($item));
             } elseif(is_array($item)) {
                 $data[$key] = $this->sanitizeData($item);
             } 
