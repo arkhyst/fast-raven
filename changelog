@@ -3,10 +3,11 @@
 - Config::configurePrivacy(...) for defining whether to register logs or restrict what data to register.
 
 #### Changed
-- 
+- Sekeleton: Update build.sh to account for last changes.
 
 #### Fixed
 - Skeleton: Sites folder not accounted for deploy.sh and index.php
+- Skeleton: .htaccess fallback not working.
 
 #### Removed
 - 
