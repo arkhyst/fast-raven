@@ -29,6 +29,11 @@ final class Config {
     private string $defaultUnauthorizedSubdomainRedirect = "";
         public function getDefaultUnauthorizedSubdomainRedirect(): string { return $this->defaultUnauthorizedSubdomainRedirect; }
 
+    private bool $privacyRegisterLogs = true;
+        public function isPrivacyRegisterLogs(): bool { return $this->privacyRegisterLogs; }
+    private bool $privacyRegisterOrigin = true;
+        public function isPrivacyRegisterOrigin(): bool { return $this->privacyRegisterOrigin; }
+
     #/ VARIABLES
     #----------------------------------------------------------------------
 
@@ -115,6 +120,17 @@ final class Config {
     public function configureUnauthorizedRedirects(string $path, string $subdomain = ""): void {
         $this->defaultUnauthorizedPathRedirect = $path;
         $this->defaultUnauthorizedSubdomainRedirect = $subdomain;
+    }
+
+    /**
+     * Configure the privacy settings.
+     *
+     * @param bool $registerLogs   Define whether to register logs or not.
+     * @param bool $registerOrigin Define whether to register origin data or not.
+     */
+    public function configurePrivacy(bool $registerLogs = true, bool $registerOrigin = true): void {
+        $this->privacyRegisterLogs = $registerLogs;
+        $this->privacyRegisterOrigin = $registerOrigin;
     }
 
     #/ METHODS

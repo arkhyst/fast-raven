@@ -26,6 +26,7 @@ OR (not recommended)
 
 ### Roadmap: v0.3
 - Improvement of typed arguments in DataWorker conditions and values.
+- ~~Implementation of logs privacy settings.~~
 - Addition of ValidationWorker.
 
 ### Roadmap: v1.0

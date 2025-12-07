@@ -1,4 +1,19 @@
-### [v0.2] - 2025-12-09
+### [v0.3] - 2025-12-XX
+#### Added
+- Config::configurePrivacy(...) for defining whether to register logs or restrict what data to register.
+
+#### Changed
+- 
+
+#### Fixed
+- Skeleton: Sites folder not accounted for deploy.sh and index.php
+
+#### Removed
+- 
+
+---
+
+### [v0.2] - 2025-12-06
 #### Added
 - Configuration of path redirects for 404 error.
 - Support for .html template injection before and after #main div.

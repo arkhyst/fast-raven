@@ -86,10 +86,17 @@ final class Kernel {
         $this->startRequestTime = microtime(true);
 
         // Add security for remote address
-        $this->request = new Request($_SERVER["REQUEST_URI"], $_SERVER["REQUEST_METHOD"], file_get_contents("php://input"), $_SERVER["REMOTE_ADDR"]);
+        $this->request = new Request(
+            $_SERVER["REQUEST_URI"],
+            $_SERVER["REQUEST_METHOD"],
+            file_get_contents("php://input"),
+            $this->config->isPrivacyRegisterOrigin() ? $_SERVER["REMOTE_ADDR"] : ""
+        );
         
-        $this->logSlave = LogSlave::zap();
-        $this->logSlave->writeOpenLogs($this->request);
+        if($this->config->isPrivacyRegisterLogs()) {
+            $this->logSlave = LogSlave::zap();
+            $this->logSlave->writeOpenLogs($this->request);
+        }
 
         $this->authSlave = AuthSlave::zap();
         $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->getAuthDomain());
