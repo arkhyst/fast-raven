@@ -1,9 +1,13 @@
 ### [v0.3] - 2025-12-XX
 #### Added
 - Config::configurePrivacy(...) for defining whether to register logs or restrict what data to register.
+- Collection and Item components for handling key-value pair arrays.
 
 #### Changed
-- Sekeleton: Update build.sh to account for last changes.
+- Skeleton: Update build.sh to account for last changes.
+- DataWorker now uses Collection and Item components.
+- Router now uses Collection and Item components.
+- Template now uses Collection and Item components.
 
 #### Fixed
 - Skeleton: Sites folder not accounted for deploy.sh and index.php

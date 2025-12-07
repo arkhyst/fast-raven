@@ -2,6 +2,9 @@
 
 namespace FastRaven\Components\Core;
 
+use FastRaven\Components\Data\Collection;
+use FastRaven\Components\Data\Item;
+
 final class Template {
     #----------------------------------------------------------------------
     #\ VARIABLES
@@ -24,9 +27,9 @@ final class Template {
     private array $scripts = [];
         public function getScripts(): array { return $this->scripts; }
         public function addScript(string $script): void { $this->scripts[] = $script; }
-    private array $autofill = [];
-        public function getAutofill(): array { return $this->autofill; }
-        public function addAutofill(string $dom, string $api): void { $this->autofill[$dom] = $api; }
+    private Collection $autofill;
+        public function getAutofill(): Collection { return $this->autofill; }
+        public function addAutofill(string $dom, string $api): void { $this->autofill->add(Item::new($dom, $api)); }
     private array $preDOMFiles = [];
         public function getPreDOMFiles(): array { return $this->preDOMFiles; }
         public function setPreDOMFiles(array $files): void { $this->preDOMFiles = $files; }
@@ -61,23 +64,22 @@ final class Template {
      * @param string $lang        [optional] The language of the page. Default is "en".
      * @param array  $styles      [optional] An array of style files to include.
      * @param array  $scripts     [optional] An array of script files to include.
-     * @param array  $autofill    [optional] An associative array of DOM elements to autofill with API data.
-     *                             Example: ["#name" => "/api/name", "#email" => "/api/email"]
+     * @param Collection $autofill [optional] A collection of DOM elements to autofill with API data.
      *
      * @return Template
      */
-    public static function flex(string $title = "", string $version = "", string $lang = "", string $favicon = "", array $styles = [], array $scripts = [], array $autofill = []): Template {
+    public static function flex(string $title = "", string $version = "", string $lang = "", string $favicon = "", array $styles = [], array $scripts = [], ?Collection $autofill = null): Template {
         return new Template($title, $version, $lang, $favicon, $styles, $scripts, $autofill);
     }
 
-    private function  __construct(string $title, string $version, string $lang, string $favicon, array $styles = [], array $scripts = [], array $autofill = []) {
+    private function  __construct(string $title, string $version, string $lang, string $favicon, array $styles = [], array $scripts = [], ?Collection $autofill = null) {
         $this->title = $title;
         $this->version = $version;
         $this->lang = $lang;
         $this->favicon = $favicon;
         $this->styles = $styles;
         $this->scripts = $scripts;
-        $this->autofill = $autofill;
+        $this->autofill = $autofill ?? Collection::new();
     }
 
     #/ INIT
@@ -107,7 +109,7 @@ final class Template {
         $this->favicon = $template->getFavicon() ? $template->getFavicon() : $this->favicon;
         $this->styles = array_merge($this->styles, $template->getStyles());
         $this->scripts = array_merge($this->scripts, $template->getScripts());
-        $this->autofill = array_merge($this->autofill, $template->getAutofill());
+        $this->autofill->merge($template->getAutofill());
     }
 
     /**
@@ -171,10 +173,10 @@ final class Template {
      */
     public function getHtmlAutofill(): string { 
         $autofillList = [];
-        foreach ($this->autofill as $dom => $api) {
+        foreach ($this->autofill->getAllKeys() as $dom) {
             $autofillList[] = [
                 "dom" => $dom,
-                "api" => $api
+                "api" => $this->autofill->get($dom)->getValue()
             ];
         }
         return json_encode($autofillList, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);

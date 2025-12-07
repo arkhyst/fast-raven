@@ -9,6 +9,7 @@ It focuses on simplicity, clarity, and raw performance: no unnecessary layers, n
 
 ### Requeriments  
 - **PHP** ^8.5  
+- **MySQL** ^8.0  
 - **Composer** ^2.9.2
 
 ---
@@ -25,7 +26,7 @@ OR (not recommended)
 ---
 
 ### Roadmap: v0.3
-- Improvement of typed arguments in DataWorker conditions and values.
+- ~~Improvement of typed arguments in DataWorker conditions and values.~~
 - ~~Implementation of logs privacy settings.~~
 - Addition of ValidationWorker.
 

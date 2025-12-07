@@ -8,6 +8,7 @@ use FastRaven\Components\Routing\Endpoint;
 use FastRaven\Workers\LogWorker;
 
 use FastRaven\Workers\Bee;
+use FastRaven\Components\Data\Collection;
 
 final class RouterSlave {
     #----------------------------------------------------------------------
@@ -48,22 +49,22 @@ final class RouterSlave {
     #\ PRIVATE FUNCTIONS
 
     /**
-     * Attempts to match the request path to a path in the associative file list.
+     * Attempts to match the request path to a path in the file collection.
      * 
-     * It will loop through the associative file list and check if the request path starts with the path in the associative file list.
+     * It will loop through the file collection and check if the request path starts with the path in the file collection.
      * If it does, it will check if the file exists in the router directory. If it does, it will return the file path.
      * If it does not, it will log an error.
      * 
      * @param Request $request The request object.
-     * @param array $assocFileList The associative array of file endpoints files relative to /config/router/ directory.
+     * @param Collection $fileCollection The collection of file endpoints files relative to /config/router/ directory.
      * 
-     * @return string|null The file path if the request path matches a path in the associative file list, null otherwise.
+     * @return string|null The file path if the request path matches a path in the file collection, null otherwise.
      */
-    private function matchAssocFileList(Request $request, array $assocFileList): string|null {
+    private function matchFileCollection(Request $request, Collection $fileCollection): string|null {
         $requestPath = dirname($request->getPath());
         $filePath = null;
 
-        foreach($assocFileList as $path => $file) {
+        foreach($fileCollection->getRawData() as $path => $file) {
             if($request->isApi()) $path = "/api/" . Bee::normalizePath($path . "/");
             if(str_starts_with($path, $requestPath)) {
                 $tmp = SITE_PATH . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . $file;
@@ -84,7 +85,7 @@ final class RouterSlave {
 
     /**
      * Attempts to match the request path to an endpoint in the router.
-     * If the router endpoints are not loaded, it will attempt to load them from the associative file list.
+     * If the router endpoints are not loaded, it will attempt to load them from the file collection.
      * If the router endpoints are loaded, it will loop through the endpoint list and check if the request path matches the complex path of an endpoint.
      * If a match is found, it will return the matched endpoint.
      * If no match is found, it will log an error and return null.
@@ -98,8 +99,8 @@ final class RouterSlave {
         $endpointList = $router->getEndpointList();
         $endpoint = null;
 
-        if(!$router->getEndpointsLoaded()) {
-            $filePath = $this->matchAssocFileList($request, $router->getAssocFileList());
+        if(!$router->isEndpointsLoaded()) {
+            $filePath = $this->matchFileCollection($request, $router->getFileCollection());
             if($filePath) $endpointList = require_once $filePath;
         }
 

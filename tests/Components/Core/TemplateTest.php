@@ -4,6 +4,8 @@ namespace FastRaven\Tests\Components\Core;
 
 use PHPUnit\Framework\TestCase;
 use FastRaven\Components\Core\Template;
+use FastRaven\Components\Data\Collection;
+use FastRaven\Components\Data\Item;
 
 class TemplateTest extends TestCase
 {
@@ -34,7 +36,10 @@ class TemplateTest extends TestCase
             'icon.png',
             ['style1.css', 'style2.css'],
             ['script1.js', 'script2.js'],
-            ['#name' => '/api/name', '#email' => '/api/email']
+            Collection::new([
+                Item::new('#name', '/api/name'),
+                Item::new('#email', '/api/email')
+            ])
         );
 
         $this->assertEquals('Title', $template->getTitle());
@@ -43,7 +48,11 @@ class TemplateTest extends TestCase
         $this->assertEquals('icon.png', $template->getFavicon());
         $this->assertEquals(['style1.css', 'style2.css'], $template->getStyles());
         $this->assertEquals(['script1.js', 'script2.js'], $template->getScripts());
-        $this->assertEquals(['#name' => '/api/name', '#email' => '/api/email'], $template->getAutofill());
+        $this->assertEquals(['script1.js', 'script2.js'], $template->getScripts());
+        
+        $autofill = $template->getAutofill();
+        $this->assertEquals(['#name', '#email'], $autofill->getAllKeys());
+        $this->assertEquals(['/api/name', '/api/email'], $autofill->getAllValues());
     }
 
     public function testFlexWithEmptyParameters(): void
@@ -56,7 +65,8 @@ class TemplateTest extends TestCase
         $this->assertEquals('', $template->getFavicon());
         $this->assertEmpty($template->getStyles());
         $this->assertEmpty($template->getScripts());
-        $this->assertEmpty($template->getAutofill());
+        $this->assertEmpty($template->getScripts());
+        $this->assertEmpty($template->getAutofill()->getRawData());
     }
 
     public function testSetFileAndGetFile(): void
@@ -104,8 +114,11 @@ class TemplateTest extends TestCase
         $template->addAutofill('#username', '/api/user');
         $template->addAutofill('#email', '/api/email');
 
-        $expected = ['#username' => '/api/user', '#email' => '/api/email'];
-        $this->assertEquals($expected, $template->getAutofill());
+        $expectedKeys = ['#username', '#email'];
+        $expectedValues = ['/api/user', '/api/email'];
+        
+        $this->assertEquals($expectedKeys, $template->getAutofill()->getAllKeys());
+        $this->assertEquals($expectedValues, $template->getAutofill()->getAllValues());
     }
 
     public function testMergeOverwritesTitleLangFavicon(): void
@@ -145,13 +158,16 @@ class TemplateTest extends TestCase
 
     public function testMergeCombinesAutofill(): void
     {
-        $template1 = Template::flex('', '', '', '', [], [], ['#field1' => '/api/1']);
-        $template2 = Template::flex('', '', '', '', [], [], ['#field2' => '/api/2']);
+        $template1 = Template::flex('', '', '', '', [], [], Collection::new([Item::new('#field1', '/api/1')]));
+        $template2 = Template::flex('', '', '', '', [], [], Collection::new([Item::new('#field2', '/api/2')]));
 
         $template1->merge($template2);
 
-        $expected = ['#field1' => '/api/1', '#field2' => '/api/2'];
-        $this->assertEquals($expected, $template1->getAutofill());
+        $expectedKeys = ['#field1', '#field2'];
+        $expectedValues = ['/api/1', '/api/2'];
+        
+        $this->assertEquals($expectedKeys, $template1->getAutofill()->getAllKeys());
+        $this->assertEquals($expectedValues, $template1->getAutofill()->getAllValues());
     }
 
     public function testGetHtmlTitleGeneratesCorrectTag(): void

@@ -67,9 +67,9 @@ final class Response {
      * Sets the body of the response.
      *
      * @param string $message [optional] The message to set on the response.
-     * @param mixed $data [optional] The data to set on the response.
+     * @param string|array $data [optional] The data to set on the response.
      */
-    public function setBody(string $message = "", mixed $data = []): void {
+    public function setBody(string $message = "", string|array $data = []): void {
         $this->message = $message;
         $this->data = $data;
     }

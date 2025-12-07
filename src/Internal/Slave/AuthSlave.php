@@ -4,6 +4,8 @@ namespace FastRaven\Internal\Slave;
 
 use FastRaven\Workers\AuthWorker;
 use FastRaven\Workers\DataWorker;
+use FastRaven\Components\Data\Collection;
+use FastRaven\Components\Data\Item;
 
 final class AuthSlave {
     #----------------------------------------------------------------------
@@ -153,7 +155,9 @@ final class AuthSlave {
      * @return ?int The user's ID if the login is successful, null otherwise.
      */
     public function loginAttempt(string $user, string $pass, string $dbTable, string $dbIdCol, string $dbNameCol, string $dbPassCol): ?int {
-        $data = DataWorker::getOneWhere($dbTable, [$dbIdCol, $dbNameCol, $dbPassCol], [$dbNameCol], [$user]);
+        $data = DataWorker::getOneWhere($dbTable, [$dbIdCol, $dbNameCol, $dbPassCol], Collection::new([
+            Item::new($dbNameCol, $user)
+        ]));
 
         if($data && password_verify($pass, $data[$dbPassCol])) {
             return (int)$data[$dbIdCol];
