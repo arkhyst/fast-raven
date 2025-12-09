@@ -2,6 +2,8 @@
 #### Added
 - Config::configurePrivacy(...) for defining whether to register logs or restrict what data to register.
 - Collection and Item components for handling key-value pair arrays.
+- ValidationWorker for validating data such as email addresses or passwords.
+- ValidationFlags collection for handling validation flags.
 
 #### Changed
 - Skeleton: Update build.sh to account for last changes.

@@ -3,11 +3,11 @@
 namespace FastRaven\Components\Data;
 
 
-final class Collection {
+class Collection {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private array $data;
+    protected array $data;
         public function getRawData(): array { return $this->data; }
         public function add(Item $pair): void { $this->data[] = $pair; }
         
@@ -28,7 +28,7 @@ final class Collection {
         return new Collection($data);
     }
 
-    private function  __construct(array $data = []) {
+    protected function  __construct(array $data = []) {
         $this->data = [];
         foreach($data as $item) {
             if($item instanceof Item) {

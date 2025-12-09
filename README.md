@@ -28,11 +28,12 @@ OR (not recommended)
 ### Roadmap: v0.3
 - ~~Improvement of typed arguments in DataWorker conditions and values.~~
 - ~~Implementation of logs privacy settings.~~
-- Addition of ValidationWorker.
+- ~~Addition of ValidationWorker.~~
 
 ### Roadmap: v1.0
-- Upgrade of Router component: refactor to support more complex architectures.
+- Improvement of ValidationWorker complexity and ValidationFlags.
 - Implementation of unauthorized flow with redirects after login.
+- Upgrade of Router component: refactor to support more complex architectures.
 
 ---
 
