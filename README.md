@@ -8,9 +8,9 @@ It focuses on simplicity, clarity, and raw performance: no unnecessary layers, n
 ---
 
 ### Requeriments  
-- **PHP** ^8.5  
+- **PHP** ^8.4  
 - **MySQL** ^8.0  
-- **Composer** ^2.9.2
+- **Composer** ^2.9.2  
 
 ---
 
@@ -29,11 +29,13 @@ OR (not recommended)
 - ~~Improvement of typed arguments in DataWorker conditions and values.~~
 - ~~Implementation of logs privacy settings.~~
 - ~~Addition of ValidationWorker.~~
+- Addition of MailWorker with PHPMailer and configurable SMTP settings.
 
 ### Roadmap: v1.0
 - Improvement of ValidationWorker complexity and ValidationFlags.
 - Implementation of unauthorized flow with redirects after login.
 - Upgrade of Router component: refactor to support more complex architectures.
+- Upgrade of PHP version to 8.5 (if is globally supported by hosting providers).
 
 ---
 

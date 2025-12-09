@@ -10,6 +10,7 @@
 - DataWorker now uses Collection and Item components.
 - Router now uses Collection and Item components.
 - Template now uses Collection and Item components.
+- PHP Version downgrade to 8.4 to support hosting deployment.
 
 #### Fixed
 - Skeleton: Sites folder not accounted for deploy.sh and index.php
