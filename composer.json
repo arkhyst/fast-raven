@@ -9,7 +9,7 @@
         }
     },
     "require": {
-        "php": "^8.5",
+        "php": "^8.4",
         "vlucas/phpdotenv": "^5.0"
     }, 
     "autoload-dev": {
