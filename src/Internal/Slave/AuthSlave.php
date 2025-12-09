@@ -36,6 +36,8 @@ final class AuthSlave {
 
             return $inst;
         }
+
+        return null;
     }
 
     private function __construct() {

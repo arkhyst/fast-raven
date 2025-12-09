@@ -43,6 +43,8 @@ final class DataSlave {
 
             return $inst;
         }
+
+        return null;
     }
 
     private function __construct() {

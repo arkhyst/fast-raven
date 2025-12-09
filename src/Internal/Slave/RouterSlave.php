@@ -36,6 +36,8 @@ final class RouterSlave {
             self::$busy = true;
             return new RouterSlave();
         }
+
+        return null;
     }
 
     private function __construct() {

@@ -37,6 +37,8 @@ final class LogSlave {
 
             return $inst;
         }
+
+        return null;
     }
 
     private function __construct() {

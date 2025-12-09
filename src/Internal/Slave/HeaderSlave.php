@@ -33,6 +33,8 @@ final class HeaderSlave {
 
             return $inst;
         }
+
+        return null;
     }
 
     private function __construct() {
