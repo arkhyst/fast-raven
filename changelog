@@ -19,6 +19,7 @@
 
 #### Removed
 - htmlspecialchars method from Request::sanitizeData().
+- meta tag HTTP headers from main.php Template.
 
 ---
 
