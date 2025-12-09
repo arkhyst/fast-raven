@@ -2,6 +2,7 @@
 
 namespace FastRaven;
 
+use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
 use FastRaven\Exceptions\SmartException;
 use FastRaven\Internal\Core\Kernel;
@@ -104,9 +105,9 @@ final class Server {
         LogWorker::error("-SG- " . $e->getMessage());
 
         if(!$this->kernel->isApiRequest()) {
-            if($e instanceof NotFoundException) {
+            if($e instanceof NotFoundException || is_subclass_of($e, NotFoundException::class)) {
                 HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultNotFoundPathRedirect());
-            } else if($e instanceof NotAuthorizedException) {
+            } else if($e instanceof NotAuthorizedException || is_subclass_of($e, NotAuthorizedException::class)) {
                 if($e->isDomainLevel())
                     HeaderWorker::addHeader("Location", "https://".Bee::getBuiltDomain($this->kernel->getConfig()->getDefaultUnauthorizedSubdomainRedirect()));
                 else

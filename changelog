@@ -16,6 +16,7 @@
 - Skeleton: Sites folder not accounted for deploy.sh and index.php
 - Skeleton: .htaccess fallback not working.
 - Skeleton: Sites folder not accounted for watch.sh
+- NotFoundException and NotAuthorizedException are not being handled correctly.
 
 #### Removed
 - htmlspecialchars method from Request::sanitizeData().
