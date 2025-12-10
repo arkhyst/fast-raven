@@ -179,7 +179,7 @@ final class Kernel {
 
         if ($type == DataType::JSON) {
             echo json_encode([
-                "status" => $response->getStatus(),
+                "success" => $response->getSuccess(),
                 "msg" => $response->getMessage(),
                 "data" => $response->getData()
             ]);

@@ -4,6 +4,7 @@
 - Collection and Item components for handling key-value pair arrays.
 - ValidationWorker for validating data such as email addresses or passwords.
 - ValidationFlags collection for handling validation flags.
+- API Response success boolean field.
 
 #### Changed
 - Skeleton: Update build.sh to account for last changes.
@@ -21,6 +22,7 @@
 #### Removed
 - htmlspecialchars method from Request::sanitizeData().
 - meta tag HTTP headers from main.php Template.
+- - API Response status string field.
 
 ---
 

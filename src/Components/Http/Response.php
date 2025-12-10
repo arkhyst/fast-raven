@@ -12,8 +12,8 @@ final class Response {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private string $status;
-        public function getStatus(): string { return $this->status; }
+    private bool $success;
+        public function getSuccess(): bool { return $this->success; }
     private int $code;
         public function getCode(): int { return $this->code; }
     private string $message = "";
@@ -45,7 +45,7 @@ final class Response {
     }
 
     private function __construct(bool $success, int $code) {
-        $this->status = $success ? "OK" : "ERROR";
+        $this->success = $success;
         $this->code = $code;
     }
 
