@@ -85,7 +85,7 @@ class AuthWorker {
      *
      * @return bool True if the user is authorized and has a valid csrf_token, false otherwise.
      */
-    public static function isAuthorized(?Request $request): bool {
+    public static function isAuthorized(?Request $request = null): bool {
         if(self::$busy) {
             if (session_status() === PHP_SESSION_ACTIVE) {
                 if(self::$slave->validateSession()) {

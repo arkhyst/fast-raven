@@ -23,6 +23,7 @@
 - NotFoundException and NotAuthorizedException are not being handled correctly.
 - ValidationWorker is not initialized. (jesus christ)
 - DataWorker::getOne() crashes when no result is found.
+- AlreadyAuthorizedException is not being handled.
 
 #### Removed
 - htmlspecialchars method from Request::sanitizeData().
