@@ -18,6 +18,7 @@ use FastRaven\Internal\Slave\HeaderSlave;
 use FastRaven\Internal\Slave\AuthSlave;
 use FastRaven\Internal\Slave\DataSlave;
 use FastRaven\Internal\Slave\RouterSlave;
+use FastRaven\Internal\Slave\ValidationSlave;
 
 use FastRaven\Exceptions\BadImplementationException;
 use FastRaven\Exceptions\EndpointFileDoesNotExist;
@@ -46,6 +47,7 @@ final class Kernel {
     private AuthSlave $authSlave;
     private DataSlave $dataSlave;
     private RouterSlave $routerSlave;
+    private ValidationSlave $validationSlave;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -111,6 +113,8 @@ final class Kernel {
         $this->dataSlave = DataSlave::zap();
 
         $this->routerSlave = RouterSlave::zap();
+
+        $this->validationSlave = ValidationSlave::zap();
     }
 
     /**
