@@ -225,19 +225,46 @@ Defines individual routes.
 ```php
 // View endpoint
 Endpoint::view(
-    $restricted,    // Requires auth?
-    "/path",        // URL path
-    "file.html",    // File in src/views/
-    Template::flex()// Optional template override
+    $restricted,           // Requires auth?
+    "/path",               // URL path
+    "file.html",           // File in src/views/
+    Template::flex(),      // Optional template override
+    $unauthorizedExclusive // Optional: only for unauthorized users (default: false)
 );
 
 // API endpoint
 Endpoint::api(
-    $restricted,    // Requires auth?
-    "POST",         // HTTP method
-    "/path",        // URL path (relative to /api/)
-    "file.php"      // File in src/api/
+    $restricted,           // Requires auth?
+    "POST",                // HTTP method
+    "/path",               // URL path (relative to /api/)
+    "file.php",            // File in src/api/
+    $unauthorizedExclusive // Optional: only for unauthorized users (default: false)
 );
+```
+
+#### Authentication Control
+
+The `$restricted` and `$unauthorizedExclusive` parameters control access:
+
+- **`$restricted = false`** - Endpoint is accessible to everyone (default: public)
+- **`$restricted = true`** - Endpoint requires authentication
+- **`$unauthorizedExclusive = true`** - Endpoint is ONLY accessible to unauthorized users (e.g., login/register pages)
+- **`$unauthorizedExclusive = false`** - No unauthorized-only restriction (default)
+
+**Common use cases:**
+
+```php
+// Public endpoint (anyone can access)
+Endpoint::view(false, "/", "home.html");
+
+// Protected endpoint (requires login)
+Endpoint::view(true, "/dashboard", "dashboard.html");
+
+// Unauthorized-only endpoint (login page - redirects if already logged in)
+Endpoint::view(false, "/login", "login.html", null, true);
+
+// API registration endpoint (only for non-logged-in users)
+Endpoint::api(false, "POST", "/register", "register.php", true);
 ```
 
 ### Request

@@ -5,6 +5,8 @@
 - ValidationWorker for validating data such as email addresses or passwords.
 - ValidationFlags collection for handling validation flags.
 - API Response success boolean field.
+- AlreadyAuthorizedException for handling unauthorized exclusive endpoints.
+- Endpoint argument unauthorizedExclusive for handling unauthorized exclusive endpoints.
 
 #### Changed
 - Skeleton: Update build.sh to account for last changes.
@@ -22,7 +24,7 @@
 #### Removed
 - htmlspecialchars method from Request::sanitizeData().
 - meta tag HTTP headers from main.php Template.
-- - API Response status string field.
+- API Response status string field.
 
 ---
 

@@ -22,6 +22,7 @@ use FastRaven\Internal\Slave\RouterSlave;
 use FastRaven\Exceptions\BadImplementationException;
 use FastRaven\Exceptions\EndpointFileDoesNotExist;
 use FastRaven\Exceptions\NotAuthorizedException;
+use FastRaven\Exceptions\AlreadyAuthorizedException;
 
 final class Kernel {
     #----------------------------------------------------------------------
@@ -125,6 +126,7 @@ final class Kernel {
      * 
      * @throws NotFoundException If no matching route is found for the request.
      * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
+     * @throws AlreadyAuthorizedException If the endpoint is unauthorized exclusive and the request is authorized.
      * @throws EndpointFileDoesNotExist If the endpoint file does not exist.
      * @throws BadImplementationException If the API function does not return a Response object.
      */
@@ -137,6 +139,7 @@ final class Kernel {
         if(!$endpoint) throw new NotFoundException();
 
         if($endpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
+        if($endpoint->getUnauthorizedExclusive() && AuthWorker::isAuthorized($this->request)) throw new AlreadyAuthorizedException();
 
         $filePath = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
         if(!file_exists($filePath)) throw new EndpointFileDoesNotExist($filePath);

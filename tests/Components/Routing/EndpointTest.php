@@ -144,4 +144,63 @@ class EndpointTest extends TestCase
         $this->assertEquals('/admin/dashboard/stats#GET', $endpoint->getComplexPath());
         $this->assertEquals('admin/dashboard/stats.php', $endpoint->getFile());
     }
+
+    public function testApiUnauthorizedExclusiveDefaultsFalse(): void
+    {
+        $endpoint = Endpoint::api(false, 'GET', 'users', 'users.php');
+
+        $this->assertFalse($endpoint->getUnauthorizedExclusive());
+    }
+
+    public function testApiUnauthorizedExclusiveTrue(): void
+    {
+        $endpoint = Endpoint::api(false, 'GET', 'register', 'register.php', true);
+
+        $this->assertTrue($endpoint->getUnauthorizedExclusive());
+    }
+
+    public function testApiUnauthorizedExclusiveFalse(): void
+    {
+        $endpoint = Endpoint::api(false, 'POST', 'login', 'login.php', false);
+
+        $this->assertFalse($endpoint->getUnauthorizedExclusive());
+    }
+
+    public function testViewUnauthorizedExclusiveDefaultsFalse(): void
+    {
+        $endpoint = Endpoint::view(false, '/home', 'home.php');
+
+        $this->assertFalse($endpoint->getUnauthorizedExclusive());
+    }
+
+    public function testViewUnauthorizedExclusiveTrue(): void
+    {
+        $endpoint = Endpoint::view(false, '/login', 'login.php', null, true);
+
+        $this->assertTrue($endpoint->getUnauthorizedExclusive());
+    }
+
+    public function testViewUnauthorizedExclusiveFalse(): void
+    {
+        $template = Template::new('Page', '1.0');
+        $endpoint = Endpoint::view(false, '/profile', 'profile.php', $template, false);
+
+        $this->assertFalse($endpoint->getUnauthorizedExclusive());
+    }
+
+    public function testApiRestrictedWithUnauthorizedExclusive(): void
+    {
+        $endpoint = Endpoint::api(true, 'GET', 'admin', 'admin.php', true);
+
+        $this->assertTrue($endpoint->getRestricted());
+        $this->assertTrue($endpoint->getUnauthorizedExclusive());
+    }
+
+    public function testViewRestrictedWithUnauthorizedExclusive(): void
+    {
+        $endpoint = Endpoint::view(true, '/dashboard', 'dashboard.php', null, true);
+
+        $this->assertTrue($endpoint->getRestricted());
+        $this->assertTrue($endpoint->getUnauthorizedExclusive());
+    }
 }

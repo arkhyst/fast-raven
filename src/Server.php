@@ -129,7 +129,7 @@ final class Server {
      *
      * If the server has not been configured, it will return a 500 status code.
      *
-     * Handles NotFoundException, BadImplementationException, EndpointFileDoesNotExist, and NotAuthorizedException.
+     * Handles NotFoundException, BadImplementationException, EndpointFileDoesNotExist, NotAuthorizedException and AlreadyAuthorizedException.
      */
     public function run(): void {
         if ($this->ready) {
