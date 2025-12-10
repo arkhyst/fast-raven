@@ -12,7 +12,7 @@ final class LogSlave {
 
     private static bool $busy = false;
     private LogStash $stash;
-        public function insertLogIntoStash(string $text): void { $this->stash->addLog($text); }
+    private string $requestInternalId;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -29,10 +29,10 @@ final class LogSlave {
      * 
      * @return ?LogSlave The LogSlave object if it was successfully created, null otherwise.
      */
-    public static function zap(): ?LogSlave {
+    public static function zap(string $requestInternalId): ?LogSlave {
         if(!self::$busy) {
             self::$busy = true;
-            $inst = new LogSlave();
+            $inst = new LogSlave($requestInternalId);
             LogWorker::__getToWork($inst);
 
             return $inst;
@@ -41,8 +41,9 @@ final class LogSlave {
         return null;
     }
 
-    private function __construct() {
+    private function __construct(string $requestInternalId) {
         $this->stash = new LogStash();
+        $this->requestInternalId = $requestInternalId;
     }
 
     #/ INIT
@@ -73,15 +74,23 @@ final class LogSlave {
     #\ METHODS
 
     /**
+     * Inserts a log entry into the stash with a timestamp and request internal ID.
+     *
+     * @param string $text The log message to be inserted.
+     */
+    public function insertLogIntoStash(string $text): void {
+        $date = date("Y-m-d H:i:s");
+        $this->stash->addLog("[{$date}]-({$this->requestInternalId}) {$text}"); 
+    }
+
+    /**
      * Writes an open log entry for the given request.
      * 
      * @param Request $request The request object for which the open log entry should be written.
      */
     public function writeOpenLogs(Request $request): void {
         $type = $request->isApi() ? "API" : "VIEW";
-        LogWorker::log("# OPEN {$type} REQUEST({$request->getInternalID()})");
-        LogWorker::log("-SG- -- Complex Path: {$request->getComplexPath()}");
-        LogWorker::log("-SG- -- Remote Address: {$request->getOriginInfo()["IP"]}");
+        LogWorker::log("{$type}[{$request->getMethod()}] > {$request->getPath()} <-> {$request->getOriginInfo()["IP"]} < ELAPSED_TIMEms");
     }
 
     /**
@@ -89,13 +98,10 @@ final class LogSlave {
      * This function will log the request time and some other information.
      * The request time will be logged in milliseconds.
      *
-     * @param Request $request The request object for which the close log entry should be written.
      * @param float $elapsedTime The time it took to process the request in milliseconds.
      */
-    public static function writeCloseLogs(Request $request, float $elapsedTime): void {
-        LogWorker::log("-SG- -- Request time: " . $elapsedTime . "ms");
-        LogWorker::log("# CLOSE REQUEST({$request->getInternalID()})");
-        LogWorker::log("=======================================================");
+    public function writeCloseLogs(float $elapsedTime): void {
+        $this->stash->replaceLog(0, "ELAPSED_TIME", strval($elapsedTime));
     }
 
     /**

@@ -34,7 +34,7 @@ final class Request {
      * @param string $remoteAddress    The remote address of the request.
      */
     public function __construct(string $uri, string $method, string $dataStream, string $remoteAddress) {
-        $this->internalID = bin2hex(random_bytes(8));
+        $this->internalID = bin2hex(random_bytes(4));
         $this->data = json_decode($dataStream, true) ?? [];
         $this->data = $this->sanitizeData($this->data);
         

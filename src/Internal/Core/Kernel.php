@@ -93,11 +93,11 @@ final class Kernel {
             $_SERVER["REQUEST_URI"],
             $_SERVER["REQUEST_METHOD"],
             file_get_contents("php://input"),
-            $this->config->isPrivacyRegisterOrigin() ? $_SERVER["REMOTE_ADDR"] : ""
+            $this->config->isPrivacyRegisterOrigin() ? $_SERVER["REMOTE_ADDR"] : "HOST"
         );
         
         if($this->config->isPrivacyRegisterLogs()) {
-            $this->logSlave = LogSlave::zap();
+            $this->logSlave = LogSlave::zap($this->request->getInternalID());
             $this->logSlave->writeOpenLogs($this->request);
         }
 
@@ -197,7 +197,7 @@ final class Kernel {
         $diff = microtime(true) - $this->startRequestTime;
         $elapsedTime = round(($diff - floor($diff)) * 1000);
 
-        $this->logSlave->writeCloseLogs($this->request, $elapsedTime);
+        $this->logSlave->writeCloseLogs($elapsedTime);
         $this->logSlave->dumpLogStashIntoFile();
     }
 

@@ -46,7 +46,7 @@ class LogWorker {
      */
     public static function log(string $text): void {
         if(self::$busy) {
-            self::$slave->insertLogIntoStash("[".date("Y-m-d H:i:s")."] ".$text);
+            self::$slave->insertLogIntoStash($text);
         }
     }
 
@@ -59,7 +59,7 @@ class LogWorker {
      */
     public static function error(string $text): void {
         if(self::$busy) {
-            self::$slave->insertLogIntoStash("[".date("Y-m-d H:i:s")."] **ERROR** => ".$text);
+            self::$slave->insertLogIntoStash("**ERROR** => ".$text);
         }
     }
 
@@ -72,7 +72,7 @@ class LogWorker {
      */
     public static function warning(string $text): void {
         if(self::$busy) {
-            self::$slave->insertLogIntoStash("[".date("Y-m-d H:i:s")."] **WARNING** => ".$text);
+            self::$slave->insertLogIntoStash("**WARNING** => ".$text);
         }
     }
 

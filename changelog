@@ -14,6 +14,7 @@
 - Router now uses Collection and Item components.
 - Template now uses Collection and Item components.
 - PHP Version downgrade to 8.4 to support hosting deployment.
+- System logs now are collapsed so they take less space.
 
 #### Fixed
 - Skeleton: Sites folder not accounted for deploy.sh and index.php
