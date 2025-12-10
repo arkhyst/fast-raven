@@ -21,6 +21,7 @@
 - Skeleton: Sites folder not accounted for watch.sh
 - NotFoundException and NotAuthorizedException are not being handled correctly.
 - ValidationWorker is not initialized. (jesus christ)
+- DataWorker::getOne() crashes when no result is found.
 
 #### Removed
 - htmlspecialchars method from Request::sanitizeData().

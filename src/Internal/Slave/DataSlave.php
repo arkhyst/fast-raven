@@ -148,7 +148,7 @@ final class DataSlave {
             $ok = $stmt->execute($vars);
 
             if($ok) {
-                if($type == QueryType::SELECT) return ($fetchAll ? $stmt->fetchAll() : $stmt->fetch());
+                if($type == QueryType::SELECT) return $fetchAll ? $stmt->fetchAll() : ($stmt->fetch() ?: null);
                 else if($type == QueryType::COUNT) return (int)$stmt->fetch()["count"];
                 else if($type == QueryType::DELETE) return $stmt->rowCount() > 0;
                 else if($type == QueryType::INSERT || $type == QueryType::UPDATE) return $ok;
