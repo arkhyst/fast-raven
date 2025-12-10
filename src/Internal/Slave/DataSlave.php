@@ -83,7 +83,7 @@ final class DataSlave {
                 $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT);
             } catch (\PDOException $e) {
                 $this->pdo = null;
-                LogWorker::error("-SG- PDOException: ".$e->getMessage());
+                LogWorker::error("PDOException: ".$e->getMessage());
             }
         }
     }
@@ -153,7 +153,7 @@ final class DataSlave {
                 else if($type == QueryType::DELETE) return $stmt->rowCount() > 0;
                 else if($type == QueryType::INSERT || $type == QueryType::UPDATE) return $ok;
             } else {
-                LogWorker::error("-SG- SQL Query was not successfull -> $query");
+                LogWorker::error("SQL Query was not successfull -> $query");
                 if($type == QueryType::SELECT) return null;
                 else if($type == QueryType::COUNT) return 0;
                 else if($type == QueryType::INSERT || $type == QueryType::UPDATE || $type == QueryType::DELETE) return false;
@@ -290,7 +290,7 @@ final class DataSlave {
                     $ok = $stmt->execute($values);
                     if(!$ok) {
                         $this->pdo->rollBack();
-                        LogWorker::error("-SG- Batch insert failed -> $query");
+                        LogWorker::error("Batch insert failed -> $query");
                         return false;
                     }
                 }
@@ -299,7 +299,7 @@ final class DataSlave {
                 return true;
             } catch (\PDOException $e) {
                 if($this->pdo->inTransaction()) $this->pdo->rollBack();
-                LogWorker::error("-SG- PDOException during batch insert: ".$e->getMessage());
+                LogWorker::error("PDOException during batch insert: ".$e->getMessage());
                 return false;
             }
         }

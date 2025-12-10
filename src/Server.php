@@ -103,7 +103,7 @@ final class Server {
     private function handleException(SmartException $e): Response {
         $statusCode = $this->kernel->isApiRequest() ? $e->getStatusCode() : 301;
         $response = Response::new(false, $statusCode, $e->getPublicMessage());
-        LogWorker::error("-SG- " . $e->getMessage());
+        LogWorker::error("SmartException: " . $e->getMessage());
 
         if(!$this->kernel->isApiRequest()) {
             if($e instanceof NotFoundException || is_subclass_of($e, NotFoundException::class) ||

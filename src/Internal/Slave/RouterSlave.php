@@ -71,7 +71,7 @@ final class RouterSlave {
             if(str_starts_with($path, $requestPath)) {
                 $tmp = SITE_PATH . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . $file;
                 if(file_exists($tmp)) $filePath = $tmp;
-                else LogWorker::error("-SG- Router file does not exist: " . $filePath);
+                else LogWorker::error("Router file does not exist: " . $filePath);
                 break;
             }
         }
@@ -114,7 +114,7 @@ final class RouterSlave {
                 }
             }
         } else {
-            LogWorker::error("-SG- Router endpoint list is empty or does not contain endpoints.");
+            LogWorker::error("Router endpoint list is empty or does not contain endpoints.");
         }
 
         return $endpoint;

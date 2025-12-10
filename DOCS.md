@@ -469,6 +469,9 @@ LogWorker::warning("Invalid input detected");
 
 // Error
 LogWorker::error("Database connection failed");
+
+// Debug
+LogWorker::debug("User {$userId} performed action");
 ```
 
 ---
@@ -613,6 +616,7 @@ if (password_verify($password, $hash)) {
 LogWorker::log("User {$userId} performed action");
 LogWorker::warning("Suspicious activity detected");
 LogWorker::error("Critical error occurred");
+LogWorker::debug("User {$userId} performed action");
 ```
 
 ---

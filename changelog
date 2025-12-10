@@ -7,6 +7,7 @@
 - API Response success boolean field.
 - AlreadyAuthorizedException for handling unauthorized exclusive endpoints.
 - Endpoint argument unauthorizedExclusive for handling unauthorized exclusive endpoints.
+- LogWorker::debug() for debugging system logs.
 
 #### Changed
 - Skeleton: Update build.sh to account for last changes.
@@ -15,6 +16,7 @@
 - Template now uses Collection and Item components.
 - PHP Version downgrade to 8.4 to support hosting deployment.
 - System logs now are collapsed so they take less space.
+- LogWorker prefix for each type of log.
 
 #### Fixed
 - Skeleton: Sites folder not accounted for deploy.sh and index.php
