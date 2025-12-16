@@ -39,6 +39,7 @@ OR (not recommended)
 - Upgrade of Router component: refactor to support more complex architectures.
 - Upgrade of PHP version to 8.5 (if is globally supported by hosting providers).
 - Upgrade of DataSlave: implementation of index and join for scalable queries.
+- Upgrade of ValidationWorker: implementation of validation details when validation fails.
 
 ---
 

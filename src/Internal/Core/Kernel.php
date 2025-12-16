@@ -19,6 +19,7 @@ use FastRaven\Internal\Slave\AuthSlave;
 use FastRaven\Internal\Slave\DataSlave;
 use FastRaven\Internal\Slave\RouterSlave;
 use FastRaven\Internal\Slave\ValidationSlave;
+use FastRaven\Internal\Slave\MailSlave;
 
 use FastRaven\Exceptions\BadImplementationException;
 use FastRaven\Exceptions\EndpointFileDoesNotExist;
@@ -48,6 +49,7 @@ final class Kernel {
     private DataSlave $dataSlave;
     private RouterSlave $routerSlave;
     private ValidationSlave $validationSlave;
+    private MailSlave $mailSlave;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -115,6 +117,8 @@ final class Kernel {
         $this->routerSlave = RouterSlave::zap();
 
         $this->validationSlave = ValidationSlave::zap();
+
+        $this->mailSlave = MailSlave::zap();
     }
 
     /**
@@ -159,7 +163,7 @@ final class Kernel {
             if($epTemplate) $template->merge($epTemplate);
             
             $template->setFile($filePath);
-            require_once __DIR__ . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
+            require_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
 
             $response = Response::new(true, 200);
         }

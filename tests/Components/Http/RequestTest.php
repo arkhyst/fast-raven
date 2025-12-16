@@ -176,8 +176,8 @@ class RequestTest extends TestCase
         $internalId = $request->getInternalID();
 
         $this->assertIsString($internalId);
-        $this->assertEquals(16, strlen($internalId));
-        $this->assertMatchesRegularExpression('/^[a-f0-9]{16}$/', $internalId);
+        $this->assertEquals(8, strlen($internalId));
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{8}$/', $internalId);
     }
 
     public function testGetInternalIdIsUnique(): void

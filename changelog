@@ -8,6 +8,9 @@
 - AlreadyAuthorizedException for handling unauthorized exclusive endpoints.
 - Endpoint argument unauthorizedExclusive for handling unauthorized exclusive endpoints.
 - LogWorker::debug() for debugging system logs.
+- MailWorker for sending crafted and dynamic emails.
+- Mail component for crafting mail objects.
+- Item::mail and Item::file for helping with Mail crafting.
 
 #### Changed
 - Skeleton: Update build.sh to account for last changes.

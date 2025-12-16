@@ -59,6 +59,7 @@ framework/
 │   │   ├── DataWorker.php
 │   │   ├── HeaderWorker.php
 │   │   ├── LogWorker.php
+│   │   ├── MailWorker.php
 │   │   └── Bee.php        # Utility functions
 │   └── Server.php         # Main server class
 └── tests/                 # PHPUnit tests
@@ -126,7 +127,7 @@ $template->merge($anotherTemplate);
 
 ### Lib (JavaScript)
 
-The `Lib` class is automatically included in templates and provides client-side utility methods for interacting with your API endpoints. It's located in the framework's Template folder at `src/Internal/Core/Template/lib.js`.
+The `Lib` class is automatically included in templates and provides client-side utility methods for interacting with your API endpoints. It's located in the framework's Template folder at `src/Internal/Template/lib.js`.
 
 #### Static Methods
 
@@ -472,6 +473,85 @@ LogWorker::error("Database connection failed");
 
 // Debug
 LogWorker::debug("User {$userId} performed action");
+```
+
+### MailWorker
+
+Email sending system using PHPMailer.
+
+```php
+use FastRaven\Workers\MailWorker;
+use FastRaven\Components\Core\Mail;
+use FastRaven\Components\Data\Item;
+use FastRaven\Components\Data\Collection;
+
+// Create origin and destination
+$origin = Item::new("Site Name", "noreply@example.com");
+$destination = Item::new("John Doe", "john@example.com");
+
+// Create mail
+$mail = Mail::new(
+    $origin,
+    $destination,
+    "Welcome to Our Site",
+    "emails/welcome.html"  // Template in src/views/
+);
+
+// Optional: Add BCC recipients
+$bccList = Collection::new();
+$bccList->add(Item::new("Admin", "admin@example.com"));
+$mail->setBccMails($bccList);
+
+// Optional: Add placeholder replacements
+$replacements = Collection::new();
+$replacements->add(Item::new("{{USERNAME}}", "John"));
+$replacements->add(Item::new("{{ACTIVATION_LINK}}", "https://example.com/activate"));
+$mail->setReplaceValues($replacements);
+
+// Optional: Add attachments
+$attachments = Collection::new();
+$attachments->add(Item::new("document.pdf", "files/document.pdf")); // Attachments in src/assets/
+$mail->setAttachments($attachments);
+
+// Optional: Set timeout (default: 3000ms)
+$mail->setTimeout(100);
+
+// Send email
+if (MailWorker::sendMail($mail)) {
+    Response::new(true, 200, "Email sent successfully");
+} else {
+    Response::new(false, 500, "Failed to send email");
+}
+```
+
+**SMTP Configuration:**
+
+Configure SMTP settings in your `.env` file:
+
+```env
+SMTP_HOST=smtp.domain.com
+SMTP_PORT=587
+SMTP_USER=email@domain.com
+SMTP_PASS=secret
+```
+
+**Email Template Example:**
+
+Create `src/views/emails/welcome.html`:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome</title>
+</head>
+<body>
+    <h1>Welcome {{USERNAME}}!</h1>
+    <p>Thank you for joining us.</p>
+    <a href="{{ACTIVATION_LINK}}">Activate your account</a>
+</body>
+</html>
 ```
 
 ---
@@ -827,6 +907,7 @@ $template->setPostDOMFiles(["footer.php"]);
 | `DataWorker` | Database operations |
 | `HeaderWorker` | HTTP headers |
 | `LogWorker` | Logging |
+| `MailWorker` | Email sending |
 
 ---
 

@@ -30,6 +30,14 @@ final class Item {
         return new Item($key, $value);
     }
 
+    public static function mail(string $name, string $address): Item {
+        return new Item($name, $address);
+    }
+
+    public static function file(string $name, string $path): Item {
+        return new Item($name, $path);
+    }
+
     private function  __construct(string $key, string|int|float|bool $value) {
         $this->key = $key;
         $this->value = $value;
@@ -49,7 +57,9 @@ final class Item {
     #----------------------------------------------------------------------
     #\ METHODS
 
-    
+    public function __toArray(): array {
+        return [$this->key, $this->value];
+    }
 
     #/ METHODS
     #----------------------------------------------------------------------

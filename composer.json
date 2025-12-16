@@ -10,7 +10,8 @@
     },
     "require": {
         "php": "^8.4",
-        "vlucas/phpdotenv": "^5.0"
+        "vlucas/phpdotenv": "^5.0",
+        "phpmailer/phpmailer": "^7.0"
     }, 
     "autoload-dev": {
         "psr-4": {
