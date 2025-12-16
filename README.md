@@ -30,8 +30,8 @@ OR (not recommended)
 - ~~Improvement of typed arguments in DataWorker conditions and values.~~
 - ~~Implementation of logs privacy settings.~~
 - ~~Addition of ValidationWorker.~~
-- Addition of MailWorker with PHPMailer and configurable SMTP settings.
-- Addition of custom helper classes support for each FastRaven project.
+- ~~Addition of MailWorker with PHPMailer and configurable SMTP settings.~~
+- ~~Addition of custom helper classes support for each FastRaven project.~~
 
 ### Roadmap: v1.0
 - Improvement of ValidationWorker complexity and ValidationFlags.

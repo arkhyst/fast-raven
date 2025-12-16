@@ -42,18 +42,22 @@ graph TD
 
 ### Directory Structure
 
+**Framework Structure:**
+
 ```
 framework/
 ├── src/
 │   ├── Components/        # Core components
-│   │   ├── Core/          # Config, Template
+│   │   ├── Core/          # Config, Template, Mail
+│   │   ├── Data/          # Collection, Item
 │   │   ├── Http/          # Request, Response
 │   │   └── Routing/       # Router, Endpoint
 │   ├── Exceptions/        # Custom exceptions
 │   ├── Internal/          # Internal
 │   │   ├── Core/          # Kernel
-│   │   ├── Slave/         # AuthSlave, DataSlave, etc.
-│   │   └── Stash/         # LogStash
+│   │   ├── Slave/         # AuthSlave, DataSlave, MailSlave, etc.
+│   │   ├── Stash/         # LogStash
+│   │   └── Template/      # main.php, lib.js
 │   ├── Workers/           # Public API for developers
 │   │   ├── AuthWorker.php
 │   │   ├── DataWorker.php
@@ -65,9 +69,85 @@ framework/
 └── tests/                 # PHPUnit tests
 ```
 
+**Project Structure:**
+
+```
+project/
+├── sites/
+│   └── main/              # Example site
+│       ├── config/
+│       │   ├── env/       # Environment variables
+│       │   │   ├── .env
+│       │   │   ├── .env.dev
+│       │   │   └── .env.prod
+│       │   ├── router/
+│       │   │   ├── api.php
+│       │   │   └── views.php
+│       │   ├── config.php
+│       │   └── template.php
+│       ├── src/
+│       │   ├── api/       # API endpoints
+│       │   ├── web/
+│       │   │   ├── assets/
+│       │   │   │   ├── scss/   # SCSS source files
+│       │   │   │   ├── js/     # JavaScript source files
+│       │   │   │   ├── fonts/
+│       │   │   │   └── img/
+│       │   │   └── views/
+│       │   │       ├── pages/      # Page templates
+│       │   │       ├── fragments/  # Reusable fragments
+│       │   │       └── mails/      # Email templates
+│       │   └── _shared/   # Shared utilities
+│       ├── public/
+│       │   └── assets/
+│       │       ├── css/   # Compiled CSS
+│       │       ├── js/    # Compiled/obfuscated JS
+│       │       ├── fonts/
+│       │       └── img/
+│       ├── storage/
+│       │   ├── cache/
+│       │   ├── logs/
+│       │   └── uploads/
+│       ├── .htaccess
+│       └── index.php
+└── ops/                   # Build and deployment scripts
+    ├── build.sh
+    ├── deploy.sh
+    └── watch.sh
+```
+
 ---
 
 ## Core Components
+
+### File Organization
+
+**Views:**
+- **Pages**: `src/web/views/pages/` - Main HTML page templates
+- **Fragments**: `src/web/views/fragments/` - Reusable HTML snippets (headers, footers, etc.)
+- **Mails**: `src/web/views/mails/` - Email templates for MailWorker
+
+**API Endpoints:**
+- `src/api/` - PHP files that return Response objects
+
+**Assets:**
+- **Source**: `src/web/assets/`
+  - `scss/` - SCSS source files
+  - `js/` - JavaScript source files  
+  - `fonts/` - Font files
+  - `img/` - Image source files
+- **Public**: `public/assets/`
+  - `css/` - Compiled CSS (from SCSS)
+  - `js/` - Compiled/obfuscated JavaScript
+  - `fonts/` - Public fonts
+  - `img/` - Public images
+
+**Configuration:**
+- `config/config.php` - Main site configuration
+- `config/template.php` - Template configuration
+- `config/router/views.php` - View routes
+- `config/router/api.php` - API routes
+- `config/env/.env*` - Environment variables
 
 ### Server
 
@@ -114,15 +194,31 @@ Manages HTML templates, assets, and metadata.
 ```php
 $template = Template::new("Page Title", "1.0.0", "en");
 
-// Add assets
-$template->addStyle("styles/main.css");
-$template->addScript("scripts/app.js");
+// Add assets (paths relative to public/assets/)
+$template->addStyle("main.css");      // Will load from public/assets/css/main.css
+$template->addScript("app.js");       // Will load from public/assets/js/app.js
 
 // Add autofill (auto-populate DOM from API)
 $template->addAutofill("#username", "/api/user/name");
 
+// Add fragments (before/after main content)
+$template->setBeforeFragments(["header.html", "nav.html"]);
+$template->setAfterFragments(["footer.html"]);
+
 // Merge templates
 $template->merge($anotherTemplate);
+```
+
+**Fragment Files:**
+
+Fragments are reusable HTML snippets stored in `src/web/views/fragments/` that can be injected before or after your main content.
+
+```php
+// Set fragments that appear before main content
+$template->setBeforeFragments(["header.html"]);
+
+// Set fragments that appear after main content  
+$template->setAfterFragments(["footer.html", "analytics.html"]);
 ```
 
 ### Lib (JavaScript)
@@ -736,26 +832,45 @@ Based on your `STATE` value, create the corresponding environment file:
 # If STATE=staging, create .env.staging
 ```
 
+**Example `.env`:**
+
+```env
+STATE=dev
+VERSION=0.0.1
+```
+
 **Example `.env.dev`:**
 
 ```env
-# Development environment
+SITE_ADDRESS=localhost
+
 DB_HOST=localhost
+
 DB_NAME=myapp_dev
 DB_USER=root
 DB_PASS=
-DEBUG=true
+
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=noreply@example.com
+SMTP_PASS=
 ```
 
 **Example `.env.prod`:**
 
 ```env
-# Production environment
-DB_HOST=production-db.example.com
+SITE_ADDRESS=example.com
+
+DB_HOST=prod-db.example.com
+
 DB_NAME=myapp_production
 DB_USER=prod_user
 DB_PASS=secure_password_here
-DEBUG=false
+
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=noreply@example.com
+SMTP_PASS=smtp_password_here
 ```
 
 ### How It Works

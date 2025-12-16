@@ -30,12 +30,12 @@ final class Template {
     private Collection $autofill;
         public function getAutofill(): Collection { return $this->autofill; }
         public function addAutofill(string $dom, string $api): void { $this->autofill->add(Item::new($dom, $api)); }
-    private array $preDOMFiles = [];
-        public function getPreDOMFiles(): array { return $this->preDOMFiles; }
-        public function setPreDOMFiles(array $files): void { $this->preDOMFiles = $files; }
-    private array $postDOMFiles = [];
-        public function getPostDOMFiles(): array { return $this->postDOMFiles; }
-        public function setPostDOMFiles(array $files): void { $this->postDOMFiles = $files; }
+    private array $beforeFragments = [];
+        public function getBeforeFragments(): array { return $this->beforeFragments; }
+        public function setBeforeFragments(array $fragments): void { $this->beforeFragments = $fragments; }
+    private array $afterFragments = [];
+        public function getAfterFragments(): array { return $this->afterFragments; }
+        public function setAfterFragments(array $fragments): void { $this->afterFragments = $fragments; }
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -129,7 +129,7 @@ final class Template {
      * @return string The HTML link element containing the favicon of the page.
      */
     public function getHtmlFavicon(): string {
-        return "<link rel=\"icon\" href=\"/public/assets/{$this->favicon}\" type=\"image/png\">";
+        return "<link rel=\"icon\" href=\"/public/assets/img/{$this->favicon}\" type=\"image/png\">";
     }
 
     /**
@@ -142,7 +142,7 @@ final class Template {
     public function getHtmlStyles(): string { 
         $html = "";
         foreach ($this->styles as $style) {
-            $html .= "<link rel=\"stylesheet\" href=\"/public/resources/$style?v=".$this->getVersion()."\">";
+            $html .= "<link rel=\"stylesheet\" href=\"/public/assets/css/$style?v=".$this->getVersion()."\">";
         }
 
         return $html;
@@ -158,7 +158,7 @@ final class Template {
     public function getHtmlScripts(): string { 
         $html = "";
         foreach ($this->scripts as $script) {
-            $html .= "<script src=\"/public/resources/$script?v=".$this->getVersion()."\" type=\"text/javascript\"></script>";
+            $html .= "<script src=\"/public/assets/js/$script?v=".$this->getVersion()."\" type=\"text/javascript\"></script>";
         }
 
         return $html;

@@ -140,7 +140,7 @@ final class Kernel {
      */
     public function process(): Response {
         $api = $this->request->isApi();
-        $mid = $api ? "api" : "views";
+        $mid = $api ? "api" : "web/views/pages";
         $endpoint = $this->routerSlave->route($this->request, $api ? $this->apiRouter : $this->viewRouter);
         $response = null;
 

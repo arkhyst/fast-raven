@@ -21,16 +21,16 @@
     </head>
     <body>
         <?php 
-            foreach ($template->getPreDOMFiles() as $preFile) {
-                include SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . $preFile;
+            foreach ($template->getBeforeFragments() as $beforeFragment) {
+                include SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "web" . DIRECTORY_SEPARATOR . "fragments" . DIRECTORY_SEPARATOR . $beforeFragment;
             }
         ?>
         <main>
             <?php include $template->getFile(); ?>
         </main>
         <?php 
-            foreach ($template->getPostDOMFiles() as $postfile) {
-                include SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . $postfile;
+            foreach ($template->getAfterFragments() as $afterFragment) {
+                include SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "web" . DIRECTORY_SEPARATOR . "fragments" . DIRECTORY_SEPARATOR . $afterFragment;
             }
         ?>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>

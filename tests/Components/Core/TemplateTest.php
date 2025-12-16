@@ -253,23 +253,23 @@ class TemplateTest extends TestCase
         $this->assertStringContainsString('?v=3.2.1', $scripts);
     }
 
-    public function testSetPreDOMFilesAndGetPreDOMFiles(): void
+    public function testSetBeforeFragmentsAndGetBeforeFragments(): void
     {
         $template = Template::new('Test', '1.0');
         $files = ['header.php', 'nav.php'];
 
-        $template->setPreDOMFiles($files);
+        $template->setBeforeFragments($files);
 
-        $this->assertEquals($files, $template->getPreDOMFiles());
+        $this->assertEquals($files, $template->getBeforeFragments());
     }
 
-    public function testSetPostDOMFilesAndGetPostDOMFiles(): void
+    public function testSetAfterFragmentsAndGetAfterFragments(): void
     {
         $template = Template::new('Test', '1.0');
         $files = ['footer.php', 'analytics.php'];
 
-        $template->setPostDOMFiles($files);
+        $template->setAfterFragments($files);
 
-        $this->assertEquals($files, $template->getPostDOMFiles());
+        $this->assertEquals($files, $template->getAfterFragments());
     }
 }
