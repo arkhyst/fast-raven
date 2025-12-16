@@ -7,6 +7,8 @@ use FastRaven\Workers\DataWorker;
 use FastRaven\Components\Data\Collection;
 use FastRaven\Components\Data\Item;
 
+use FastRaven\Workers\Bee;
+
 final class AuthSlave {
     #----------------------------------------------------------------------
     #\ VARIABLES
@@ -67,21 +69,30 @@ final class AuthSlave {
      *
      * @param string $sessionName The session name to use.
      * @param int $lifetime The lifetime of the session cookie in seconds.
-     * @param string $domain The domain to use for the session cookie.
+     * @param bool $globalAuth Whether the authorization should be valid AUTH_DOMAIN.
      */
-    public function initializeSessionCookie(string $sessionName, int $lifetime, string $domain): void {
+    public function initializeSessionCookie(string $sessionName, int $lifetime, bool $globalAuth = false): void {
         ini_set("session.use_strict_mode", 1);
         ini_set("session.gc_maxlifetime", $lifetime);
         session_name($sessionName);
-        session_set_cookie_params([
+
+        $options = [
             "lifetime" => $lifetime,
             "path" => "/",
-            "domain" => $domain,
             "secure" => true,
             "httponly" => true,
             "samesite" => "Lax"
-        ]);
+        ];
 
+        if ($globalAuth) {
+            $domain = Bee::env("AUTH_DOMAIN", "localhost");
+            if (filter_var(ltrim($domain, "."), FILTER_VALIDATE_IP) === false && $domain !== "localhost") {
+                if ($domain[0] !== ".") $domain = "." . $domain;
+                $options['domain'] = $domain;
+            }
+        }
+
+        session_set_cookie_params($options);
         session_start();
     }
 

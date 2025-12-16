@@ -26,7 +26,7 @@ OR (not recommended)
 ---
 
 ### Roadmap: v0.3
-- Fixing for configureAuthorization() and globalAuth parameter.
+- ~~Fixing for configureAuthorization() and globalAuth parameter.~~
 - ~~Improvement of typed arguments in DataWorker conditions and values.~~
 - ~~Implementation of logs privacy settings.~~
 - ~~Addition of ValidationWorker.~~

@@ -85,7 +85,7 @@ class Bee {
         $count = count($parts);
 
         if ($count >= 3) {
-            $domain = array_slice($parts, -2);
+            $domain = array_slice($parts, -2); # UK... Why, common wealth, WHY???
             return implode(".", $domain);
         }
 

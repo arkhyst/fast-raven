@@ -11,6 +11,7 @@
 - MailWorker for sending crafted and dynamic emails.
 - Mail component for crafting mail objects.
 - Item::mail and Item::file for helping with Mail crafting.
+- AUTH_DOMAIN env variable for defining global authorization domain.
 
 #### Changed
 - Skeleton: Update build.sh to account for last changes.
@@ -29,11 +30,13 @@
 - ValidationWorker is not initialized. (jesus christ)
 - DataWorker::getOne() crashes when no result is found.
 - AlreadyAuthorizedException is not being handled.
+- Config::configureAuthorization(...) is not enabling global authorization correctly.
 
 #### Removed
 - htmlspecialchars method from Request::sanitizeData().
 - meta tag HTTP headers from main.php Template.
 - API Response status string field.
+- domain configuration from Config::configureAuthorization(...)
 
 ---
 

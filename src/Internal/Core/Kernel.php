@@ -104,7 +104,7 @@ final class Kernel {
         }
 
         $this->authSlave = AuthSlave::zap();
-        $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->getAuthDomain());
+        $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->isAuthGlobal());
 
         if($this->config->isRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
 

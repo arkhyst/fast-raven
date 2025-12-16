@@ -185,7 +185,7 @@ class TemplateTest extends TestCase
 
         $html = $template->getHtmlFavicon();
 
-        $this->assertEquals('<link rel="icon" href="/public/assets/icon.png" type="image/png">', $html);
+        $this->assertEquals('<link rel="icon" href="/public/assets/img/icon.png" type="image/png">', $template->getHtmlFavicon());
     }
 
     public function testGetHtmlStylesGeneratesLinkTags(): void
@@ -196,8 +196,8 @@ class TemplateTest extends TestCase
 
         $html = $template->getHtmlStyles();
 
-        $this->assertStringContainsString('<link rel="stylesheet" href="/public/resources/main.css?v=1.0">', $html);
-        $this->assertStringContainsString('<link rel="stylesheet" href="/public/resources/theme.css?v=1.0">', $html);
+        $this->assertStringContainsString('<link rel="stylesheet" href="/public/assets/css/main.css?v=1.0">', $html);
+        $this->assertStringContainsString('<link rel="stylesheet" href="/public/assets/css/theme.css?v=1.0">', $html);
     }
 
     public function testGetHtmlScriptsGeneratesScriptTags(): void
@@ -208,8 +208,8 @@ class TemplateTest extends TestCase
 
         $html = $template->getHtmlScripts();
 
-        $this->assertStringContainsString('<script src="/public/resources/app.js?v=1.0" type="text/javascript"></script>', $html);
-        $this->assertStringContainsString('<script src="/public/resources/utils.js?v=1.0" type="text/javascript"></script>', $html);
+        $this->assertStringContainsString('<script src="/public/assets/js/app.js?v=1.0" type="text/javascript"></script>', $html);
+        $this->assertStringContainsString('<script src="/public/assets/js/utils.js?v=1.0" type="text/javascript"></script>', $html);
     }
 
     public function testGetHtmlAutofillGeneratesJsonArray(): void

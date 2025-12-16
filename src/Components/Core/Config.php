@@ -19,8 +19,8 @@ final class Config {
         public function getAuthSessionName(): string { return $this->authSessionName; }
     private int $authExpiryDays = 7;
         public function getAuthLifetime(): int { return $this->authExpiryDays * 24 * 60 * 60; }
-    private string $authDomain = "localhost";
-         public function getAuthDomain(): string { return $this->authDomain; }
+    private bool $authGlobal = false;
+        public function isAuthGlobal(): bool { return $this->authGlobal; }
 
     private string $defaultNotFoundPathRedirect = "/";
         public function getDefaultNotFoundPathRedirect(): string { return $this->defaultNotFoundPathRedirect; }
@@ -72,34 +72,17 @@ final class Config {
     #\ METHODS
 
     /**
-     * @deprecated This setting is not used and will be removed in the next version
-     * Configure the allowed hosts for this site.
-     *
-     * @param array $allowedHosts   An array of allowed hosts. Use "*" to allow all hosts.
-     */
-    public function configureAllowedHosts(array $allowedHosts): void {
-        $this->allowedHosts = $allowedHosts;
-    }
-
-    /**
      * Configure the authorization settings.
      *
      * @param string $sessionName   The name of the session to use for authorization.
      * @param int $expiryDays       The number of days the authorization session should last.
-     * @param string $domain        The domain to use for the authorization session.
      * @param bool $globalAuth      Whether the authorization should be valid across the parent domain and all subdomains.
      *                              (e.g. "example.com" becomes ".example.com", "lin.sub.example.com" becomes ".sub.example.com")
      */
-    public function configureAuthorization(string $sessionName, int $expiryDays, string $domain, bool $globalAuth = false): void {
+    public function configureAuthorization(string $sessionName, int $expiryDays, bool $globalAuth = false): void {
         $this->authSessionName = $sessionName;
         $this->authExpiryDays = $expiryDays;
-        if ($globalAuth) {
-            $this->authDomain = count(explode(".", $domain)) > 2
-                ? "." . substr($domain, strpos($domain, ".") + 1)
-                : "." . $domain;
-        } else {
-            $this->authDomain = $domain;
-        }
+        $this->authGlobal = $globalAuth;
     }
 
     /**
