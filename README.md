@@ -1,6 +1,6 @@
 # FastRaven  
 **State:** use only for personal projects  
-**Version:** v0.2  
+**Version:** v0.3  
 
 FastRaven is a minimalistic and fast PHP framework for **monolithic apps**.  
 It focuses on simplicity, clarity, and raw performance: no unnecessary layers, no dependencies you don’t control.
@@ -25,13 +25,12 @@ OR (not recommended)
 
 ---
 
-### Roadmap: v0.3
-- ~~Fixing for configureAuthorization() and globalAuth parameter.~~
-- ~~Improvement of typed arguments in DataWorker conditions and values.~~
-- ~~Implementation of logs privacy settings.~~
-- ~~Addition of ValidationWorker.~~
-- ~~Addition of MailWorker with PHPMailer and configurable SMTP settings.~~
-- ~~Addition of custom helper classes support for each FastRaven project.~~
+### Roadmap: v0.4
+- Research and fixing of security issues.
+- Research and fixing of performance issues.
+- Implementation of Request file retrieval controls.
+- Implementation of rate-limiting configuration.
+- Addition of StorageWorker for cache and file storage management.
 
 ### Roadmap: v1.0
 - Improvement of ValidationWorker complexity and ValidationFlags.
