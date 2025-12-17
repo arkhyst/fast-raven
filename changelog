@@ -27,6 +27,7 @@
 - AuthSlave::validateCSRF() now uses hash_equals() for improved security.
 - Improved PDO Exception handling in DataSlave.
 - Jquery is now loaded from local files.
+- HeaderSlave::addSecurityHeaders() now uses a more secure CSP.
 
 #### Fixed
 - Skeleton: Sites folder not accounted for deploy.sh and index.php
