@@ -148,7 +148,8 @@ final class AuthSlave {
      * @return bool True if the CSRF tokens match, false otherwise.
      */
     public function validateCSRF(?string $sessionToken, ?string $requestToken): bool {
-        return $sessionToken === $requestToken;
+        if ($sessionToken === null || $requestToken === null) return false;
+        return hash_equals($sessionToken, $requestToken);
     }
 
     /**

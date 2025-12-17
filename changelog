@@ -22,6 +22,7 @@
 - System logs now are collapsed so they take less space.
 - LogWorker prefix for each type of log.
 - Template component now sanitazes file paths.
+- AuthSlave::validateCSRF() now uses hash_equals() for improved security.
 
 #### Fixed
 - Skeleton: Sites folder not accounted for deploy.sh and index.php
