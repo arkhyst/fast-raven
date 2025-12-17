@@ -19,8 +19,8 @@ final class Config {
         public function getAuthSessionName(): string { return $this->authSessionName; }
     private int $authExpiryDays = 7;
         public function getAuthLifetime(): int { return $this->authExpiryDays * 24 * 60 * 60; }
-    private string $authDomain = "localhost";
-         public function getAuthDomain(): string { return $this->authDomain; }
+    private bool $authGlobal = false;
+        public function isAuthGlobal(): bool { return $this->authGlobal; }
 
     private string $defaultNotFoundPathRedirect = "/";
         public function getDefaultNotFoundPathRedirect(): string { return $this->defaultNotFoundPathRedirect; }
@@ -28,6 +28,16 @@ final class Config {
         public function getDefaultUnauthorizedPathRedirect(): string { return $this->defaultUnauthorizedPathRedirect; }
     private string $defaultUnauthorizedSubdomainRedirect = "";
         public function getDefaultUnauthorizedSubdomainRedirect(): string { return $this->defaultUnauthorizedSubdomainRedirect; }
+
+    private bool $privacyRegisterLogs = true;
+        public function isPrivacyRegisterLogs(): bool { return $this->privacyRegisterLogs; }
+    private bool $privacyRegisterOrigin = true;
+        public function isPrivacyRegisterOrigin(): bool { return $this->privacyRegisterOrigin; }
+
+    private int $securityRateLimit = 100;
+        public function getSecurityRateLimit(): int { return $this->securityRateLimit; }
+    private int $securityInputLengthLimit = 256 * 1024;
+        public function getSecurityInputLengthLimit(): int { return $this->securityInputLengthLimit; }
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -67,34 +77,17 @@ final class Config {
     #\ METHODS
 
     /**
-     * @deprecated This setting is not used and will be removed in the next version
-     * Configure the allowed hosts for this site.
-     *
-     * @param array $allowedHosts   An array of allowed hosts. Use "*" to allow all hosts.
-     */
-    public function configureAllowedHosts(array $allowedHosts): void {
-        $this->allowedHosts = $allowedHosts;
-    }
-
-    /**
      * Configure the authorization settings.
      *
      * @param string $sessionName   The name of the session to use for authorization.
      * @param int $expiryDays       The number of days the authorization session should last.
-     * @param string $domain        The domain to use for the authorization session.
      * @param bool $globalAuth      Whether the authorization should be valid across the parent domain and all subdomains.
      *                              (e.g. "example.com" becomes ".example.com", "lin.sub.example.com" becomes ".sub.example.com")
      */
-    public function configureAuthorization(string $sessionName, int $expiryDays, string $domain, bool $globalAuth = false): void {
+    public function configureAuthorization(string $sessionName, int $expiryDays, bool $globalAuth = false): void {
         $this->authSessionName = $sessionName;
         $this->authExpiryDays = $expiryDays;
-        if ($globalAuth) {
-            $this->authDomain = count(explode(".", $domain)) > 2
-                ? "." . substr($domain, strpos($domain, ".") + 1)
-                : "." . $domain;
-        } else {
-            $this->authDomain = $domain;
-        }
+        $this->authGlobal = $globalAuth;
     }
 
     /**
@@ -115,6 +108,28 @@ final class Config {
     public function configureUnauthorizedRedirects(string $path, string $subdomain = ""): void {
         $this->defaultUnauthorizedPathRedirect = $path;
         $this->defaultUnauthorizedSubdomainRedirect = $subdomain;
+    }
+
+    /**
+     * Configure the privacy settings.
+     *
+     * @param bool $registerLogs   Define whether to register logs or not.
+     * @param bool $registerOrigin Define whether to register origin data or not.
+     */
+    public function configurePrivacy(bool $registerLogs = true, bool $registerOrigin = true): void {
+        $this->privacyRegisterLogs = $registerLogs;
+        $this->privacyRegisterOrigin = $registerOrigin;
+    }
+
+    /**
+     * Configure the security settings.
+     *
+     * @param int $rateLimit       The number of requests allowed per minute.
+     * @param int $inputLengthLimit The maximum length of input data allowed in bytes.
+     */
+    public function configureSecurity(int $rateLimit = 100, int $inputLengthLimit = 256 * 1024): void {
+        $this->securityRateLimit = $rateLimit;
+        $this->securityInputLengthLimit = $inputLengthLimit;
     }
 
     #/ METHODS

@@ -9,9 +9,15 @@
         }
     },
     "require": {
-        "php": "^8.5",
-        "vlucas/phpdotenv": "^5.0"
+        "php": "^8.4",
+        "vlucas/phpdotenv": "^5.0",
+        "phpmailer/phpmailer": "^7.0"
     }, 
+    "autoload-dev": {
+        "psr-4": {
+            "FastRaven\\Tests\\": "tests/"
+        }
+    },
     "require-dev": {
         "phpunit/phpunit": "^10"
     },

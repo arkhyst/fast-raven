@@ -43,6 +43,19 @@ final class LogStash {
     }
 
     /**
+     * Replaces a log entry in the stash.
+     *
+     * @param int $index The index of the log entry to replace.
+     * @param string $search The text to search for in the log entry.
+     * @param string $replace The text to replace the search text with.
+     */
+    public function replaceLog(int $index, string $search, string $replace): void {
+        if (isset($this->logList[$index])) {
+            $this->logList[$index] = str_replace($search, $replace, $this->logList[$index]);
+        }
+    }
+
+    /**
      * Empties the log stash.
      *
      * This function is used to empty the log stash after it has been written to a file.

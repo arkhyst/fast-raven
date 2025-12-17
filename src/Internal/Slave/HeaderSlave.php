@@ -33,6 +33,8 @@ final class HeaderSlave {
 
             return $inst;
         }
+
+        return null;
     }
 
     private function __construct() {
@@ -85,10 +87,21 @@ final class HeaderSlave {
         HeaderWorker::addHeader("X-Content-Type-Options", "nosniff");
         HeaderWorker::addHeader("Referrer-Policy", "strict-origin-when-cross-origin");
         HeaderWorker::addHeader("Cross-Origin-Resource-Policy", "same-origin");
-        HeaderWorker::addHeader("Content-Security-Policy", "frame-ancestors 'none';");
         HeaderWorker::addHeader("X-Frame-Options", "DENY");
         HeaderWorker::addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
         HeaderWorker::addHeader("Access-Control-Allow-Headers", "Content-Type");
+
+        HeaderWorker::addHeader("Content-Security-Policy", 
+            "default-src 'self'; " .
+            "script-src 'self' 'unsafe-inline' https:; " .
+            "style-src 'self' 'unsafe-inline' https:; " .
+            "img-src 'self' data: https:; " .
+            "font-src 'self' data: https:; " .
+            "connect-src 'self' https:; " .
+            "frame-ancestors 'none'; " .
+            "base-uri 'self'; " .
+            "form-action 'self'"
+        );
 
         if (!empty($https) && $https !== 'off') {
             HeaderWorker::addHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");

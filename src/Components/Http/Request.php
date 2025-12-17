@@ -34,7 +34,7 @@ final class Request {
      * @param string $remoteAddress    The remote address of the request.
      */
     public function __construct(string $uri, string $method, string $dataStream, string $remoteAddress) {
-        $this->internalID = bin2hex(random_bytes(8));
+        $this->internalID = bin2hex(random_bytes(4));
         $this->data = json_decode($dataStream, true) ?? [];
         $this->data = $this->sanitizeData($this->data);
         
@@ -64,7 +64,7 @@ final class Request {
     private function sanitizeData(array $data): array {
         foreach ($data as $key => $item) {
             if(is_string($item)) {
-                $data[$key] = trim(strip_tags(htmlspecialchars($item, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+                $data[$key] = trim(strip_tags($item));
             } elseif(is_array($item)) {
                 $data[$key] = $this->sanitizeData($item);
             } 

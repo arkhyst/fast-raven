@@ -12,8 +12,8 @@ final class Response {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private string $status;
-        public function getStatus(): string { return $this->status; }
+    private bool $success;
+        public function getSuccess(): bool { return $this->success; }
     private int $code;
         public function getCode(): int { return $this->code; }
     private string $message = "";
@@ -45,7 +45,7 @@ final class Response {
     }
 
     private function __construct(bool $success, int $code) {
-        $this->status = $success ? "OK" : "ERROR";
+        $this->success = $success;
         $this->code = $code;
     }
 
@@ -67,9 +67,9 @@ final class Response {
      * Sets the body of the response.
      *
      * @param string $message [optional] The message to set on the response.
-     * @param mixed $data [optional] The data to set on the response.
+     * @param string|array $data [optional] The data to set on the response.
      */
-    public function setBody(string $message = "", mixed $data = []): void {
+    public function setBody(string $message = "", string|array $data = []): void {
         $this->message = $message;
         $this->data = $data;
     }

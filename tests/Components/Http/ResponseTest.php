@@ -11,7 +11,7 @@ class ResponseTest extends TestCase
     {
         $response = Response::new(true, 200);
 
-        $this->assertEquals('OK', $response->getStatus());
+        $this->assertTrue($response->getSuccess());
         $this->assertEquals(200, $response->getCode());
     }
 
@@ -19,7 +19,7 @@ class ResponseTest extends TestCase
     {
         $response = Response::new(false, 404);
 
-        $this->assertEquals('ERROR', $response->getStatus());
+        $this->assertFalse($response->getSuccess());
         $this->assertEquals(404, $response->getCode());
     }
 

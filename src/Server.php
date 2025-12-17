@@ -2,7 +2,9 @@
 
 namespace FastRaven;
 
+use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
+use FastRaven\Exceptions\AlreadyAuthorizedException;
 use FastRaven\Exceptions\SmartException;
 use FastRaven\Internal\Core\Kernel;
 
@@ -101,12 +103,13 @@ final class Server {
     private function handleException(SmartException $e): Response {
         $statusCode = $this->kernel->isApiRequest() ? $e->getStatusCode() : 301;
         $response = Response::new(false, $statusCode, $e->getPublicMessage());
-        LogWorker::error("-SG- " . $e->getMessage());
+        LogWorker::error("SmartException: " . $e->getMessage());
 
         if(!$this->kernel->isApiRequest()) {
-            if($e instanceof NotFoundException) {
+            if($e instanceof NotFoundException || is_subclass_of($e, NotFoundException::class) ||
+            $e instanceof AlreadyAuthorizedException || is_subclass_of($e, AlreadyAuthorizedException::class)) {
                 HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultNotFoundPathRedirect());
-            } else if($e instanceof NotAuthorizedException) {
+            } else if($e instanceof NotAuthorizedException || is_subclass_of($e, NotAuthorizedException::class)) {
                 if($e->isDomainLevel())
                     HeaderWorker::addHeader("Location", "https://".Bee::getBuiltDomain($this->kernel->getConfig()->getDefaultUnauthorizedSubdomainRedirect()));
                 else
@@ -128,7 +131,7 @@ final class Server {
      *
      * If the server has not been configured, it will return a 500 status code.
      *
-     * Handles NotFoundException, BadImplementationException, EndpointFileDoesNotExist, and NotAuthorizedException.
+     * Handles NotFoundException, BadImplementationException, EndpointFileDoesNotExist, NotAuthorizedException and AlreadyAuthorizedException.
      */
     public function run(): void {
         if ($this->ready) {

@@ -23,31 +23,9 @@ class ConfigTest extends TestCase
         $this->assertFalse($config->isRestricted());
     }
 
-    public function testDefaultAllowedHostsIsWildcard(): void
-    {
-        $config = Config::new('test', false);
 
-        $this->assertEquals(['*'], $config->getAllowedHosts());
-    }
 
-    public function testConfigureAllowedHostsSetsHosts(): void
-    {
-        $config = Config::new('test', false);
-        $hosts = ['example.com', 'test.com'];
 
-        $config->configureAllowedHosts($hosts);
-
-        $this->assertEquals($hosts, $config->getAllowedHosts());
-    }
-
-    public function testConfigureAllowedHostsWithEmptyArray(): void
-    {
-        $config = Config::new('test', false);
-
-        $config->configureAllowedHosts([]);
-
-        $this->assertEquals([], $config->getAllowedHosts());
-    }
 
     public function testDefaultAuthSessionName(): void
     {
@@ -64,54 +42,36 @@ class ConfigTest extends TestCase
         $this->assertEquals(604800, $config->getAuthLifetime());
     }
 
-    public function testDefaultAuthDomain(): void
+    public function testDefaultAuthGlobalIsFalse(): void
     {
         $config = Config::new('test', false);
 
-        $this->assertEquals('localhost', $config->getAuthDomain());
+        $this->assertFalse($config->isAuthGlobal());
     }
 
-        public function testDefaultAuthDomainWithoutGlobalAuth(): void
+    public function testConfigureAuthorizationSetsGlobalAuthTrue(): void
     {
         $config = Config::new('test', false);
 
-        $config->configureAuthorization('SESSION', 7, 'example.com', false);
+        $config->configureAuthorization('SESSION', 7, true);
 
-        $this->assertEquals('example.com', $config->getAuthDomain());
+        $this->assertTrue($config->isAuthGlobal());
     }
 
-    public function testDefaultAuthDomainWithGlobalAuth(): void
+    public function testConfigureAuthorizationSetsGlobalAuthFalse(): void
     {
         $config = Config::new('test', false);
 
-        $config->configureAuthorization('SESSION', 7, 'example.com', true);
+        $config->configureAuthorization('SESSION', 7, false);
 
-        $this->assertEquals('.example.com', $config->getAuthDomain());
-    }
-
-    public function testDefaultAuthDomainWithGlobalAuthComplex(): void
-    {
-        $config = Config::new('test', false);
-
-        $config->configureAuthorization('SESSION', 7, 'sub.example.com', true);
-
-        $this->assertEquals('.example.com', $config->getAuthDomain());
-    }
-
-        public function testDefaultAuthDomainWithGlobalAuthComplex2(): void
-    {
-        $config = Config::new('test', false);
-
-        $config->configureAuthorization('SESSION', 7, 'min.sub.example.com', true);
-
-        $this->assertEquals('.sub.example.com', $config->getAuthDomain());
+        $this->assertFalse($config->isAuthGlobal());
     }
 
     public function testConfigureAuthorizationSetsSessionName(): void
     {
         $config = Config::new('test', false);
 
-        $config->configureAuthorization('CUSTOM_SESSION', 30, 'example.com');
+        $config->configureAuthorization('CUSTOM_SESSION', 30, false);
 
         $this->assertEquals('CUSTOM_SESSION', $config->getAuthSessionName());
     }
@@ -120,7 +80,7 @@ class ConfigTest extends TestCase
     {
         $config = Config::new('test', false);
 
-        $config->configureAuthorization('SESSION', 1, 'example.com');
+        $config->configureAuthorization('SESSION', 1, false);
 
         // 1 day = 86400 seconds
         $this->assertEquals(86400, $config->getAuthLifetime());
@@ -130,19 +90,10 @@ class ConfigTest extends TestCase
     {
         $config = Config::new('test', false);
 
-        $config->configureAuthorization('SESSION', 14, 'example.com');
+        $config->configureAuthorization('SESSION', 14, false);
 
         // 14 days = 1209600 seconds
         $this->assertEquals(1209600, $config->getAuthLifetime());
-    }
-
-    public function testConfigureAuthorizationSetsDomain(): void
-    {
-        $config = Config::new('test', false);
-
-        $config->configureAuthorization('SESSION', 7, 'example.com');
-
-        $this->assertEquals('example.com', $config->getAuthDomain());
     }
 
     public function testDefaultNotFoundPathRedirect(): void
@@ -207,15 +158,13 @@ class ConfigTest extends TestCase
     {
         $config = Config::new('test', true);
 
-        $config->configureAllowedHosts(['host1.com', 'host2.com']);
-        $config->configureAuthorization('MY_SESSION', 10, 'mydomain.com');
+        $config->configureAuthorization('MY_SESSION', 10, true);
         $config->configureNotFoundRedirects('/not-found');
         $config->configureUnauthorizedRedirects('/unauthorized', 'auth.mydomain.com');
 
-        $this->assertEquals(['host1.com', 'host2.com'], $config->getAllowedHosts());
         $this->assertEquals('MY_SESSION', $config->getAuthSessionName());
         $this->assertEquals(864000, $config->getAuthLifetime()); // 10 days
-        $this->assertEquals('mydomain.com', $config->getAuthDomain());
+        $this->assertTrue($config->isAuthGlobal());
         $this->assertEquals('/not-found', $config->getDefaultNotFoundPathRedirect());
         $this->assertEquals('/unauthorized', $config->getDefaultUnauthorizedPathRedirect());
         $this->assertEquals('auth.mydomain.com', $config->getDefaultUnauthorizedSubdomainRedirect());

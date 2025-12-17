@@ -44,7 +44,7 @@ class Bee {
      * 
      * @return bool true if the application is running in a development environment, false otherwise
      */
-    public static function isDev() {
+    public static function isDev() : bool {
         return Bee::env("STATE") === "dev";
     }
     
@@ -85,7 +85,7 @@ class Bee {
         $count = count($parts);
 
         if ($count >= 3) {
-            $domain = array_slice($parts, -2);
+            $domain = array_slice($parts, -2); # UK... Why, common wealth, WHY???
             return implode(".", $domain);
         }
 

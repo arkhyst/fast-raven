@@ -2,16 +2,18 @@
 
 namespace FastRaven\Components\Routing;
 
+use FastRaven\Components\Data\Collection;
+
 final class Router {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
     private bool $endpointsLoaded = false;
-        public function getEndpointsLoaded(): bool { return $this->endpointsLoaded; }
+        public function isEndpointsLoaded(): bool { return $this->endpointsLoaded; }
     private array $endpointList = [];
         public function getEndpointList(): array { return $this->endpointList; }
-    private array $assocFileList = [];
-        public function getAssocFileList(): array { return $this->assocFileList; }
+    private Collection $fileCollection;
+        public function getFileCollection(): Collection { return $this->fileCollection; }
     
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -20,21 +22,21 @@ final class Router {
     #\ INIT
 
     /**
-     * Returns a new Router instance with the given associative array of endpoints files.
+     * Returns a new Router instance with the given Collection of endpoints files.
      *
-     * The associative array should have the following format:
+     * The Collection should have the following format:
      *
-     * [
-     *     "/v1/path" => "v1/main.php",
+     * Collection::new([
+     *     Item::new("/v1", "v1/main.php"),
      *     ...
-     * ]
+     * ])
      *
-     * @param array $assocFileList The associative array of file endpoints files relative to /config/router/ directory.
+     * @param Collection $fileCollection The Collection of file endpoints files relative to /config/router/ directory.
      * 
      * @return Router The new Router instance.
      */
-    public static function files(array $assocFileList): Router {
-        return new Router([], $assocFileList);
+    public static function files(Collection $fileCollection): Router {
+        return new Router([], $fileCollection);
     }
 
     /**
@@ -47,13 +49,13 @@ final class Router {
      * @return Router The new Router instance.
      */
     public static function endpoints(array $endpointList): Router {
-        return new Router($endpointList, []);
+        return new Router($endpointList);
     }
 
-    private function __construct(array $endpointList = [], array $fileList = []) {
+    private function __construct(array $endpointList = [], ?Collection $fileCollection = null) {
         $this->endpointsLoaded = !empty($endpointList);
         $this->endpointList = $endpointList;
-        $this->assocFileList = $fileList;
+        $this->fileCollection = $fileCollection ?? Collection::new();
     }
 
     #/ INIT

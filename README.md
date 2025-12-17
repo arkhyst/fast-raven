@@ -1,6 +1,6 @@
 # FastRaven  
 **State:** use only for personal projects  
-**Version:** v0.2  
+**Version:** v0.3  
 
 FastRaven is a minimalistic and fast PHP framework for **monolithic apps**.  
 It focuses on simplicity, clarity, and raw performance: no unnecessary layers, no dependencies you don’t control.
@@ -8,8 +8,9 @@ It focuses on simplicity, clarity, and raw performance: no unnecessary layers, n
 ---
 
 ### Requeriments  
-- **PHP** ^8.5  
-- **Composer** ^2.9.2
+- **PHP** ^8.4  
+- **MySQL** ^8.0  
+- **Composer** ^2.9.2  
 
 ---
 
@@ -24,13 +25,20 @@ OR (not recommended)
 
 ---
 
-### Roadmap: v0.3
-- Improvement of typed arguments in DataWorker conditions and values.
-- Addition of ValidationWorker.
+### Roadmap: v0.4
+- Research and fixing of security issues.
+- Research and fixing of performance issues.
+- Implementation of Request file retrieval controls.
+- Implementation of rate-limiting configuration.
+- Addition of StorageWorker for cache and file storage management.
 
 ### Roadmap: v1.0
-- Upgrade of Router component: refactor to support more complex architectures.
+- Improvement of ValidationWorker complexity and ValidationFlags.
 - Implementation of unauthorized flow with redirects after login.
+- Upgrade of Router component: refactor to support more complex architectures.
+- Upgrade of PHP version to 8.5 (if is globally supported by hosting providers).
+- Upgrade of DataSlave: implementation of index and join for scalable queries.
+- Upgrade of ValidationWorker: implementation of validation details when validation fails.
 
 ---
 

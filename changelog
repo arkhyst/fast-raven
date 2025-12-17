@@ -1,4 +1,54 @@
-### [v0.2] - 2025-12-09
+### [v0.3] - 2025-12-17
+#### Added
+- Config::configurePrivacy(...) for defining whether to register logs or restrict what data to register.
+- Collection and Item components for handling key-value pair arrays.
+- ValidationWorker for validating data such as email addresses or passwords.
+- ValidationFlags collection for handling validation flags.
+- API Response success boolean field.
+- AlreadyAuthorizedException for handling unauthorized exclusive endpoints.
+- Endpoint argument unauthorizedExclusive for handling unauthorized exclusive endpoints.
+- LogWorker::debug() for debugging system logs.
+- MailWorker for sending crafted and dynamic emails.
+- Mail component for crafting mail objects.
+- Item::mail and Item::file for helping with Mail crafting.
+- AUTH_DOMAIN env variable for defining global authorization domain.
+- Config::configureSecurity(...) for defining security policies against DDoS attacks and input length. 
+- DataWorker warnings against SQL injection.  
+
+#### Changed
+- Skeleton: Update build.sh to account for last changes.
+- DataWorker now uses Collection and Item components.
+- Router now uses Collection and Item components.
+- Template now uses Collection and Item components.
+- PHP Version downgrade to 8.4 to support hosting deployment.
+- System logs now are collapsed so they take less space.
+- LogWorker prefix for each type of log.
+- Template component now sanitizes file paths.
+- AuthSlave::validateCSRF() now uses hash_equals() for improved security.
+- Improved PDO Exception handling in DataSlave.
+- Jquery is now loaded from local files.
+- HeaderSlave::addSecurityHeaders() now uses a more secure CSP.
+
+#### Fixed
+- Skeleton: Sites folder not accounted for deploy.sh and index.php
+- Skeleton: .htaccess fallback not working.
+- Skeleton: Sites folder not accounted for watch.sh
+- NotFoundException and NotAuthorizedException are not being handled correctly.
+- ValidationWorker is not initialized. (jesus christ)
+- DataWorker::getOne() crashes when no result is found.
+- AlreadyAuthorizedException is not being handled.
+- Config::configureAuthorization(...) is not enabling global authorization correctly.
+- CSRF token session is not being correctly injected into the main template.
+
+#### Removed
+- htmlspecialchars method from Request::sanitizeData().
+- meta tag HTTP headers from main.php Template.
+- API Response status string field.
+- domain configuration from Config::configureAuthorization(...)
+
+---
+
+### [v0.2] - 2025-12-06
 #### Added
 - Configuration of path redirects for 404 error.
 - Support for .html template injection before and after #main div.

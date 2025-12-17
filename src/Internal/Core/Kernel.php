@@ -18,10 +18,13 @@ use FastRaven\Internal\Slave\HeaderSlave;
 use FastRaven\Internal\Slave\AuthSlave;
 use FastRaven\Internal\Slave\DataSlave;
 use FastRaven\Internal\Slave\RouterSlave;
+use FastRaven\Internal\Slave\ValidationSlave;
+use FastRaven\Internal\Slave\MailSlave;
 
 use FastRaven\Exceptions\BadImplementationException;
 use FastRaven\Exceptions\EndpointFileDoesNotExist;
 use FastRaven\Exceptions\NotAuthorizedException;
+use FastRaven\Exceptions\AlreadyAuthorizedException;
 
 final class Kernel {
     #----------------------------------------------------------------------
@@ -45,6 +48,8 @@ final class Kernel {
     private AuthSlave $authSlave;
     private DataSlave $dataSlave;
     private RouterSlave $routerSlave;
+    private ValidationSlave $validationSlave;
+    private MailSlave $mailSlave;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -86,13 +91,20 @@ final class Kernel {
         $this->startRequestTime = microtime(true);
 
         // Add security for remote address
-        $this->request = new Request($_SERVER["REQUEST_URI"], $_SERVER["REQUEST_METHOD"], file_get_contents("php://input"), $_SERVER["REMOTE_ADDR"]);
+        $this->request = new Request(
+            $_SERVER["REQUEST_URI"],
+            $_SERVER["REQUEST_METHOD"],
+            file_get_contents("php://input", false, null, 0, $this->config->getSecurityInputLengthLimit()),
+            $this->config->isPrivacyRegisterOrigin() ? $_SERVER["REMOTE_ADDR"] : "HOST"
+        );
         
-        $this->logSlave = LogSlave::zap();
-        $this->logSlave->writeOpenLogs($this->request);
+        if($this->config->isPrivacyRegisterLogs()) {
+            $this->logSlave = LogSlave::zap($this->request->getInternalID());
+            $this->logSlave->writeOpenLogs($this->request);
+        }
 
         $this->authSlave = AuthSlave::zap();
-        $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->getAuthDomain());
+        $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->isAuthGlobal());
 
         if($this->config->isRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
 
@@ -103,6 +115,10 @@ final class Kernel {
         $this->dataSlave = DataSlave::zap();
 
         $this->routerSlave = RouterSlave::zap();
+
+        $this->validationSlave = ValidationSlave::zap();
+
+        $this->mailSlave = MailSlave::zap();
     }
 
     /**
@@ -118,18 +134,20 @@ final class Kernel {
      * 
      * @throws NotFoundException If no matching route is found for the request.
      * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
+     * @throws AlreadyAuthorizedException If the endpoint is unauthorized exclusive and the request is authorized.
      * @throws EndpointFileDoesNotExist If the endpoint file does not exist.
      * @throws BadImplementationException If the API function does not return a Response object.
      */
     public function process(): Response {
         $api = $this->request->isApi();
-        $mid = $api ? "api" : "views";
+        $mid = $api ? "api" : "web/views/pages";
         $endpoint = $this->routerSlave->route($this->request, $api ? $this->apiRouter : $this->viewRouter);
         $response = null;
 
         if(!$endpoint) throw new NotFoundException();
 
         if($endpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
+        if($endpoint->getUnauthorizedExclusive() && AuthWorker::isAuthorized($this->request)) throw new AlreadyAuthorizedException();
 
         $filePath = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
         if(!file_exists($filePath)) throw new EndpointFileDoesNotExist($filePath);
@@ -145,7 +163,8 @@ final class Kernel {
             if($epTemplate) $template->merge($epTemplate);
             
             $template->setFile($filePath);
-            require_once __DIR__ . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
+            $template->sanitize();
+            require_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
 
             $response = Response::new(true, 200);
         }
@@ -172,7 +191,7 @@ final class Kernel {
 
         if ($type == DataType::JSON) {
             echo json_encode([
-                "status" => $response->getStatus(),
+                "success" => $response->getSuccess(),
                 "msg" => $response->getMessage(),
                 "data" => $response->getData()
             ]);
@@ -183,7 +202,7 @@ final class Kernel {
         $diff = microtime(true) - $this->startRequestTime;
         $elapsedTime = round(($diff - floor($diff)) * 1000);
 
-        $this->logSlave->writeCloseLogs($this->request, $elapsedTime);
+        $this->logSlave->writeCloseLogs($elapsedTime);
         $this->logSlave->dumpLogStashIntoFile();
     }
 

@@ -139,7 +139,9 @@ class BeeTest extends TestCase
         $this->assertEquals('localhost', Bee::getBaseDomain());
 
         $_ENV['SITE_ADDRESS'] = 'deep.subdomain.example.co.uk';
-        $this->assertEquals('co.uk', Bee::getBaseDomain());
+        $this->assertEquals('example.co.uk', Bee::getBaseDomain());
+        
+        unset($_ENV['SITE_ADDRESS']);
     }
 
     public function testGetBaseDomainReturnsLocalhostWhenNotSet(): void
@@ -162,6 +164,9 @@ class BeeTest extends TestCase
         // Test without subdomain
         $resultWithoutSubdomain = Bee::getBuiltDomain();
         $this->assertEquals('example.com', $resultWithoutSubdomain);
+        
+        // Clean up
+        unset($_ENV['SITE_ADDRESS']);
     }
 
     public function testHashPasswordReturnsNonEmptyString(): void

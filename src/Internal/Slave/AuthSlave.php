@@ -4,6 +4,10 @@ namespace FastRaven\Internal\Slave;
 
 use FastRaven\Workers\AuthWorker;
 use FastRaven\Workers\DataWorker;
+use FastRaven\Components\Data\Collection;
+use FastRaven\Components\Data\Item;
+
+use FastRaven\Workers\Bee;
 
 final class AuthSlave {
     #----------------------------------------------------------------------
@@ -34,6 +38,8 @@ final class AuthSlave {
 
             return $inst;
         }
+
+        return null;
     }
 
     private function __construct() {
@@ -63,21 +69,30 @@ final class AuthSlave {
      *
      * @param string $sessionName The session name to use.
      * @param int $lifetime The lifetime of the session cookie in seconds.
-     * @param string $domain The domain to use for the session cookie.
+     * @param bool $globalAuth Whether the authorization should be valid AUTH_DOMAIN.
      */
-    public function initializeSessionCookie(string $sessionName, int $lifetime, string $domain): void {
+    public function initializeSessionCookie(string $sessionName, int $lifetime, bool $globalAuth = false): void {
         ini_set("session.use_strict_mode", 1);
         ini_set("session.gc_maxlifetime", $lifetime);
         session_name($sessionName);
-        session_set_cookie_params([
+
+        $options = [
             "lifetime" => $lifetime,
             "path" => "/",
-            "domain" => $domain,
             "secure" => true,
             "httponly" => true,
             "samesite" => "Lax"
-        ]);
+        ];
 
+        if ($globalAuth) {
+            $domain = Bee::env("AUTH_DOMAIN", "localhost");
+            if (filter_var(ltrim($domain, "."), FILTER_VALIDATE_IP) === false && $domain !== "localhost") {
+                if ($domain[0] !== ".") $domain = "." . $domain;
+                $options['domain'] = $domain;
+            }
+        }
+
+        session_set_cookie_params($options);
         session_start();
     }
 
@@ -133,7 +148,8 @@ final class AuthSlave {
      * @return bool True if the CSRF tokens match, false otherwise.
      */
     public function validateCSRF(?string $sessionToken, ?string $requestToken): bool {
-        return $sessionToken === $requestToken;
+        if ($sessionToken === null || $requestToken === null) return false;
+        return hash_equals($sessionToken, $requestToken);
     }
 
     /**
@@ -153,7 +169,9 @@ final class AuthSlave {
      * @return ?int The user's ID if the login is successful, null otherwise.
      */
     public function loginAttempt(string $user, string $pass, string $dbTable, string $dbIdCol, string $dbNameCol, string $dbPassCol): ?int {
-        $data = DataWorker::getOneWhere($dbTable, [$dbIdCol, $dbNameCol, $dbPassCol], [$dbNameCol], [$user]);
+        $data = DataWorker::getOneWhere($dbTable, [$dbIdCol, $dbNameCol, $dbPassCol], Collection::new([
+            Item::new($dbNameCol, $user)
+        ]));
 
         if($data && password_verify($pass, $data[$dbPassCol])) {
             return (int)$data[$dbIdCol];
