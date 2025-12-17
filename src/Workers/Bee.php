@@ -44,7 +44,7 @@ class Bee {
      * 
      * @return bool true if the application is running in a development environment, false otherwise
      */
-    public static function isDev() {
+    public static function isDev() : bool {
         return Bee::env("STATE") === "dev";
     }
     

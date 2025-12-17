@@ -94,7 +94,7 @@ final class Kernel {
         $this->request = new Request(
             $_SERVER["REQUEST_URI"],
             $_SERVER["REQUEST_METHOD"],
-            file_get_contents("php://input"),
+            file_get_contents("php://input", false, null, 0, $this->config->getSecurityInputLengthLimit()),
             $this->config->isPrivacyRegisterOrigin() ? $_SERVER["REMOTE_ADDR"] : "HOST"
         );
         

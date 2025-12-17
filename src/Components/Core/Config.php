@@ -34,6 +34,11 @@ final class Config {
     private bool $privacyRegisterOrigin = true;
         public function isPrivacyRegisterOrigin(): bool { return $this->privacyRegisterOrigin; }
 
+    private int $securityRateLimit = 100;
+        public function getSecurityRateLimit(): int { return $this->securityRateLimit; }
+    private int $securityInputLengthLimit = 256 * 1024;
+        public function getSecurityInputLengthLimit(): int { return $this->securityInputLengthLimit; }
+
     #/ VARIABLES
     #----------------------------------------------------------------------
 
@@ -114,6 +119,17 @@ final class Config {
     public function configurePrivacy(bool $registerLogs = true, bool $registerOrigin = true): void {
         $this->privacyRegisterLogs = $registerLogs;
         $this->privacyRegisterOrigin = $registerOrigin;
+    }
+
+    /**
+     * Configure the security settings.
+     *
+     * @param int $rateLimit       The number of requests allowed per minute.
+     * @param int $inputLengthLimit The maximum length of input data allowed in bytes.
+     */
+    public function configureSecurity(int $rateLimit = 100, int $inputLengthLimit = 256 * 1024): void {
+        $this->securityRateLimit = $rateLimit;
+        $this->securityInputLengthLimit = $inputLengthLimit;
     }
 
     #/ METHODS
