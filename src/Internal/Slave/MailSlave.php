@@ -63,7 +63,7 @@ final class MailSlave {
      * @return ?string The template content if the file exists, null otherwise.
      */
     private function getMailTemplate(string $file): ?string {
-        $path = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . Bee::normalizePath($file);
+        $path = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . "mails" . DIRECTORY_SEPARATOR . Bee::normalizePath($file);
         if(file_exists($path)) {
             return file_get_contents($path);
         }
@@ -127,7 +127,7 @@ final class MailSlave {
     }
 
     /**
-     * Adds attachments to the PHPMailer instance from the assets directory.
+     * Adds attachments to the PHPMailer instance from the storage/uploads directory.
      *
      * @param PHPMailer $mailer The PHPMailer instance to configure.
      * @param ?Collection $attachments Optional collection of attachments (key: display name, value: file path relative to src/assets/).
@@ -135,7 +135,7 @@ final class MailSlave {
     private function setMailerAttachments(PHPMailer &$mailer, ?Collection $attachments): void {
         if($attachments) {
             foreach($attachments->getRawData() as $attachment) {
-                $mailer->addAttachment(SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "assets" . DIRECTORY_SEPARATOR . Bee::normalizePath($attachment->getValue()), $attachment->getKey());
+                $mailer->addAttachment(SITE_PATH . DIRECTORY_SEPARATOR . "storage" . DIRECTORY_SEPARATOR . "uploads" . DIRECTORY_SEPARATOR . Bee::normalizePath($attachment->getValue()), $attachment->getKey());
             }
         }
     }

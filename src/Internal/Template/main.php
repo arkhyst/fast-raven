@@ -22,7 +22,7 @@
     <body>
         <?php 
             foreach ($template->getBeforeFragments() as $beforeFragment) {
-                include SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "web" . DIRECTORY_SEPARATOR . "fragments" . DIRECTORY_SEPARATOR . $beforeFragment;
+                include SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "web" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . "fragments" . DIRECTORY_SEPARATOR . $beforeFragment;
             }
         ?>
         <main>
@@ -30,7 +30,7 @@
         </main>
         <?php 
             foreach ($template->getAfterFragments() as $afterFragment) {
-                include SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "web" . DIRECTORY_SEPARATOR . "fragments" . DIRECTORY_SEPARATOR . $afterFragment;
+                include SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "web" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . "fragments" . DIRECTORY_SEPARATOR . $afterFragment;
             }
         ?>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
