@@ -47,6 +47,8 @@ class DataWorker {
      * @param array $cols The columns to retrieve data from.
      * @param int $id The id of the row to retrieve.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
     public static function getOneById(string $table, array $cols, int $id): ?array {
@@ -64,6 +66,8 @@ class DataWorker {
      * @param array $cols The columns to retrieve data from.
      * @param Collection $conditionCollection The conditions to filter the data with.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
     public static function getOneWhere(string $table, array $cols, Collection $conditionCollection): ?array {
@@ -84,6 +88,8 @@ class DataWorker {
      * @param int $limit [optional] The maximum number of rows to retrieve.
      * @param int $offset [optional] The number of rows to skip.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
     public static function getAllWhere(string $table, array $cols, Collection $conditionCollection, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
@@ -103,6 +109,8 @@ class DataWorker {
      * @param int $limit [optional] The maximum number of rows to retrieve.
      * @param int $offset [optional] The number of rows to skip.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
     public static function getAll(string $table, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
@@ -119,6 +127,8 @@ class DataWorker {
      * @param string $table The table to insert into.
      * @param Collection $columnCollection Collection of columns to insert data into and their values.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return bool True if the insertion was successful, false otherwise.
      */
     public static function insert(string $table, Collection $columnCollection) : bool {
@@ -136,6 +146,8 @@ class DataWorker {
      * @param string $table The table to insert into.
      * @param array $columnCollectionList List of Collections to insert data into and their values.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return bool True if all insertions were successful, false otherwise.
      */
     public static function insertBatch(string $table, array $columnCollectionList): bool {
@@ -173,6 +185,8 @@ class DataWorker {
      * @param Collection $columnCollection Collection of columns to update and their new values.
      * @param Collection $conditionCollection Collection of conditions to filter the rows to update with.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return bool True if the update was successful, false otherwise.
      */
     public static function updateWhere(string $table, Collection $columnCollection, Collection $conditionCollection) : bool {
@@ -190,6 +204,8 @@ class DataWorker {
      * @param Collection $columnCollection Collection of columns to update and their new values.
      * @param int $id The ID of the row to update.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return bool True if the update was successful, false otherwise.
      */
     public static function updateById(string $table, int $id, Collection $columnCollection): bool {
@@ -206,6 +222,8 @@ class DataWorker {
      * @param string $table The table to delete the row from.
      * @param int $id The ID of the row to delete.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return bool True if the deletion was successful, false otherwise.
      */
     public static function deleteById(string $table, int $id): bool {
@@ -222,6 +240,8 @@ class DataWorker {
      * @param string $table The table to delete rows from.
      * @param Collection $conditionCollection Collection of conditions to filter the rows to delete.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return bool True if the deletion was successful, false otherwise.
      */
     public static function deleteWhere(string $table, Collection $conditionCollection): bool {
@@ -238,6 +258,8 @@ class DataWorker {
      * @param string $table The table to count rows from.
      * @param Collection $conditionCollection Collection of conditions to filter the rows to count.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return int The number of rows that match the conditions.
      */
     public static function count(string $table, Collection $conditionCollection): int {
@@ -253,6 +275,8 @@ class DataWorker {
      *
      * @param string $table The table to count rows from.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return int The total number of rows in the table.
      */
     public static function countAll(string $table): int {
@@ -268,6 +292,8 @@ class DataWorker {
      *
      * @param string $table The table to check for existence.
      * @param Collection $conditionCollection Collection of conditions to filter the rows.
+     * 
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      *
      * @return bool True if at least one row exists, false otherwise.
      */
@@ -285,6 +311,8 @@ class DataWorker {
      * @param string $table The table to check for existence.
      * @param int $id The ID to check for.
      *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return bool True if a row with the given ID exists, false otherwise.
      */
     public static function existsById(string $table, int $id): bool {

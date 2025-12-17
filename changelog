@@ -13,6 +13,7 @@
 - Item::mail and Item::file for helping with Mail crafting.
 - AUTH_DOMAIN env variable for defining global authorization domain.
 - Config::configureSecurity(...) for defining security policies against DDoS attacks and input length. 
+- DataWorker warnings against SQL injection.  
 
 #### Changed
 - Skeleton: Update build.sh to account for last changes.
