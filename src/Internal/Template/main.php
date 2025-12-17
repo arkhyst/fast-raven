@@ -15,9 +15,6 @@
 
         <?= $template->getHtmlFavicon(); ?>
         <?= $template->getHtmlStyles(); ?>
-
-        <link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>
-        <link rel="dns-prefetch" href="https://ajax.googleapis.com">
     </head>
     <body>
         <?php
@@ -34,7 +31,9 @@
                 include $fragmentsPath . $afterFragment;
             }
         ?>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script>
+            <?php include __DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "jquery.min.js"; ?>
+        </script>
         <script>
             <?php if (isset($_SESSION["sgas_csrf"])) { ?>
                 const CSRF_TOKEN = "<?= $_SESSION["sgas_csrf"]; ?>";
