@@ -115,7 +115,7 @@ final class Template {
         $this->afterFragments = array_merge($this->afterFragments, $template->getAfterFragments());
     }
 
-    public function sanitaze(): void {
+    public function sanitize(): void {
         $this->favicon = Bee::normalizePath($this->favicon);
         $this->styles = array_map(fn($style) => Bee::normalizePath($style), $this->styles);
         $this->scripts = array_map(fn($script) => Bee::normalizePath($script), $this->scripts);

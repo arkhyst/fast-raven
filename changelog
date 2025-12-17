@@ -1,4 +1,4 @@
-### [v0.3] - 2025-12-XX
+### [v0.3] - 2025-12-17
 #### Added
 - Config::configurePrivacy(...) for defining whether to register logs or restrict what data to register.
 - Collection and Item components for handling key-value pair arrays.
@@ -23,7 +23,7 @@
 - PHP Version downgrade to 8.4 to support hosting deployment.
 - System logs now are collapsed so they take less space.
 - LogWorker prefix for each type of log.
-- Template component now sanitazes file paths.
+- Template component now sanitizes file paths.
 - AuthSlave::validateCSRF() now uses hash_equals() for improved security.
 - Improved PDO Exception handling in DataSlave.
 - Jquery is now loaded from local files.

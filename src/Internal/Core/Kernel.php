@@ -163,7 +163,7 @@ final class Kernel {
             if($epTemplate) $template->merge($epTemplate);
             
             $template->setFile($filePath);
-            $template->sanitaze();
+            $template->sanitize();
             require_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
 
             $response = Response::new(true, 200);
