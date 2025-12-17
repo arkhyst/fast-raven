@@ -35,8 +35,8 @@
         ?>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
         <script>
-            <?php if (isset($_SESSION["csrf_token"])) { ?>
-                const CSRF_TOKEN = "<?= $_SESSION["csrf_token"]; ?>";
+            <?php if (isset($_SESSION["sgas_csrf"])) { ?>
+                const CSRF_TOKEN = "<?= $_SESSION["sgas_csrf"]; ?>";
             <?php } ?>
             <?php 
                 $comp = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "packedlib.js");

@@ -31,6 +31,7 @@
 - DataWorker::getOne() crashes when no result is found.
 - AlreadyAuthorizedException is not being handled.
 - Config::configureAuthorization(...) is not enabling global authorization correctly.
+- CSRF token session is not being correctly injected into the main template.
 
 #### Removed
 - htmlspecialchars method from Request::sanitizeData().
