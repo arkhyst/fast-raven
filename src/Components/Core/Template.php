@@ -4,6 +4,7 @@ namespace FastRaven\Components\Core;
 
 use FastRaven\Components\Data\Collection;
 use FastRaven\Components\Data\Item;
+use FastRaven\Workers\Bee;
 
 final class Template {
     #----------------------------------------------------------------------
@@ -110,6 +111,16 @@ final class Template {
         $this->styles = array_merge($this->styles, $template->getStyles());
         $this->scripts = array_merge($this->scripts, $template->getScripts());
         $this->autofill->merge($template->getAutofill());
+        $this->beforeFragments = array_merge($this->beforeFragments, $template->getBeforeFragments());
+        $this->afterFragments = array_merge($this->afterFragments, $template->getAfterFragments());
+    }
+
+    public function sanitaze(): void {
+        $this->favicon = Bee::normalizePath($this->favicon);
+        $this->styles = array_map(fn($style) => Bee::normalizePath($style), $this->styles);
+        $this->scripts = array_map(fn($script) => Bee::normalizePath($script), $this->scripts);
+        $this->beforeFragments = array_map(fn($fragment) => Bee::normalizePath($fragment), $this->beforeFragments);
+        $this->afterFragments = array_map(fn($fragment) => Bee::normalizePath($fragment), $this->afterFragments);
     }
 
     /**
