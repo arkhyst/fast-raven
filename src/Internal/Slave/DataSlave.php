@@ -80,7 +80,7 @@ final class DataSlave {
             try {
                 $this->pdo = new \PDO($this->buildDatabaseDSN(Bee::env("DB_HOST"), Bee::env("DB_NAME")), Bee::env("DB_USER"), Bee::env("DB_PASS"));
                 $this->pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
-                $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT);
+                $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             } catch (\PDOException $e) {
                 $this->pdo = null;
                 LogWorker::error("PDOException: ".$e->getMessage());
@@ -144,19 +144,25 @@ final class DataSlave {
         $this->initializePDO();
 
         if($this->pdo) {
-            $stmt = $this->pdo->prepare($query);
-            $ok = $stmt->execute($vars);
+            try {
+                $stmt = $this->pdo->prepare($query);
+                $ok = $stmt->execute($vars);
 
-            if($ok) {
-                if($type == QueryType::SELECT) return $fetchAll ? $stmt->fetchAll() : ($stmt->fetch() ?: null);
-                else if($type == QueryType::COUNT) return (int)$stmt->fetch()["count"];
-                else if($type == QueryType::DELETE) return $stmt->rowCount() > 0;
-                else if($type == QueryType::INSERT || $type == QueryType::UPDATE) return $ok;
-            } else {
-                LogWorker::error("SQL Query was not successfull -> $query");
-                if($type == QueryType::SELECT) return null;
-                else if($type == QueryType::COUNT) return 0;
-                else if($type == QueryType::INSERT || $type == QueryType::UPDATE || $type == QueryType::DELETE) return false;
+                if($ok) {
+                    if($type == QueryType::SELECT) return $fetchAll ? $stmt->fetchAll() : ($stmt->fetch() ?: null);
+                    else if($type == QueryType::COUNT) return (int)$stmt->fetch()["count"];
+                    else if($type == QueryType::DELETE) return $stmt->rowCount() > 0;
+                    else if($type == QueryType::INSERT || $type == QueryType::UPDATE) return $ok;
+                } else {
+                    LogWorker::error("SQL Query was not successfull -> $query");
+                    if($type == QueryType::SELECT) return null;
+                    else if($type == QueryType::COUNT) return 0;
+                    else if($type == QueryType::INSERT || $type == QueryType::UPDATE || $type == QueryType::DELETE) return false;
+                }
+
+            } catch (\PDOException $e) {
+                LogWorker::error("PDOException: ".$e->getMessage());
+                return null;
             }
         }
 
@@ -210,7 +216,8 @@ final class DataSlave {
      */
     public function insert(string $table, array $cols, array $values): bool {
         $query = $this->buildQuery(QueryType::INSERT, $table, $cols);
-        return $this->simpleRequestToDatabase(QueryType::INSERT, $query, $values);
+        $res = $this->simpleRequestToDatabase(QueryType::INSERT, $query, $values);
+        return $res === true;
     }
 
     /**
@@ -237,7 +244,8 @@ final class DataSlave {
      */
     public function update(string $table, array $cols, array $cond, array $vars): bool {
         $query = $this->buildQuery(QueryType::UPDATE, $table, $cols, $cond);
-        return $this->simpleRequestToDatabase(QueryType::UPDATE, $query, $vars);
+        $res = $this->simpleRequestToDatabase(QueryType::UPDATE, $query, $vars);
+        return $res === true;
     }
 
     /**
@@ -251,7 +259,8 @@ final class DataSlave {
      */
     public function delete(string $table, array $cond, array $vars): bool {
         $query = $this->buildQuery(QueryType::DELETE, $table, [], $cond);
-        return $this->simpleRequestToDatabase(QueryType::DELETE, $query, $vars);
+        $res = $this->simpleRequestToDatabase(QueryType::DELETE, $query, $vars);
+        return $res === true;
     }
 
     /**
@@ -265,7 +274,8 @@ final class DataSlave {
      */
     public function count(string $table, array $cond, array $vars): int {
         $query = $this->buildQuery(QueryType::COUNT, $table, [], $cond);
-        return $this->simpleRequestToDatabase(QueryType::COUNT, $query, $vars) ?? 0;
+        $res = $this->simpleRequestToDatabase(QueryType::COUNT, $query, $vars);
+        return $res ?? 0;
     }
 
     /**
