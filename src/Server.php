@@ -41,28 +41,27 @@ final class Server {
      * @param string $sitePath The local path of the site. Use __DIR__ unless you know what you are doing.
      */
     public static function preload(string $sitePath): void {
-        define("SITE_PATH", $sitePath);
+        define("SITE_PATH", DIRECTORY_SEPARATOR . Bee::normalizePath($sitePath) . DIRECTORY_SEPARATOR);
 
-        $envPath = $sitePath . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "env" . DIRECTORY_SEPARATOR;
-
+        $envPath = SITE_PATH . "config" . DIRECTORY_SEPARATOR . "env" . DIRECTORY_SEPARATOR;
         Dotenv::createImmutable($envPath, ".env")->safeLoad();
         Dotenv::createImmutable($envPath, Bee::isDev() ? ".env.dev" : ".env.prod")->safeLoad();
     }
 
-    public static function getConfiguration(string $sitePath = SITE_PATH): Config {
-        return require_once $sitePath . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "config.php";
+    public static function getConfiguration(): Config {
+        return require_once SITE_PATH . "config" . DIRECTORY_SEPARATOR . "config.php";
     }
 
-    public static function getTemplate(string $sitePath = SITE_PATH): Template {
-        return require_once $sitePath . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "template.php";
+    public static function getTemplate(): Template {
+        return require_once SITE_PATH . "config" . DIRECTORY_SEPARATOR . "template.php";
     }
 
-    public static function getViewRouter(string $sitePath = SITE_PATH): Router {
-        return require_once $sitePath . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . "views.php";
+    public static function getViewRouter(): Router {
+        return require_once SITE_PATH . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . "views.php";
     }
 
-    public static function getApiRouter(string $sitePath = SITE_PATH): Router {
-        return require_once $sitePath . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . "api.php";
+    public static function getApiRouter(): Router {
+        return require_once SITE_PATH . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . "api.php";
     }
 
     /**

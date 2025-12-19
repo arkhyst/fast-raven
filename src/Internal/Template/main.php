@@ -18,7 +18,7 @@
     </head>
     <body>
         <?php
-            $fragmentsPath = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "web" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . "fragments" . DIRECTORY_SEPARATOR;
+            $fragmentsPath = SITE_PATH . "src" . DIRECTORY_SEPARATOR . "web" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . "fragments" . DIRECTORY_SEPARATOR;
             foreach ($template->getBeforeFragments() as $beforeFragment) {
                 include $fragmentsPath . $beforeFragment;
             }

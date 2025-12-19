@@ -149,7 +149,7 @@ final class Kernel {
         if($endpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
         if($endpoint->getUnauthorizedExclusive() && AuthWorker::isAuthorized($this->request)) throw new AlreadyAuthorizedException();
 
-        $filePath = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
+        $filePath = SITE_PATH . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
         if(!file_exists($filePath)) throw new EndpointFileDoesNotExist($filePath);
         
         if($this->request->isApi()) {
@@ -183,8 +183,8 @@ final class Kernel {
      * @param Response $response The response to output or process
      */
     public function close(Response $response): void {
-        session_write_close();
         http_response_code($response->getCode());
+        session_write_close();
 
         $type = $this->request->isApi() ? DataType::JSON : DataType::HTML;
         HeaderWorker::addHeader( "Content-Type", "{$type->value}; charset=utf-8");

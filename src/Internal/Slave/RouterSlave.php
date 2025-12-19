@@ -69,7 +69,7 @@ final class RouterSlave {
         foreach($fileCollection->getRawData() as $path => $file) {
             if($request->isApi()) $path = "/api/" . Bee::normalizePath($path . "/");
             if(str_starts_with($path, $requestPath)) {
-                $tmp = SITE_PATH . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . $file;
+                $tmp = SITE_PATH . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . $file;
                 if(file_exists($tmp)) $filePath = $tmp;
                 else LogWorker::error("Router file does not exist: " . $filePath);
                 break;
