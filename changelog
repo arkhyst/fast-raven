@@ -6,7 +6,7 @@
 - 
 
 #### Fixed
-- 
+- Logs are not being stored inside storage directory.
 
 #### Removed
 - sitePath parameter from Server::getConfiguration(), Server::getTemplate(), Server::getViewRouter(), Server::getApiRouter() 

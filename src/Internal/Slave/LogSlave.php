@@ -61,10 +61,10 @@ final class LogSlave {
      * @param string $text The text to write to the log file.
      */
     private function writeIntoFile(string $text): void {
-        $dir = SITE_PATH . DIRECTORY_SEPARATOR . "logs" . DIRECTORY_SEPARATOR;
+        $dir = SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "logs" . DIRECTORY_SEPARATOR;
         if(!is_dir($dir)) mkdir($dir, 0755, true);
 
-        file_put_contents($dir . date("dmY") . ".log", $text, FILE_APPEND | LOCK_EX);
+        file_put_contents($dir . date("Y-m-d") . ".log", $text, FILE_APPEND | LOCK_EX);
     }
 
     #/ PRIVATE FUNCTIONS
