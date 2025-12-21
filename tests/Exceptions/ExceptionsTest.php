@@ -4,7 +4,7 @@ namespace FastRaven\Tests\Exceptions;
 
 use PHPUnit\Framework\TestCase;
 use FastRaven\Exceptions\BadImplementationException;
-use FastRaven\Exceptions\EndpointFileDoesNotExist;
+use FastRaven\Exceptions\EndpointFileNotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
 use FastRaven\Exceptions\NotFoundException;
 
@@ -37,30 +37,30 @@ class ExceptionsTest extends TestCase
         $this->assertEquals("This resource is not available at this time.", $exception->getPublicMessage());
     }
 
-    // EndpointFileDoesNotExist Tests
-    public function testEndpointFileDoesNotExistCanBeThrownAndCaught(): void
+    // EndpointFileNotFoundException Tests
+    public function testEndpointFileNotFoundExceptionCanBeThrownAndCaught(): void
     {
-        $this->expectException(EndpointFileDoesNotExist::class);
+        $this->expectException(EndpointFileNotFoundException::class);
         $this->expectExceptionMessage("¡Endpoint file does not exist! (/missing/file.php)");
 
-        throw new EndpointFileDoesNotExist("/missing/file.php");
+        throw new EndpointFileNotFoundException("/missing/file.php");
     }
 
-    public function testEndpointFileDoesNotExistExtendsException(): void
+    public function testEndpointFileNotFoundExceptionExtendsException(): void
     {
-        $exception = new EndpointFileDoesNotExist("/test/path.php");
+        $exception = new EndpointFileNotFoundException("/test/path.php");
         $this->assertInstanceOf(\Exception::class, $exception);
     }
 
-    public function testEndpointFileDoesNotExistHasCorrectStatusCode(): void
+    public function testEndpointFileNotFoundExceptionHasCorrectStatusCode(): void
     {
-        $exception = new EndpointFileDoesNotExist("/test/path.php");
+        $exception = new EndpointFileNotFoundException("/test/path.php");
         $this->assertEquals(500, $exception->getStatusCode());
     }
 
-    public function testEndpointFileDoesNotExistHasCorrectPublicMessage(): void
+    public function testEndpointFileNotFoundExceptionHasCorrectPublicMessage(): void
     {
-        $exception = new EndpointFileDoesNotExist("/test/path.php");
+        $exception = new EndpointFileNotFoundException("/test/path.php");
         $this->assertEquals("This resource is not available at this time.", $exception->getPublicMessage());
     }
 

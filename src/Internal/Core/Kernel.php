@@ -22,7 +22,7 @@ use FastRaven\Internal\Slave\ValidationSlave;
 use FastRaven\Internal\Slave\MailSlave;
 
 use FastRaven\Exceptions\BadImplementationException;
-use FastRaven\Exceptions\EndpointFileDoesNotExist;
+use FastRaven\Exceptions\EndpointFileNotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
 use FastRaven\Exceptions\AlreadyAuthorizedException;
 
@@ -126,7 +126,7 @@ final class Kernel {
      *
      * This function will try to match the request with an endpoint in the router.
      * If the endpoint is restricted and the request is not authorized, it will throw a NotAuthorizedException.
-     * If the endpoint file does not exist, it will throw an EndpointFileDoesNotExist exception.
+     * If the endpoint file does not exist, it will throw an EndpointFileNotFoundException exception.
      * If the request is an API request, it will call the function in the endpoint file and expect a Response object to be returned.
      * If the request is not an API request, it will render the template in the endpoint file.
      *
@@ -135,7 +135,7 @@ final class Kernel {
      * @throws NotFoundException If no matching route is found for the request.
      * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
      * @throws AlreadyAuthorizedException If the endpoint is unauthorized exclusive and the request is authorized.
-     * @throws EndpointFileDoesNotExist If the endpoint file does not exist.
+     * @throws EndpointFileNotFoundException If the endpoint file does not exist.
      * @throws BadImplementationException If the API function does not return a Response object.
      */
     public function process(): Response {
@@ -150,7 +150,7 @@ final class Kernel {
         if($endpoint->getUnauthorizedExclusive() && AuthWorker::isAuthorized($this->request)) throw new AlreadyAuthorizedException();
 
         $filePath = SITE_PATH . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
-        if(!file_exists($filePath)) throw new EndpointFileDoesNotExist($filePath);
+        if(!file_exists($filePath)) throw new EndpointFileNotFoundException($filePath);
         
         if($this->request->isApi()) {
             $fn = require_once $filePath;
