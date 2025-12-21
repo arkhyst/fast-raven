@@ -28,7 +28,7 @@ OR (not recommended)
 ### Roadmap: v0.4
 - Research and fixing of security issues.
 - Research and fixing of performance issues.
-- Improvement of DataSlave: regex filtering for injected strings.
+- ~~Improvement of DataSlave: regex filtering for injected strings.~~
 - Implementation of Request file retrieval controls.
 - Implementation of rate-limiting configuration.
 - Addition of StorageWorker for cache and file storage management.

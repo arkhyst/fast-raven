@@ -3,7 +3,7 @@
 - 
 
 #### Changed
-- 
+- DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).
 
 #### Fixed
 - Logs are not being stored inside storage directory.
