@@ -22,7 +22,8 @@
 #### Removed
 - sitePath parameter from Server::getConfiguration(), Server::getTemplate(), Server::getViewRouter(), Server::getApiRouter() 
 - getDataItem() method from Request component is getting deprecated.
-- getOriginInfo() method.
+- getOriginInfo() method from Request component.
+- Permissions-Policy meta tag from main.php template.
 
 ---
 

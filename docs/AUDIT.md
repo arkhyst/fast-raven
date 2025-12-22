@@ -13,90 +13,13 @@ This security audit examines the FastRaven PHP framework based on a comprehensiv
 
 | Severity | Count | Status |
 |----------|-------|--------|
-| 🟢 Low | 6 | Minor enhancements |
+| 🟢 Low | 1 | Minor enhancements |
 | ✅ Resolved | 9 | Fixed |
-| ➖ Won't Fix | 7 | By design |
+| ➖ Won't Fix | 12 | By design |
 
 ---
 
 ## Low Severity Issues 🟢
-
-### 17. Missing Security Headers
-
-**Missing headers that could improve security:**
-
-| Header | Purpose | Recommendation |
-|--------|---------|----------------|
-| `X-XSS-Protection` | Legacy XSS filter | `1; mode=block` (for older browsers) |
-| `X-Download-Options` | IE8 download sniffing | `noopen` |
-| `X-Permitted-Cross-Domain-Policies` | Flash/PDF cross-domain | `none` |
-| `Permissions-Policy` | Feature restrictions | Configured in HTML meta, but could be header |
-
-**Severity:** 🟢 Low
-
----
-
-### 18. Debug Logs in Production
-
-**Location:** `LogWorker.php` - `debug()` (lines 86-89)
-
-```php
-public static function debug(string $text): void {
-    if(self::$busy && Bee::isDev()) {  // Only in dev mode - GOOD
-        self::$slave->insertLogIntoStash("/SG/ ".$text);
-    }
-}
-```
-
-**Issue:** While debug is properly gated to dev mode, the check relies on `STATE` env variable. If misconfigured, debug logs could appear in production.
-
-**Recommendation:** Add defense in depth:
-```php
-public static function debug(string $text): void {
-    if (self::$busy && Bee::isDev() && Bee::env("ENABLE_DEBUG_LOGS", "false") === "true") {
-        self::$slave->insertLogIntoStash("/SG/ ".$text);
-    }
-}
-```
-
-**Severity:** 🟢 Low
-
----
-
-### 19. Session Cookie Name Disclosure
-
-**Location:** `config.php` skeleton
-
-```php
-$config->configureAuthorization("YOURSESSIONNAME", 7, false);
-```
-
-**Issue:** Default session name could reveal framework identity.
-
-**Recommendation:** Use a non-descriptive session name in production.
-
-**Severity:** 🟢 Low
-
----
-
-### 20. Missing Request ID Entropy
-
-**Location:** `Request.php` (line 37)
-
-```php
-$this->internalID = bin2hex(random_bytes(4));  // 8 hex chars = 32 bits
-```
-
-**Issue:** 32 bits of randomness provides ~4 billion possible IDs - could potentially collide or be predicted with enough requests.
-
-**Recommendation:** Increase to 64 or 128 bits:
-```php
-$this->internalID = bin2hex(random_bytes(8));  // 64 bits
-```
-
-**Severity:** 🟢 Low
-
----
 
 ### 21. No Account Lockout
 
@@ -131,25 +54,6 @@ public function loginAttempt(...): ?int {
 ```
 
 **Severity:** 🟢 Low (but important for complete auth)
-
----
-
-### 22. jQuery Dependency
-
-**Location:** `main.php` - includes jQuery (line 35)
-
-```php
-<?php include __DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "jquery.min.js"; ?>
-```
-
-**Issue:** jQuery is included inline. Version should be tracked and updated for security patches.
-
-**Recommendation:**
-- Document jQuery version in changelog
-- Regular dependency audits
-- Consider using fetch API for modern browsers
-
-**Severity:** 🟢 Low
 
 ---
 
@@ -224,8 +128,8 @@ Before production deployment, verify:
 FastRaven has reached production-ready status with all critical, high, and medium severity security issues addressed. The framework implements industry-standard security practices including SQL injection prevention, rate limiting, CSRF protection, path traversal protection, and timing-safe authentication.
 
 **Resolved Issues:** 9 ✅  
-**Won't Fix (By Design):** 7 ➖  
-**Remaining (Low Priority):** 6 (minor enhancements)
+**Won't Fix (By Design):** 12 ➖  
+**Remaining (Low Priority):** 1 (account lockout)
 
 **Overall Security Rating:** 9.5/10 (Production-ready)
 
@@ -253,6 +157,11 @@ All critical and medium severity issues have been addressed. Only low-severity e
 | 2025-12-22 | #14 DB SSL/TLS (optional via env vars) | ✅ Resolved |
 | 2025-12-22 | #15 AuthDomain Cookie (developer responsibility) | ➖ Won't Fix |
 | 2025-12-22 | #16 Attachment Path Injection (realpath added) | ✅ Resolved |
+| 2025-12-22 | #18 Debug Logs (already gated by isDev) | ➖ Won't Fix |
+| 2025-12-22 | #19 Session Cookie Name (developer responsibility) | ➖ Won't Fix |
+| 2025-12-22 | #20 Request ID Entropy (log identifier, not security) | ➖ Won't Fix |
+| 2025-12-22 | #22 jQuery Dependency (stable, local, no CDN risk) | ➖ Won't Fix |
+| 2025-12-22 | #17 Security Headers (legacy/obsolete, meta removed) | ➖ Won't Fix |
 
 ---
 

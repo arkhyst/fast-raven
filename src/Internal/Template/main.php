@@ -5,7 +5,6 @@
         <?= $template->getHtmlTitle(); ?>
 
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), interest-cohort=()">
         <meta name="color-scheme" content="light dark">
         <meta name="format-detection" content="telephone=no">
 
