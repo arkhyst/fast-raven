@@ -7,6 +7,7 @@
 - SanitizeType enum for defining data sanitization levels.
 - Request::getRemoteAddress() for getting remote address (unless is defined as hidden).
 - AuthWorker::regenerateCSRF() for regenerating CSRF token.
+- DataSlave optional SSL/TLS support via DB_USE_SSL and DB_SSL_CA environment variables.
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).

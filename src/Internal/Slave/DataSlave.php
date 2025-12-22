@@ -80,7 +80,16 @@ final class DataSlave {
     private function initializePDO(): void {
         if(!$this->pdo) {
             try {
-                $this->pdo = new \PDO($this->buildDatabaseDSN(Bee::env("DB_HOST"), Bee::env("DB_NAME")), Bee::env("DB_USER"), Bee::env("DB_PASS"));
+                $options = [];
+                if(Bee::env("DB_USE_SSL", "false") === "true") {
+                    $caPath = realpath(Bee::env("DB_SSL_CA", ""));
+                    if($caPath !== false) {
+                        $options[\PDO::MYSQL_ATTR_SSL_CA] = $caPath;
+                        $options[\PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
+                    }
+                }
+
+                $this->pdo = new \PDO($this->buildDatabaseDSN(Bee::env("DB_HOST"), Bee::env("DB_NAME")), Bee::env("DB_USER"), Bee::env("DB_PASS"), $options);
                 $this->pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
                 $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             } catch (\PDOException $e) {

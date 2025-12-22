@@ -13,96 +13,14 @@ This security audit examines the FastRaven PHP framework based on a comprehensiv
 
 | Severity | Count | Status |
 |----------|-------|--------|
-| 🟡 Medium | 4 | Recommended improvements |
+| 🟡 Medium | 2 | Recommended improvements |
 | 🟢 Low | 6 | Minor enhancements |
-| ✅ Resolved | 7 | Fixed |
-| ➖ Won't Fix | 5 | By design |
+| ✅ Resolved | 8 | Fixed |
+| ➖ Won't Fix | 6 | By design |
 
 ---
 
 ## Medium Severity Issues 🟡
-
-### 12. Missing Session Binding
-
-**Location:** `AuthSlave.php`
-
-**Issue:** Sessions aren't bound to any client fingerprint, making session hijacking easier.
-
-**Recommendation:**
-```php
-public function createAuthorizedSession(int $id, array $customData, string $csrf): void {
-    session_regenerate_id(true);
-    $_SESSION["sgas_uid"] = $id;
-    $_SESSION["sgas_custom"] = $customData;
-    $_SESSION["sgas_csrf"] = $csrf;
-    $_SESSION["sgas_fingerprint"] = hash('sha256', 
-        $_SERVER['HTTP_USER_AGENT'] . 
-        ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '')
-    );
-}
-
-public function validateSession(): bool {
-    if (!isset($_SESSION["sgas_uid"]) || !isset($_SESSION["sgas_csrf"])) {
-        return false;
-    }
-    
-    // Validate fingerprint
-    $expectedFingerprint = hash('sha256',
-        $_SERVER['HTTP_USER_AGENT'] .
-        ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '')
-    );
-    
-    if (!isset($_SESSION["sgas_fingerprint"]) || 
-        !hash_equals($_SESSION["sgas_fingerprint"], $expectedFingerprint)) {
-        $this->destroyAuthorizedSession();
-        return false;
-    }
-    
-    return true;
-}
-```
-
-**Severity:** 🟡 Medium  
-**CVSS Score:** 5.4 (Medium)
-
----
-
-### 14. Missing Database Connection Encryption
-
-**Location:** `DataSlave.php` - `buildDatabaseDSN()` (lines 69-71)
-
-```php
-private function buildDatabaseDSN(string $host, string $db): string {
-    return "mysql:host=$host;dbname=$db;charset=utf8mb4";
-    // No SSL/TLS options
-}
-```
-
-**Recommendation:**
-```php
-private function buildDatabaseDSN(string $host, string $db): string {
-    $dsn = "mysql:host=$host;dbname=$db;charset=utf8mb4";
-    
-    // Add SSL for production
-    if (!Bee::isDev() && Bee::env("DB_USE_SSL", "false") === "true") {
-        $dsn .= ";sslmode=require";
-    }
-    
-    return $dsn;
-}
-
-// Also set PDO SSL options
-$options = [
-    PDO::MYSQL_ATTR_SSL_CA => Bee::env("DB_SSL_CA"),
-    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
-];
-$this->pdo = new PDO($dsn, $user, $pass, $options);
-```
-
-**Severity:** 🟡 Medium  
-**CVSS Score:** 4.8 (Medium)
-
----
 
 ### 15. Missing Cookie Security for AuthDomain
 
@@ -388,7 +306,9 @@ The remaining items (#12, #14, #15, #16) are optional enhancements that can be a
 | 2025-12-22 | #9 CSP unsafe-inline (pragmatic default) | ➖ Won't Fix |
 | 2025-12-22 | #10 Host Validation (security theater) | ➖ Won't Fix |
 | 2025-12-22 | #11 Path Traversal (realpath added) | ✅ Resolved |
+| 2025-12-22 | #12 Session Binding (overkill for lightweight framework) | ➖ Won't Fix |
 | 2025-12-22 | #13 Verbose Logs (correct behavior) | ➖ Won't Fix |
+| 2025-12-22 | #14 DB SSL/TLS (optional via env vars) | ✅ Resolved |
 
 ---
 
@@ -613,3 +533,51 @@ Detailed error logging in production is **correct and necessary**:
 4. **Standard practice** – Every major framework logs full error details to files
 
 **Original Severity:** 🟡 Medium (CVSS 3.7)
+
+---
+
+## 12. Missing Session Binding ➖ WON'T FIX
+
+**Location:** `AuthSlave.php`
+
+**Original Issue:** Sessions aren't bound to client fingerprint (User-Agent, Accept-Language).
+
+**Decision (December 22, 2025): Won't Fix - Overkill for Lightweight Framework**
+
+Session fingerprinting provides **marginal security benefit** with significant downsides:
+1. **Attacker can spoof** – If they stole the cookie, they can copy headers
+2. **User-Agent is dying** – Major browsers are freezing/reducing UA strings
+3. **Causes false positives** – Browser updates, VPNs → legitimate users logged out
+4. **Existing protections sufficient** – HttpOnly + Secure + SameSite + session_regenerate_id
+5. **OWASP notes** – "Can be bypassed by determined attackers"
+
+Apps requiring fingerprinting can implement it themselves.
+
+**Original Severity:** 🟡 Medium (CVSS 5.4)
+
+---
+
+## 14. Missing Database Connection Encryption ✅
+
+**Location:** `DataSlave.php` - `initializePDO()`
+
+**Original Issue:** No SSL/TLS options for MySQL connections.
+
+**Fix Applied (December 22, 2025):**
+
+Implemented optional SSL support via environment variables:
+```php
+if(Bee::env("DB_USE_SSL", "false") === "true") {
+    $caPath = realpath(Bee::env("DB_SSL_CA", ""));
+    if($caPath !== false) {
+        $options[\PDO::MYSQL_ATTR_SSL_CA] = $caPath;
+        $options[\PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
+    }
+}
+```
+
+**Configuration:**
+- `DB_USE_SSL=true` - Enable SSL
+- `DB_SSL_CA=/path/to/ca-cert.pem` - Path to CA certificate
+
+**Original Severity:** 🟡 Medium (CVSS 4.8)
