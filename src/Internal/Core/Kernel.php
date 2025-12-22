@@ -14,6 +14,7 @@ use FastRaven\Exceptions\RateLimitExceededException;
 
 use FastRaven\Workers\AuthWorker;
 use FastRaven\Workers\HeaderWorker;
+use FastRaven\Workers\StorageWorker;
 
 use FastRaven\Internal\Slave\LogSlave;
 use FastRaven\Internal\Slave\HeaderSlave;
@@ -22,6 +23,7 @@ use FastRaven\Internal\Slave\DataSlave;
 use FastRaven\Internal\Slave\RouterSlave;
 use FastRaven\Internal\Slave\ValidationSlave;
 use FastRaven\Internal\Slave\MailSlave;
+use FastRaven\Internal\Slave\StorageSlave;
 
 use FastRaven\Exceptions\BadImplementationException;
 use FastRaven\Exceptions\EndpointFileNotFoundException;
@@ -51,6 +53,7 @@ final class Kernel {
     private RouterSlave $routerSlave;
     private ValidationSlave $validationSlave;
     private MailSlave $mailSlave;
+    private StorageSlave $storageSlave;
 
     private float $startRequestTime;
     private int $rateLimitRemaining = 0;
@@ -87,11 +90,22 @@ final class Kernel {
                 $count = apcu_inc($rateLimitID, 1, $success, 60);
                 $this->rateLimitRemaining = $limit - $count;
                 $this->rateLimitTimeRemaining = apcu_key_info($rateLimitID)["ttl"];
-
-                if($this->rateLimitRemaining < 0 && $this->rateLimitTimeRemaining > 0) return false;
             } else {
-                // TODO: StorageWorker implementation
+                $cacheItem = StorageWorker::getCache($rateLimitID);
+                $count = 0;
+                if($cacheItem) {
+                    StorageWorker::incrementCache($rateLimitID, 1);
+                    $count = $cacheItem["value"] + 1;
+                } else {
+                    StorageWorker::setCache($rateLimitID, 1, 60);
+                    $count = 1;
+                }
+                
+                $this->rateLimitRemaining = $limit - $count;
+                $this->rateLimitTimeRemaining = $cacheItem ? $cacheItem["expires"] - time() : 60;
             }
+
+            if($this->rateLimitRemaining < 0 && $this->rateLimitTimeRemaining > 0) return false;
         }
 
         return true;
@@ -153,6 +167,8 @@ final class Kernel {
         $this->validationSlave = ValidationSlave::zap();
 
         $this->mailSlave = MailSlave::zap();
+
+        $this->storageSlave = StorageSlave::zap();
     }
 
     /**
