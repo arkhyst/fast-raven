@@ -63,12 +63,10 @@ final class MailSlave {
      * @return ?string The template content if the file exists, null otherwise.
      */
     private function getMailTemplate(string $file): ?string {
-        $path = SITE_PATH . "src" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . "mails" . DIRECTORY_SEPARATOR . Bee::normalizePath($file);
-        if(file_exists($path)) {
-            return file_get_contents($path);
-        }
-
-        return null;
+        $path = realpath(SITE_PATH . "src" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . "mails" . DIRECTORY_SEPARATOR . Bee::normalizePath($file));
+        
+        if($path !== false) return file_get_contents($path);
+        else return null;
     }
 
     /**

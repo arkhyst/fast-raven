@@ -11,6 +11,7 @@
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).
 - Request now sanitizes data in different levels of severity.
+- MailSlave::getMailTemplate() now uses realpath() to prevent directory traversal attacks.
 
 #### Fixed
 - Logs are not being stored inside storage directory.
