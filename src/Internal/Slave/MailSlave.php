@@ -133,7 +133,10 @@ final class MailSlave {
     private function setMailerAttachments(PHPMailer &$mailer, ?Collection $attachments): void {
         if($attachments) {
             foreach($attachments->getRawData() as $attachment) {
-                $mailer->addAttachment(SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "uploads" . DIRECTORY_SEPARATOR . Bee::normalizePath($attachment->getValue()), $attachment->getKey());
+                $path = realpath(SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "uploads" . DIRECTORY_SEPARATOR . Bee::normalizePath($attachment->getValue()));
+                
+                if($path !== false) $mailer->addAttachment($path, $attachment->getKey());
+                else LogWorker::error("Attachment not found: " . $attachment->getValue());
             }
         }
     }
