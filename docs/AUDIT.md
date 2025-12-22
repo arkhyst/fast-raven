@@ -14,10 +14,10 @@ This security audit examines the FastRaven PHP framework based on a comprehensiv
 | Severity | Count | Status |
 |----------|-------|--------|
 | 🔴 Critical | 0 | Must fix before production |
-| 🟠 High | 3 | Should fix before production |
+| 🟠 High | 2 | Should fix before production |
 | 🟡 Medium | 8 | Recommended improvements |
 | 🟢 Low | 6 | Minor enhancements |
-| ✅ Resolved | 5 | Fixed |
+| ✅ Resolved | 6 | Fixed |
 
 ---
 
@@ -28,52 +28,6 @@ This security audit examines the FastRaven PHP framework based on a comprehensiv
 ---
 
 ## High Severity Issues 🟠
-
-### 6. Insecure Password Verification Timing
-
-**Location:** `AuthSlave.php` - `loginAttempt()` (lines 171-181)
-
-**Issue:** Different code paths for "user not found" vs "wrong password" may leak timing information.
-
-```php
-public function loginAttempt(...): ?int {
-    $data = DataWorker::getOneWhere($dbTable, [...], Collection::new([
-        Item::new($dbNameCol, $user)
-    ]));
-
-    if($data && password_verify($pass, $data[$dbPassCol])) {
-        return (int)$data[$dbIdCol];
-    }
-
-    return null;  // Same return but different timing: DB query vs DB query + password_verify
-}
-```
-
-**Attack Vector:** Timing attacks to enumerate valid usernames
-
-**Recommendation:**
-```php
-public function loginAttempt(...): ?int {
-    $data = DataWorker::getOneWhere($dbTable, [...], Collection::new([
-        Item::new($dbNameCol, $user)
-    ]));
-
-    // Always perform password verification to maintain constant time
-    $hash = $data[$dbPassCol] ?? '$argon2id$v=19$m=65536,t=4,p=2$dummysalt$dummyhash';
-    $valid = password_verify($pass, $hash);
-
-    if ($data && $valid) {
-        return (int)$data[$dbIdCol];
-    }
-
-    return null;
-}
-```
-
-**Severity:** � High  
-**CVSS Score:** 5.3 (Medium)
-
----
 
 ### 7. Missing HTTPS Enforcement
 
@@ -750,6 +704,7 @@ FastRaven implements a solid foundation of security features with ongoing improv
 | 2025-12-22 | #3 Session Fixation (existing mitigations sufficient) | ✅ Resolved |
 | 2025-12-22 | #4 Input Sanitization (SanitizeType enum) | ✅ Resolved |
 | 2025-12-22 | #5 CSRF Token Rotation (regenerateCSRF method) | ✅ Resolved |
+| 2025-12-22 | #6 Timing Attack (constant-time verification) | ✅ Resolved |
 
 ---
 
@@ -837,3 +792,27 @@ Implemented configurable sanitization via `SanitizeType` enum with 5 cascading l
 Implemented `AuthWorker::regenerateCSRF()` method that allows developers to rotate CSRF tokens on-demand after sensitive operations.
 
 **Original Severity:** 🟠 High (CVSS 5.4)
+
+---
+
+## 6. Insecure Password Verification Timing ✅
+
+**Location:** `AuthSlave.php` - `checkCredentials()`
+
+**Original Issue:** Different code paths for "user not found" vs "wrong password" leaked timing information, enabling username enumeration.
+
+**Fix Applied (December 22, 2025):**
+
+Renamed `loginAttempt()` to `checkCredentials()` and implemented constant-time verification:
+```php
+$hash = $data[$dbPassCol] ?? '$argon2id$v=19$m=65536,t=4,p=2$...valid_dummy_hash...';
+$valid = password_verify($pass, $hash);  // Always runs
+
+if ($data && $valid) {
+    return (int)$data[$dbIdCol];
+}
+```
+
+The dummy hash uses matching Argon2ID parameters (m=65536, t=4, p=2) to ensure identical computation time.
+
+**Original Severity:** 🟠 High (CVSS 5.3)

@@ -141,7 +141,7 @@ class AuthWorker {
             if (session_status() === PHP_SESSION_ACTIVE) {
                 if(!$user || !$pass) return false;
 
-                $id = self::$slave->loginAttempt($user, $pass, $dbTable, $dbIdCol, $dbNameCol, $dbPassCol);
+                $id = self::$slave->checkCredentials($user, $pass, $dbTable, $dbIdCol, $dbNameCol, $dbPassCol);
                 
                 if($id) {
                     LogWorker::debug("User {$user} logged in via autologin.");

@@ -14,6 +14,7 @@
 
 #### Fixed
 - Logs are not being stored inside storage directory.
+- AuthWorker::autologin() produces a timing attack vulnerability.
 
 #### Removed
 - sitePath parameter from Server::getConfiguration(), Server::getTemplate(), Server::getViewRouter(), Server::getApiRouter() 
