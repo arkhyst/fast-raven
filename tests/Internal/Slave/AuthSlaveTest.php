@@ -26,13 +26,13 @@ class AuthSlaveTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function testValidateCSRFReturnsTrueWhenBothTokensAreNull(): void
+    public function testValidateCSRFReturnsFalseWhenBothTokensAreNull(): void
     {
         $authSlave = $this->createAuthSlaveInstance();
 
         $result = $authSlave->validateCSRF(null, null);
 
-        $this->assertTrue($result);
+        $this->assertFalse($result);
     }
 
     public function testValidateCSRFReturnsFalseWhenOneTokenIsNull(): void

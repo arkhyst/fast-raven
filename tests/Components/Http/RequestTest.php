@@ -4,6 +4,7 @@ namespace FastRaven\Tests\Components\Http;
 
 use PHPUnit\Framework\TestCase;
 use FastRaven\Components\Http\Request;
+use FastRaven\Components\Http\SanitizeType;
 
 class RequestTest extends TestCase
 {
@@ -87,86 +88,297 @@ class RequestTest extends TestCase
         $this->assertTrue($request->isApi());
     }
 
-    public function testGetDataItemReturnsValueForExistingKey(): void
+    // =====================================================================
+    // get() method tests - Query string parameters (URL)
+    // =====================================================================
+
+    public function testGetReturnsQueryParamValue(): void
+    {
+        $request = new Request('/search?username=testuser&email=test@example.com', 'GET', '', '127.0.0.1');
+
+        $this->assertEquals('testuser', $request->get('username'));
+        $this->assertEquals('test@example.com', $request->get('email'));
+    }
+
+    public function testGetReturnsNullForNonExistentQueryParam(): void
+    {
+        $request = new Request('/search?username=testuser', 'GET', '', '127.0.0.1');
+
+        $this->assertNull($request->get('nonexistent'));
+    }
+
+    public function testGetRawPreservesHtmlTagsInQuery(): void
+    {
+        $request = new Request('/search?content=' . urlencode('<script>alert("xss")</script>Hello'), 'GET', '', '127.0.0.1');
+
+        $result = $request->get('content', SanitizeType::RAW);
+        $this->assertEquals('<script>alert("xss")</script>Hello', $result);
+    }
+
+    public function testGetSafeStripsPhpTagsInQuery(): void
+    {
+        $request = new Request('/search?code=' . urlencode('<?php echo "hack"; ?>safe'), 'GET', '', '127.0.0.1');
+
+        $result = $request->get('code', SanitizeType::SAFE);
+        $this->assertEquals('safe', $result);
+    }
+
+    public function testGetEncodedEncodesHtmlInQuery(): void
+    {
+        $request = new Request('/search?content=' . urlencode('<b>bold</b>'), 'GET', '', '127.0.0.1');
+
+        $result = $request->get('content', SanitizeType::ENCODED);
+        $this->assertEquals('&lt;b&gt;bold&lt;/b&gt;', $result);
+    }
+
+    public function testGetSanitizedStripsHtmlInQuery(): void
+    {
+        $request = new Request('/search?content=' . urlencode('<b>bold</b>text'), 'GET', '', '127.0.0.1');
+
+        $result = $request->get('content', SanitizeType::SANITIZED);
+        $this->assertEquals('boldtext', $result);
+    }
+
+    public function testGetOnlyAlphaFiltersQuery(): void
+    {
+        $request = new Request('/search?username=john_doe@123!', 'GET', '', '127.0.0.1');
+
+        $result = $request->get('username', SanitizeType::ONLY_ALPHA);
+        $this->assertEquals('johndoe123', $result);
+    }
+
+    public function testGetHandlesEmptyQueryString(): void
+    {
+        $request = new Request('/search', 'GET', '', '127.0.0.1');
+
+        $this->assertNull($request->get('any_key'));
+    }
+
+    // =====================================================================
+    // post() method tests - Body data (JSON)
+    // =====================================================================
+
+    public function testPostReturnsValueForExistingKey(): void
     {
         $jsonData = json_encode(['username' => 'testuser', 'email' => 'test@example.com']);
         $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
 
-        $this->assertEquals('testuser', $request->getDataItem('username'));
-        $this->assertEquals('test@example.com', $request->getDataItem('email'));
+        $this->assertEquals('testuser', $request->post('username'));
+        $this->assertEquals('test@example.com', $request->post('email'));
     }
 
-    public function testGetDataItemReturnsNullForNonExistentKey(): void
+    public function testPostReturnsNullForNonExistentKey(): void
     {
         $jsonData = json_encode(['username' => 'testuser']);
         $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
 
-        $this->assertNull($request->getDataItem('nonexistent'));
+        $this->assertNull($request->post('nonexistent'));
     }
 
-    public function testGetDataItemStripsHtmlTags(): void
+    public function testPostRawPreservesHtmlTags(): void
     {
         $jsonData = json_encode(['content' => '<script>alert("xss")</script>Hello']);
         $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
 
-        $result = $request->getDataItem('content');
+        $result = $request->post('content', SanitizeType::RAW);
+        $this->assertEquals('<script>alert("xss")</script>Hello', $result);
+    }
 
-        // strip_tags removes opening tags but not the content between them
+    public function testPostRawPreservesPhpTags(): void
+    {
+        $jsonData = json_encode(['code' => '<?php echo "test"; ?>']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('code', SanitizeType::RAW);
+        $this->assertEquals('<?php echo "test"; ?>', $result);
+    }
+
+    public function testPostSafeStripsPhpTags(): void
+    {
+        $jsonData = json_encode(['code' => '<?php echo "hack"; ?>safe content']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('code', SanitizeType::SAFE);
+        $this->assertEquals('safe content', $result);
+    }
+
+    public function testPostSafeStripsShortEchoTags(): void
+    {
+        $jsonData = json_encode(['code' => '<?= $var ?>visible']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('code', SanitizeType::SAFE);
+        $this->assertEquals('visible', $result);
+    }
+
+    public function testPostSafeStripsNullBytes(): void
+    {
+        $jsonData = json_encode(['data' => "hello\x00world"]);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('data', SanitizeType::SAFE);
+        $this->assertEquals('helloworld', $result);
+    }
+
+    public function testPostSafeStripsUrlEncodedNullBytes(): void
+    {
+        $jsonData = json_encode(['data' => 'hello%00world']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('data', SanitizeType::SAFE);
+        $this->assertEquals('helloworld', $result);
+    }
+
+    public function testPostSafePreservesHtmlTags(): void
+    {
+        $jsonData = json_encode(['content' => '<b>bold</b>']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('content', SanitizeType::SAFE);
+        $this->assertEquals('<b>bold</b>', $result);
+    }
+
+    public function testPostEncodedEncodesHtmlEntities(): void
+    {
+        $jsonData = json_encode(['content' => '<script>alert("xss")</script>']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('content', SanitizeType::ENCODED);
+        $this->assertEquals('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;', $result);
+    }
+
+    public function testPostEncodedEncodesQuotes(): void
+    {
+        $jsonData = json_encode(['content' => "It's a \"test\""]);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('content', SanitizeType::ENCODED);
+        $this->assertEquals("It&#039;s a &quot;test&quot;", $result);
+    }
+
+    public function testPostEncodedInheritsSafeFiltering(): void
+    {
+        $jsonData = json_encode(['code' => '<?php echo "hack"; ?><b>bold</b>']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('code', SanitizeType::ENCODED);
+        $this->assertStringNotContainsString('<?php', $result);
+        $this->assertEquals('&lt;b&gt;bold&lt;/b&gt;', $result);
+    }
+
+    public function testPostSanitizedStripsHtmlTags(): void
+    {
+        $jsonData = json_encode(['content' => '<script>alert("xss")</script>Hello']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('content', SanitizeType::SANITIZED);
         $this->assertEquals('alert("xss")Hello', $result);
         $this->assertStringNotContainsString('<script>', $result);
     }
 
-    public function testGetDataItemTrimsWhitespace(): void
+    public function testPostSanitizedTrimsWhitespace(): void
     {
         $jsonData = json_encode(['name' => '  John Doe  ']);
         $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
 
-        $this->assertEquals('John Doe', $request->getDataItem('name'));
+        $result = $request->post('name', SanitizeType::SANITIZED);
+        $this->assertEquals('John Doe', $result);
     }
+
+    public function testPostSanitizedInheritsSafeFiltering(): void
+    {
+        $jsonData = json_encode(['code' => '<?php echo "hack"; ?><b>text</b>']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('code', SanitizeType::SANITIZED);
+        $this->assertStringNotContainsString('<?php', $result);
+        $this->assertStringNotContainsString('<b>', $result);
+        $this->assertEquals('text', $result);
+    }
+
+    public function testPostOnlyAlphaRemovesSpecialCharacters(): void
+    {
+        $jsonData = json_encode(['username' => 'john_doe@123!']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('username', SanitizeType::ONLY_ALPHA);
+        $this->assertEquals('johndoe123', $result);
+    }
+
+    public function testPostOnlyAlphaPreservesSpaces(): void
+    {
+        $jsonData = json_encode(['name' => 'John Doe 123']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('name', SanitizeType::ONLY_ALPHA);
+        $this->assertEquals('John Doe 123', $result);
+    }
+
+    public function testPostOnlyAlphaInheritsSanitizedFiltering(): void
+    {
+        $jsonData = json_encode(['data' => '<?php ?><b>Hello!</b> World@2024']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $result = $request->post('data', SanitizeType::ONLY_ALPHA);
+        $this->assertEquals('Hello World2024', $result);
+    }
+
+    // =====================================================================
+    // post() method tests - Non-string values
+    // =====================================================================
+
+    public function testPostWithBooleanValue(): void
+    {
+        $jsonData = json_encode(['active' => true, 'deleted' => false]);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $this->assertTrue($request->post('active', SanitizeType::SANITIZED));
+        $this->assertFalse($request->post('deleted', SanitizeType::SANITIZED));
+    }
+
+    public function testPostWithIntegerValue(): void
+    {
+        $jsonData = json_encode(['count' => 42, 'zero' => 0]);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $this->assertSame(42, $request->post('count', SanitizeType::ONLY_ALPHA));
+        $this->assertSame(0, $request->post('zero', SanitizeType::ONLY_ALPHA));
+    }
+
+    public function testPostWithFloatValue(): void
+    {
+        $jsonData = json_encode(['price' => 45.67]);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $this->assertSame(45.67, $request->post('price', SanitizeType::SANITIZED));
+    }
+
+    // =====================================================================
+    // Other method tests
+    // =====================================================================
 
     public function testConstructorHandlesInvalidJsonData(): void
     {
         $request = new Request('/submit', 'POST', 'invalid json', '127.0.0.1');
 
-        $this->assertNull($request->getDataItem('any_key'));
+        $this->assertNull($request->post('any_key'));
     }
 
     public function testConstructorHandlesEmptyJsonData(): void
     {
         $request = new Request('/submit', 'POST', '', '127.0.0.1');
 
-        $this->assertNull($request->getDataItem('any_key'));
+        $this->assertNull($request->post('any_key'));
     }
 
-    public function testGetDataItemWithBooleanValue(): void
-    {
-        $jsonData = json_encode(['active' => true, 'deleted' => false]);
-        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
-
-        // With improved implementation, booleans remain as booleans
-        $this->assertTrue($request->getDataItem('active'));
-        $this->assertFalse($request->getDataItem('deleted'));
-    }
-
-    public function testGetDataItemWithIntegerValue(): void
-    {
-        $jsonData = json_encode(['count' => 42, 'zero' => 0]);
-        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
-
-        // Integers remain as integers with improved implementation
-        $this->assertSame(42, $request->getDataItem('count'));
-        $this->assertSame(0, $request->getDataItem('zero'));
-    }
-
-    public function testGetOriginInfoContainsIpAddress(): void
+    public function testGetRemoteAddressReturnsIpString(): void
     {
         $request = new Request('/home', 'GET', '', '192.168.1.100');
 
-        $originInfo = $request->getOriginInfo();
+        $remoteAddress = $request->getRemoteAddress();
 
-        $this->assertIsArray($originInfo);
-        $this->assertArrayHasKey('IP', $originInfo);
-        $this->assertEquals('192.168.1.100', $originInfo['IP']);
+        $this->assertIsString($remoteAddress);
+        $this->assertEquals('192.168.1.100', $remoteAddress);
     }
 
     public function testGetInternalIdIsHexString(): void
@@ -198,25 +410,29 @@ class RequestTest extends TestCase
         }
     }
 
-    public function testGetDataItemWithComplexJsonFormats(): void
+    public function testGetDefaultSanitizationIsRaw(): void
     {
-        $complexJson = json_encode([
-            'string' => 'text',
-            'number' => 123,
-            'float' => 45.67,
-            'boolean' => true,
-            'unicode' => 'Hello 世界 🌍',
-            'special_chars' => '!@#$%^&*()',
-        ]);
+        $request = new Request('/search?html=' . urlencode('<b>bold</b>'), 'GET', '', '127.0.0.1');
 
-        $request = new Request('/submit', 'POST', $complexJson, '127.0.0.1');
+        $this->assertEquals('<b>bold</b>', $request->get('html'));
+    }
 
-        // With improved implementation, scalar values keep their types
-        $this->assertEquals('text', $request->getDataItem('string'));
-        $this->assertSame(123, $request->getDataItem('number'));
-        $this->assertSame(45.67, $request->getDataItem('float'));
-        $this->assertTrue($request->getDataItem('boolean'));
-        $this->assertEquals('Hello 世界 🌍', $request->getDataItem('unicode'));
-        $this->assertEquals('!@#$%^&*()', $request->getDataItem('special_chars'));
+    public function testPostDefaultSanitizationIsRaw(): void
+    {
+        $jsonData = json_encode(['html' => '<b>bold</b>']);
+        $request = new Request('/submit', 'POST', $jsonData, '127.0.0.1');
+
+        $this->assertEquals('<b>bold</b>', $request->post('html'));
+    }
+
+    public function testGetAndPostCanBeUsedTogether(): void
+    {
+        $jsonData = json_encode(['body_param' => 'from_body']);
+        $request = new Request('/submit?url_param=from_url', 'POST', $jsonData, '127.0.0.1');
+
+        $this->assertEquals('from_url', $request->get('url_param'));
+        $this->assertEquals('from_body', $request->post('body_param'));
+        $this->assertNull($request->get('body_param'));
+        $this->assertNull($request->post('url_param'));
     }
 }

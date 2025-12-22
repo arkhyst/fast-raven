@@ -41,7 +41,7 @@ class ExceptionsTest extends TestCase
     public function testEndpointFileNotFoundExceptionCanBeThrownAndCaught(): void
     {
         $this->expectException(EndpointFileNotFoundException::class);
-        $this->expectExceptionMessage("¡Endpoint file does not exist! (/missing/file.php)");
+        $this->expectExceptionMessage("Endpoint file does not exist! (/missing/file.php)");
 
         throw new EndpointFileNotFoundException("/missing/file.php");
     }

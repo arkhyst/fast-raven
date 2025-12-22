@@ -133,7 +133,7 @@ final class Kernel {
         }
 
         if(!$this->handleRateLimit($this->config->getSecurityRateLimit()))
-            throw new RateLimitExceededException($this->request->getOriginInfo()["IP"], $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
+            throw new RateLimitExceededException($this->request->getRemoteAddress(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
 
         $this->authSlave = AuthSlave::zap();
         $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->isAuthGlobal());
@@ -182,7 +182,7 @@ final class Kernel {
 
         if(!$this->handleRateLimit($endpoint->getLimitPerMinute(), $endpoint->getComplexPath())) {
             $this->headerSlave->writeRateLimitHeaders($endpoint->getLimitPerMinute(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
-            throw new RateLimitExceededException($this->request->getOriginInfo()["IP"], $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
+            throw new RateLimitExceededException($this->request->getRemoteAddress(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
         }
 
         if($endpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();

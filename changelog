@@ -2,15 +2,22 @@
 #### Added
 - Kernel::handleRateLimit() for handling global rate limit configuration and endpoint specific rate limit.
 - HeaderSlave::writeRateLimitHeaders() for writing rate limit headers.
+- Request::get() for getting sanitized or raw query data.
+- Request::post() for getting sanitized or raw request data.
+- SanitizeType enum for defining data sanitization levels.
+- Request::getRemoteAddress() for getting remote address (unless is defined as hidden).
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).
+- Request now sanitizes data in different levels of severity.
 
 #### Fixed
 - Logs are not being stored inside storage directory.
 
 #### Removed
 - sitePath parameter from Server::getConfiguration(), Server::getTemplate(), Server::getViewRouter(), Server::getApiRouter() 
+- getDataItem() method from Request component is getting deprecated.
+- getOriginInfo() method.
 
 ---
 

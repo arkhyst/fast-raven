@@ -90,7 +90,7 @@ final class LogSlave {
      */
     public function writeOpenLogs(Request $request): void {
         $type = $request->isApi() ? "API" : "VIEW";
-        LogWorker::log("{$type}[{$request->getMethod()}] > {$request->getPath()} <-> {$request->getOriginInfo()["IP"]} < ELAPSED_TIMEms");
+        LogWorker::log("{$type}[{$request->getMethod()}] > {$request->getPath()} <-> {$request->getRemoteAddress()} < ELAPSED_TIMEms");
     }
 
     /**
