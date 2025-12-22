@@ -118,6 +118,21 @@ final class HeaderSlave {
         else HeaderWorker::addHeader("Cache-Control", "private, max-age=600, stale-while-revalidate=30");
     }
 
+    /**
+     * Writes rate limit headers to the response.
+     *
+     * @param int $configuredRateLimit The configured rate limit.
+     * @param int $rateLimitRemaining The remaining requests before being blocked.
+     * @param int $rateLimitTimeRemaining The time remaining until the rate limit is reset.
+     */
+    public function writeRateLimitHeaders(int $configuredRateLimit, int $rateLimitRemaining, int $rateLimitTimeRemaining): void {
+        if($configuredRateLimit > 0) {
+            HeaderWorker::addHeader("RateLimit-Limit", $configuredRateLimit);
+            HeaderWorker::addHeader("RateLimit-Remaining", max(0, $rateLimitRemaining));
+            HeaderWorker::addHeader("RateLimit-Reset", time() + $rateLimitTimeRemaining);
+        }
+    }
+
     #/ METHODS
     #----------------------------------------------------------------------
 }

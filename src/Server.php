@@ -5,7 +5,9 @@ namespace FastRaven;
 use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
 use FastRaven\Exceptions\AlreadyAuthorizedException;
+use FastRaven\Exceptions\RateLimitExceededException;
 use FastRaven\Exceptions\SmartException;
+
 use FastRaven\Internal\Core\Kernel;
 
 use FastRaven\Components\Core\Config;
@@ -104,6 +106,10 @@ final class Server {
         $response = Response::new(false, $statusCode, $e->getPublicMessage());
         LogWorker::error("SmartException: " . $e->getMessage());
 
+        if($e instanceof RateLimitExceededException || is_subclass_of($e, RateLimitExceededException::class)) {
+            HeaderWorker::addHeader("Retry-After", $e->getTimeLeft());
+        }
+
         if(!$this->kernel->isApiRequest()) {
             if($e instanceof NotFoundException || is_subclass_of($e, NotFoundException::class) ||
             $e instanceof AlreadyAuthorizedException || is_subclass_of($e, AlreadyAuthorizedException::class)) {
@@ -130,7 +136,7 @@ final class Server {
      *
      * If the server has not been configured, it will return a 500 status code.
      *
-     * Handles NotFoundException, BadImplementationException, EndpointFileNotFoundException, NotAuthorizedException and AlreadyAuthorizedException.
+     * Handles NotFoundException, BadImplementationException, EndpointFileNotFoundException, NotAuthorizedException, AlreadyAuthorizedException, RateLimitExceededException.
      */
     public function run(): void {
         if ($this->ready) {

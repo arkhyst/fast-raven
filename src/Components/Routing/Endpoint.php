@@ -13,6 +13,8 @@ class Endpoint {
         public function getRestricted(): bool { return $this->restricted; }
     private bool $unauthorizedExclusive = false;
         public function getUnauthorizedExclusive(): bool { return $this->unauthorizedExclusive; }
+    private int $limitPerMinute = 0;
+        public function getLimitPerMinute(): int { return $this->limitPerMinute; }
     private string $complexPath;
         public function getComplexPath(): string { return $this->complexPath; }
     private string $file;
@@ -34,11 +36,12 @@ class Endpoint {
      * @param string $path The path of the endpoint, relative to /api/.
      * @param string $fileName The filename of the endpoint, relative to the /src/api/ directory.
      * @param bool $unauthorizedExclusive Whether the endpoint should be exclusive to unauthorized users.
+     * @param int $limitPerMinute The limit of requests per minute specific for this endpoint. Must be lower than global rate limit configuration.
      *
      * @return Endpoint The created Endpoint instance.
      */
-    public static function api(bool $restricted, string $method, string $path, string $fileName, bool $unauthorizedExclusive = false): Endpoint {
-        return new Endpoint($restricted, $method, "/api/".$path, $fileName, $unauthorizedExclusive);
+    public static function api(bool $restricted, string $method, string $path, string $fileName, bool $unauthorizedExclusive = false, int $limitPerMinute = 0): Endpoint {
+        return new Endpoint($restricted, $method, "/api/".$path, $fileName, $unauthorizedExclusive, null, $limitPerMinute);
     }
 
     /**
@@ -49,19 +52,21 @@ class Endpoint {
      * @param string $fileName The filename of the endpoint, relative to the /src/views/ directory.
      * @param Template|null $template The template to use for the endpoint, or null to use the default template.
      * @param bool $unauthorizedExclusive Whether the endpoint should be exclusive to unauthorized users.
+     * @param int $limitPerMinute The limit of requests per minute specific for this endpoint. Must be lower than global rate limit configuration.
      *
      * @return Endpoint The created Endpoint instance.
      */
-    public static function view(bool $restricted, string $path, string $fileName, ?Template $template = null, bool $unauthorizedExclusive = false): Endpoint {
-        return new Endpoint($restricted, "GET", $path, $fileName, $unauthorizedExclusive, $template);
+    public static function view(bool $restricted, string $path, string $fileName, ?Template $template = null, bool $unauthorizedExclusive = false, int $limitPerMinute = 0): Endpoint {
+        return new Endpoint($restricted, "GET", $path, $fileName, $unauthorizedExclusive, $template, $limitPerMinute);
     }
 
-    private function __construct(bool $restricted, string $method, string $path, string $fileName, bool $unauthorizedExclusive = false, ?Template $template = null) {
+    private function __construct(bool $restricted, string $method, string $path, string $fileName, bool $unauthorizedExclusive = false, ?Template $template = null, int $limitPerMinute = 0) {
         $this->restricted = $restricted;
         $this->complexPath = "/".Bee::normalizePath($path)."#".$method;
         $this->file = Bee::normalizePath($fileName);
         $this->template = $template;
         $this->unauthorizedExclusive = $unauthorizedExclusive;
+        $this->limitPerMinute = $limitPerMinute;
     }
 
     #/ INIT

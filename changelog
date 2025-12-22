@@ -1,6 +1,7 @@
 ### [v0.4] - 2026-01-XX
 #### Added
-- 
+- Kernel::handleRateLimit() for handling global rate limit configuration and endpoint specific rate limit.
+- HeaderSlave::writeRateLimitHeaders() for writing rate limit headers.
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).

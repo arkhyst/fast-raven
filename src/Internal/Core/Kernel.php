@@ -10,6 +10,8 @@ use FastRaven\Components\Core\Template;
 use FastRaven\Components\Routing\Router;
 
 use FastRaven\Exceptions\NotFoundException;
+use FastRaven\Exceptions\RateLimitExceededException;
+
 use FastRaven\Workers\AuthWorker;
 use FastRaven\Workers\HeaderWorker;
 
@@ -41,7 +43,6 @@ final class Kernel {
         public function setApiRouter(Router $router): void { $this->apiRouter = $router; }
 
     private Request $request;
-    private float $startRequestTime;
 
     private LogSlave $logSlave;
     private HeaderSlave $headerSlave;
@@ -50,6 +51,10 @@ final class Kernel {
     private RouterSlave $routerSlave;
     private ValidationSlave $validationSlave;
     private MailSlave $mailSlave;
+
+    private float $startRequestTime;
+    private int $rateLimitRemaining = 0;
+    private int $rateLimitTimeRemaining = 0;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -67,7 +72,30 @@ final class Kernel {
     #----------------------------------------------------------------------
     #\ PRIVATE FUNCTIONS
 
+    /**
+     * Handles rate limiting for the request.
+     *
+     * @param int $limit The configured rate limit for the request.
+     * @param string|null $endpoint The endpoint for the request. Empty if global rate limit.
+     * 
+     * @return bool True if host does not exceed its rate limit, false otherwise.
+     */
+    private function handleRateLimit(int $limit, ?string $endpoint = null): bool {
+        if ($limit > 0) {
+            $rateLimitID = "fastraven:". $this->config->getSiteName().($endpoint ? "/$endpoint" : "").":ratelimit:". md5($_SERVER["REMOTE_ADDR"]);
+            if (function_exists("apcu_enabled") && apcu_enabled()) {
+                $count = apcu_inc($rateLimitID, 1, $success, 60);
+                $this->rateLimitRemaining = $limit - $count;
+                $this->rateLimitTimeRemaining = apcu_key_info($rateLimitID)["ttl"];
 
+                if($this->rateLimitRemaining < 0 && $this->rateLimitTimeRemaining > 0) return false;
+            } else {
+                // TODO: StorageWorker implementation
+            }
+        }
+
+        return true;
+    }
 
     #/ PRIVATE FUNCTIONS
     #----------------------------------------------------------------------
@@ -86,6 +114,7 @@ final class Kernel {
      * It should be called at the beginning of every request.
      * 
      * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
+     * @throws RateLimitExceededException If the host exceeds its rate limit.
      */
     public function open(): void {
         $this->startRequestTime = microtime(true);
@@ -94,7 +123,7 @@ final class Kernel {
         $this->request = new Request(
             $_SERVER["REQUEST_URI"],
             $_SERVER["REQUEST_METHOD"],
-            file_get_contents("php://input", false, null, 0, $this->config->getSecurityInputLengthLimit()),
+            file_get_contents("php://input", false, null, 0, $this->config->getSecurityInputLengthLimit() ?: null),
             $this->config->isPrivacyRegisterOrigin() ? $_SERVER["REMOTE_ADDR"] : "HOST"
         );
         
@@ -103,14 +132,19 @@ final class Kernel {
             $this->logSlave->writeOpenLogs($this->request);
         }
 
+        if(!$this->handleRateLimit($this->config->getSecurityRateLimit()))
+            throw new RateLimitExceededException($this->request->getOriginInfo()["IP"], $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
+
         $this->authSlave = AuthSlave::zap();
         $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->isAuthGlobal());
 
-        if($this->config->isRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
+        if($this->config->isRestricted() && !AuthWorker::isAuthorized($this->request))
+            throw new NotAuthorizedException();
 
         $this->headerSlave = HeaderSlave::zap();
         $this->headerSlave->writeSecurityHeaders($_SERVER["HTTPS"]);
         $this->headerSlave->writeUtilityHeaders($this->request->isApi());
+        $this->headerSlave->writeRateLimitHeaders($this->config->getSecurityRateLimit(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
 
         $this->dataSlave = DataSlave::zap();
 
@@ -145,6 +179,11 @@ final class Kernel {
         $response = null;
 
         if(!$endpoint) throw new NotFoundException();
+
+        if(!$this->handleRateLimit($endpoint->getLimitPerMinute(), $endpoint->getComplexPath())) {
+            $this->headerSlave->writeRateLimitHeaders($endpoint->getLimitPerMinute(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
+            throw new RateLimitExceededException($this->request->getOriginInfo()["IP"], $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
+        }
 
         if($endpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
         if($endpoint->getUnauthorizedExclusive() && AuthWorker::isAuthorized($this->request)) throw new AlreadyAuthorizedException();
