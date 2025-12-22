@@ -90,12 +90,12 @@ class AuthWorker {
             if (session_status() === PHP_SESSION_ACTIVE) {
                 if(self::$slave->validateSession()) {
                     if($request && in_array($request->getMethod(), ["POST", "PUT", "DELETE", "PATCH"], true)) {
-                        if(!self::$slave->validateCSRF($_SESSION["sgas_csrf"], $request->getDataItem("csrf_token"))) {
+                        if(!self::$slave->validateCSRF($_SESSION["sgas_csrf"], $request->post("csrf_token"))) {
                             LogWorker::warning("Restricted action for authenticated user was called without a valid csrf_token.");
                             return false;
                         }
                     }
-                    LogWorker::debug("Verified authorization for user {$_SESSION["sgas_uid"]}."); // Are we logging user data now??? Anyway...
+                    LogWorker::debug("Verified authorization for user " . self::getAuthorizedUserId() . ".");
                     return true;
                 } 
             }
@@ -156,6 +156,28 @@ class AuthWorker {
         }
 
         return false;
+    }
+
+    /**
+     * Regenerates the CSRF token for the current authorized session.
+     *
+     * This function will regenerate the CSRF token for the current authorized session if an authorized session exists.
+     * If no authorized session exists, it will return null.
+     * Note: This will invalidate CSRF tokens in other open tabs.
+     *
+     * @return ?string The new CSRF token if the authorized session exists, null otherwise.
+     */
+    public static function regenerateCSRF(): ?string {
+        if(self::$busy) {
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                if(self::$slave->validateSession()) {
+                    LogWorker::debug("CSRF token has been regenerated for user " . self::getAuthorizedUserId());
+                    return self::$slave->regenerateCSRF();
+                }
+            }
+        }
+
+        return null;
     }
 
     #/ METHODS

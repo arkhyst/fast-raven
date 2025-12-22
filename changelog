@@ -6,6 +6,7 @@
 - Request::post() for getting sanitized or raw request data.
 - SanitizeType enum for defining data sanitization levels.
 - Request::getRemoteAddress() for getting remote address (unless is defined as hidden).
+- AuthWorker::regenerateCSRF() for regenerating CSRF token.
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).

@@ -153,6 +153,19 @@ final class AuthSlave {
     }
 
     /**
+     * Regenerates the CSRF token for the authorized user.
+     *
+     * This function will regenerate the CSRF token for the authorized user if an authorized session exists.
+     *
+     * @return string The new CSRF token.
+     */
+    public function regenerateCSRF(): string {
+        $csrf = bin2hex(random_bytes(32));
+        $_SESSION["sgas_csrf"] = $csrf;
+        return $csrf;
+    }
+
+    /**
      * Attempts to login a user via their username and password.
      *
      * This function will query the given database table for a user with the given username.
