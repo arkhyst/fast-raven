@@ -133,6 +133,24 @@ final class StorageSlave {
     }
 
     /**
+     * Increments a cache item.
+     * 
+     * @param string $key The key of the cache item to increment.
+     * @param int $value The number to increment the cache item by. Default is 1.
+     * 
+     * @return bool True if the cache item was successfully incremented, false otherwise.
+     */
+    public function incrementCache(string $key, int $value = 1): bool {
+        $item = $this->getCache($key);
+
+        if($item) {
+            if(gettype($item["value"]) === "integer") return $this->setCache($key, $item["value"] + $value, 0);
+        }
+
+        return false;
+    }
+
+    /**
      * Deletes a cache item.
      * 
      * @param string $key The key of the cache item to delete.

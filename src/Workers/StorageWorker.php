@@ -106,16 +106,13 @@ class StorageWorker {
      * Increments a cache item.
      * 
      * @param string $key The key of the cache item to increment.
-     * @param int $num The number to increment the cache item by.
+     * @param int $num The number to increment the cache item by. Default is 1.
      * 
      * @return bool True if the cache item was successfully incremented, false otherwise.
      */
-    public static function incrementCache(string $key, int $num): bool {
+    public static function incrementCache(string $key, int $num = 1): bool {
         if(self::$busy) {
-            $item = self::$slave->getCache($key);
-            if($item) {
-                if(gettype($item["value"]) === "integer") return self::$slave->setCache($key, $item["value"] + $num, 0);
-            }
+            return self::$slave->incrementCache($key, $num);
         }
 
         return false;
