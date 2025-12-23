@@ -8,6 +8,7 @@ use FastRaven\Components\Http\Request;
 use FastRaven\Components\Http\DataType;
 use FastRaven\Components\Core\Template;
 use FastRaven\Components\Routing\Router;
+use FastRaven\Components\Routing\Endpoint;
 
 use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\RateLimitExceededException;
@@ -20,7 +21,6 @@ use FastRaven\Internal\Slave\LogSlave;
 use FastRaven\Internal\Slave\HeaderSlave;
 use FastRaven\Internal\Slave\AuthSlave;
 use FastRaven\Internal\Slave\DataSlave;
-use FastRaven\Internal\Slave\RouterSlave;
 use FastRaven\Internal\Slave\ValidationSlave;
 use FastRaven\Internal\Slave\MailSlave;
 use FastRaven\Internal\Slave\StorageSlave;
@@ -51,7 +51,6 @@ final class Kernel {
     private HeaderSlave $headerSlave;
     private AuthSlave $authSlave;
     private DataSlave $dataSlave;
-    private RouterSlave $routerSlave;
     private ValidationSlave $validationSlave;
     private MailSlave $mailSlave;
     private StorageSlave $storageSlave;
@@ -75,6 +74,23 @@ final class Kernel {
     
     #----------------------------------------------------------------------
     #\ PRIVATE FUNCTIONS
+
+    /**
+     * Handles routing for the request.
+     *
+     * @param Router $router The router to use.
+     * 
+     * @return Endpoint|null The matched endpoint, or null if no match is found.
+     */
+    private function handleRouting(Router $router): ?Endpoint {
+        foreach($router->getEndpointList() as $ep) {
+            if($ep instanceof Endpoint && $ep->getComplexPath() === $this->request->getComplexPath()) {
+                return $ep;
+            }
+        }
+
+        return null;
+    }
 
     /**
      * Handles rate limiting for the request.
@@ -165,7 +181,6 @@ final class Kernel {
 
         $this->dataSlave = DataSlave::zap();
 
-        $this->routerSlave = RouterSlave::zap();
 
         $this->validationSlave = ValidationSlave::zap();
 
@@ -195,7 +210,7 @@ final class Kernel {
     public function process(): Response {
         $api = $this->request->isApi();
         $mid = $api ? "api" : "web/views/pages";
-        $endpoint = $this->routerSlave->route($this->request, $api ? $this->apiRouter : $this->viewRouter);
+        $endpoint = $this->handleRouting($api ? $this->apiRouter : $this->viewRouter);
         $response = null;
 
         if(!$endpoint) throw new NotFoundException();

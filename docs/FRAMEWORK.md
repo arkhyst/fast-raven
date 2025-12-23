@@ -72,7 +72,7 @@ graph LR
         LS[LogSlave]
         MS[MailSlave]
         VS[ValidationSlave]
-        RS[RouterSlave]
+        SS[StorageSlave]
     end
     
     subgraph "Core"
@@ -81,7 +81,7 @@ graph LR
     end
     
     S --> K
-    K --> AS & DS & HS & LS & MS & VS & RS
+    K --> AS & DS & HS & LS & MS & VS & SS
     AW -.-> AS
     DW -.-> DS
     HW -.-> HS
@@ -117,7 +117,7 @@ framework/
 │   │   └── EndpointFileNotFoundException.php   # 500 - File missing
 │   ├── Internal/             # Internal components (not for direct use)
 │   │   ├── Core/             # Kernel
-│   │   ├── Slave/            # AuthSlave, DataSlave, HeaderSlave, LogSlave, MailSlave, RouterSlave, ValidationSlave
+│   │   ├── Slave/            # AuthSlave, DataSlave, HeaderSlave, LogSlave, MailSlave, StorageSlave, ValidationSlave
 │   │   ├── Stash/            # LogStash
 │   │   └── Template/         # main.php, lib.js, style.scss (compiled versions included)
 │   ├── Workers/              # Public API for developers
@@ -537,7 +537,6 @@ use FastRaven\Components\Routing\Endpoint;
 use FastRaven\Components\Data\Collection;
 use FastRaven\Components\Data\Item;
 
-// Method 1: Direct endpoint definitions (recommended for small projects)
 $viewRouter = Router::endpoints([
     Endpoint::view(false, "/", "main.html"),
     Endpoint::view(true, "/dashboard", "dashboard.html"),
@@ -547,16 +546,7 @@ $apiRouter = Router::endpoints([
     Endpoint::api(false, "GET", "/health", "Health.php"),
     Endpoint::api(true, "POST", "/user/update", "user/Update.php"),
 ]);
-
-// Method 2: File-based routing (for large projects)
-$viewRouter = Router::files(Collection::new([
-    Item::new("/", "main.php"),           // Loads config/router/main.php for / paths
-    Item::new("/admin", "admin.php"),     // Loads config/router/admin.php for /admin paths
-]));
 ```
-
-> [!TIP]
-> Use `Router::endpoints()` for small to medium projects. Switch to `Router::files()` when your route definitions become too large for a single file.
 
 ---
 
