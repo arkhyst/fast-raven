@@ -45,6 +45,7 @@ final class Kernel {
         public function setApiRouter(Router $router): void { $this->apiRouter = $router; }
 
     private Request $request;
+        public function getRequest(): Request { return $this->request; }
 
     private LogSlave $logSlave;
     private HeaderSlave $headerSlave;

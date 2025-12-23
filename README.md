@@ -31,7 +31,7 @@ OR (not recommended)
 - ~~Improvement of DataSlave: regex filtering for injected strings.~~
 - Implementation of Request file retrieval controls.
 - ~~Implementation of rate-limiting configuration.~~
-- Implementation of custom developer middleware.
+- ~~Implementation of custom developer middleware.~~
 - Addition of StorageWorker for cache and file storage management.
 
 ### Roadmap: v1.0

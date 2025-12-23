@@ -6,6 +6,7 @@ use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
 use FastRaven\Exceptions\AlreadyAuthorizedException;
 use FastRaven\Exceptions\RateLimitExceededException;
+use FastRaven\Exceptions\FilterDeniedException;
 use FastRaven\Exceptions\SmartException;
 
 use FastRaven\Internal\Core\Kernel;
@@ -27,6 +28,7 @@ final class Server {
 
     private Kernel $kernel;
     private bool $ready = false;
+    private array $filters = [];
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -95,6 +97,16 @@ final class Server {
         $this->ready = true;
     }
 
+    /**
+     * Adds a filter callback to be executed before the request is processed.
+     *
+     * @param callable $filter func(Request $request): bool - return true to continue processing, false to deny access.
+     * Supports FilterDeniedException to handle custom responses.
+     */
+    public function addFilter(callable $filter): void {
+        $this->filters[] = $filter;
+    }
+
     #/ INIT
     #----------------------------------------------------------------------
     
@@ -125,6 +137,17 @@ final class Server {
         return $response;
     }
 
+    /**
+     * Processes the filters.
+     *
+     * @throws FilterDeniedException If a filter denies access to a resource.
+     */
+    private function processFilters(): void {
+        foreach($this->filters as $filter) {
+            if ($filter($this->kernel->getRequest()) !== true) throw new FilterDeniedException();
+        }
+    }
+
     #/ PRIVATE FUNCTIONS
     #----------------------------------------------------------------------
 
@@ -136,13 +159,15 @@ final class Server {
      *
      * If the server has not been configured, it will return a 500 status code.
      *
-     * Handles NotFoundException, BadImplementationException, EndpointFileNotFoundException, NotAuthorizedException, AlreadyAuthorizedException, RateLimitExceededException.
+     * Handles NotFoundException, BadImplementationException, EndpointFileNotFoundException, NotAuthorizedException,
+     * AlreadyAuthorizedException, RateLimitExceededException, FilterDeniedException.
      */
     public function run(): void {
         if ($this->ready) {
             $response = null;
             try {
                 $this->kernel->open();
+                $this->processFilters();
                 $response = $this->kernel->process();
             } catch(SmartException $e) {
                 $response = $this->handleException($e);
