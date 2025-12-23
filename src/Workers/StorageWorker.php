@@ -133,6 +133,65 @@ class StorageWorker {
         return false;
     }
 
+    /**
+     * Clears the cache.
+     * 
+     * @return bool True if the cache was successfully cleared, false otherwise.
+     */
+    public static function clearCache(): bool {
+        if(self::$busy) {
+            return self::$slave->clearCache();
+        }
+
+        return false;
+    }
+
+    /**
+     * Uploads a file to the storage/uploads directory.
+     * 
+     * @param string $tmpFile The temporary file path from $_FILES["name"]["tmp_name"].
+     * @param string $destPath The destination path relative to storage/uploads.
+     * 
+     * @return bool True if the file was successfully uploaded, false otherwise.
+     */
+    public static function uploadFile(string $tmpFile, string $destPath): bool {
+        if(self::$busy) {
+            return self::$slave->uploadFile($tmpFile, $destPath);
+        }
+
+        return false;
+    }
+
+    /**
+     * Reads a file from the storage/uploads directory.
+     * 
+     * @param string $path The file path relative to storage/uploads.
+     * 
+     * @return ?string File contents, or null if file doesn't exist.
+     */
+    public static function readFileContents(string $path): ?string {
+        if(self::$busy) {
+            return self::$slave->readFileContents($path);
+        }
+
+        return null;
+    }
+
+    /**
+     * Deletes a file from the storage/uploads directory.
+     * 
+     * @param string $path The file path relative to storage/uploads.
+     * 
+     * @return bool True if file was deleted, false otherwise.
+     */
+    public static function deleteFile(string $path): bool {
+        if(self::$busy) {
+            return self::$slave->deleteFile($path);
+        }
+
+        return false;
+    }
+
     #/ METHODS
     #----------------------------------------------------------------------
 }

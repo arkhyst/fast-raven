@@ -11,6 +11,8 @@ final class StorageSlave {
     #\ VARIABLES
 
     private static bool $busy = false;
+    private int $fileUploadSizeLimit = -1;
+        public function setFileUploadSizeLimit(int $fileUploadSizeLimit): void { $this->fileUploadSizeLimit = $fileUploadSizeLimit; }
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -166,6 +168,22 @@ final class StorageSlave {
     }
 
     /**
+     * Clears the cache.
+     * 
+     * @return bool True if the cache was successfully cleared, false otherwise.
+     */
+    public function clearCache(): bool {
+        $files = glob(SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "*.cache", GLOB_NOSORT);
+        
+        if($files === false) return false;
+
+        foreach($files as $file)
+            if(!unlink($file)) return false;
+
+        return true;
+    }
+
+    /**
      * Runs the garbage collector.
      * 
      * @param int $power The power of the garbage collector. The higher the power, the more files will be checked.
@@ -173,12 +191,62 @@ final class StorageSlave {
     public function runGarbageCollector(int $power): void {
         if($power > 0) {
             $files = glob(SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "*.cache", GLOB_NOSORT);
-            shuffle($files);
 
-            for($i = 0; $i < count($files) && $i < $power; $i++) {
-                $this->getCache(pathinfo($files[$i], PATHINFO_FILENAME));
+            if($files !== false) {
+                shuffle($files);
+                for($i = 0; $i < count($files) && $i < $power; $i++) {
+                    $this->getCache(pathinfo($files[$i], PATHINFO_FILENAME)); // Auto-checks if the cache is expired
+                }
             }
         }
+    }
+
+    /**
+     * Uploads a file to the storage/uploads directory.
+     * 
+     * @param string $tmpFile The temporary file path from $_FILES["name"]["tmp_name"].
+     * @param string $destPath The destination path relative to storage/uploads.
+     * 
+     * @return bool True if the file was successfully uploaded, false otherwise.
+     */
+    public function uploadFile(string $tmpFile, string $destPath): bool {
+        if(!is_uploaded_file($tmpFile)) return false;
+        if($this->fileUploadSizeLimit >= 0 && filesize($tmpFile) > $this->fileUploadSizeLimit) return false;
+
+        $dest = $this->getUploadFilePath($destPath);
+        $dir = dirname($dest);
+
+        if(!is_dir($dir) && !mkdir($dir, 0755, true)) return false;
+
+        return move_uploaded_file($tmpFile, $dest);
+    }
+
+    /**
+     * Reads a file from the storage/uploads directory.
+     * 
+     * @param string $path The file path relative to storage/uploads.
+     * 
+     * @return ?string File contents, or null if file doesn't exist.
+     */
+    public function readFileContents(string $path): ?string {
+        $filePath = $this->getUploadFilePath($path);
+        if(!is_file($filePath)) return null;
+        
+        return file_get_contents($filePath) ?: null;
+    }
+
+    /**
+     * Deletes a file from the storage/uploads directory.
+     * 
+     * @param string $path The file path relative to storage/uploads.
+     * 
+     * @return bool True if file was deleted, false otherwise.
+     */
+    public function deleteFile(string $path): bool {
+        $filePath = $this->getUploadFilePath($path);
+        if(!is_file($filePath)) return false;
+        
+        return unlink($filePath);
     }
 
     #/ METHODS

@@ -29,10 +29,10 @@ OR (not recommended)
 - ~~Research and fixing of security issues.~~
 - Research and fixing of performance issues.
 - ~~Improvement of DataSlave: regex filtering for injected strings.~~
-- Implementation of Request file retrieval controls.
+- ~~Implementation of Request file retrieval controls.~~
 - ~~Implementation of rate-limiting configuration.~~
 - ~~Implementation of custom developer middleware.~~
-- Addition of StorageWorker for cache and file storage management.
+- ~~Addition of StorageWorker for cache and file storage management.~~
 
 ### Roadmap: v1.0
 - Improvement of ValidationWorker complexity and ValidationFlags.

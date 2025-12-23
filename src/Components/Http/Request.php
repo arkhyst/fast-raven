@@ -32,6 +32,7 @@ final class Request {
          * @deprecated Do not use this method to get request data. Use get() instead.
          */
         public function getDataItem(string $key): string|int|float|bool|null { return $this->data[$key] ?? null; }
+    private array $files = [];
     private string $method;
         public function getMethod(): string { return $this->method; }
     private string $path;
@@ -53,17 +54,19 @@ final class Request {
      * @param string $uri              The original URI of the request.
      * @param string $method           The HTTP method of the request (e.g. GET, POST, PUT, DELETE).
      * @param string $dataStream       The data stream of the request.
+     * @param array $fileStream        The file stream of the request.
      * @param string $remoteAddress    The remote address of the request.
      */
-    public function __construct(string $uri, string $method, string $dataStream, string $remoteAddress) {
+    public function __construct(string $uri, string $method, string $dataStream, array $fileStream, string $remoteAddress) {
         $this->internalID = bin2hex(random_bytes(4));
         parse_str(parse_url($uri, PHP_URL_QUERY) ?? '', $this->query);
         $this->data = json_decode($dataStream, true) ?? [];
+        $this->files = empty($fileStream) ? [] : array_combine(array_keys($fileStream), array_column($fileStream, "tmp_name"));
         
         $this->method = strtoupper($method);
 
         $this->path = parse_url($uri ?? "/", PHP_URL_PATH) ?? "/";
-        $this->complexPath = (($this->path !== "/") ? rtrim($this->path, "/"): "/") . "#" . $this->method;
+        $this->complexPath = (($this->path !== "/") ? rtrim($this->path, "/") : "/") . "#" . $this->method;
         $this->remoteAddress = $remoteAddress;
     }
 
@@ -150,6 +153,17 @@ final class Request {
      */
     public function post(string $key, SanitizeType $sanitizeType = SanitizeType::RAW): mixed {
         return $this->sanitizeDataItem($this->data, $key, $sanitizeType);
+    }
+
+    /**
+     * Retrieves an uploaded file's temporary path by field name.
+     *
+     * @param string $name The field name from the form/FormData.
+     * 
+     * @return ?string The temporary file path, or null if not found.
+     */
+    public function file(string $name): ?string {
+        return $this->files[$name] ?? null;
     }
 
     #/ METHODS

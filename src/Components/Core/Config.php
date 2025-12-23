@@ -34,10 +34,12 @@ final class Config {
     private bool $privacyRegisterOrigin = true;
         public function isPrivacyRegisterOrigin(): bool { return $this->privacyRegisterOrigin; }
 
-    private int $securityRateLimit = 0;
+    private int $securityRateLimit = -1;
         public function getSecurityRateLimit(): int { return $this->securityRateLimit; }
-    private int $securityInputLengthLimit = 0;
+    private int $securityInputLengthLimit = -1;
         public function getSecurityInputLengthLimit(): int { return $this->securityInputLengthLimit; }
+    private int $securityFileUploadSizeLimit = -1;
+        public function getSecurityFileUploadSizeLimit(): int { return $this->securityFileUploadSizeLimit; }
 
     private int $cacheFileGCProbability = 0;
         public function getCacheFileGCProbability(): int { return $this->cacheFileGCProbability; }
@@ -128,12 +130,14 @@ final class Config {
     /**
      * Configure the security settings.
      *
-     * @param int $rateLimit       The number of requests allowed per minute. Set to 0 to disable rate limiting.
-     * @param int $inputLengthLimit The maximum length of input data allowed in kilobytes. Set to 0 to disable input length limiting.
+     * @param int $rateLimit       The number of requests allowed per minute. Set to -1 to disable rate limiting.
+     * @param int $inputLengthLimit The maximum length of input data allowed in kilobytes. Set to -1 to disable input length limiting.
+     * @param int $fileUploadSizeLimit The maximum size of file uploads allowed in kilobytes. Set to -1 to disable file upload size limiting.
      */
-    public function configureSecurity(int $rateLimit = 0, int $inputLengthLimit = 0): void {
+    public function configureSecurity(int $rateLimit = -1, int $inputLengthLimit = -1, int $fileUploadSizeLimit = -1): void {
         $this->securityRateLimit = $rateLimit;
         $this->securityInputLengthLimit = $inputLengthLimit * 1024;
+        $this->securityFileUploadSizeLimit = $fileUploadSizeLimit * 1024;
     }
 
     /**

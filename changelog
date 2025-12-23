@@ -12,6 +12,9 @@
 - Support for non-apcu cache via StorageWorker and files inside storage/cache folder.
 - Config::configureCache(...) for defining file cache configuration.
 - Cache garbage collector via StorageSlave::runGarbageCollector().
+- fileUploadSizeLimit in Config::configureSecurity(...) for defining maximum file upload size allowed.
+- Request::file() for getting uploaded files tmp path.
+- Bee::getFileMimeType() for getting accurate file mime type.
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).

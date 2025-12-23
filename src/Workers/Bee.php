@@ -109,6 +109,22 @@ class Bee {
     public static function hashPassword(string $password): string {
         return password_hash($password, PASSWORD_ARGON2ID, ['memory_cost' => 1 << 16, 'time_cost' => 4, 'threads' => 2]);
     }
+    
+    /**
+     * Returns the MIME type of a file.
+     * 
+     * @param string $file the path to the file
+     * 
+     * @return string the MIME type of the file. If the file does not exist or cannot be read, returns "application/octet-stream".
+     */
+    public static function getFileMimeType(string $file): string {
+        if (!is_file($file)) {
+            return "application/octet-stream";
+        }
+
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        return $finfo->file($file) ?: "application/octet-stream";
+    }
 
     #/ METHODS
     #----------------------------------------------------------------------

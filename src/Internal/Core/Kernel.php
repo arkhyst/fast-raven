@@ -134,11 +134,13 @@ final class Kernel {
     public function open(): void {
         $this->startRequestTime = microtime(true);
 
+        $inputLengthLimit = $this->config->getSecurityInputLengthLimit() >= 0 ? $this->config->getSecurityInputLengthLimit() : null;
         // Add security for remote address
         $this->request = new Request(
             $_SERVER["REQUEST_URI"],
             $_SERVER["REQUEST_METHOD"],
-            file_get_contents("php://input", false, null, 0, $this->config->getSecurityInputLengthLimit() ?: null),
+            file_get_contents("php://input", false, null, 0, $inputLengthLimit),
+            $_FILES,
             $this->config->isPrivacyRegisterOrigin() ? $_SERVER["REMOTE_ADDR"] : "HOST"
         );
         
@@ -170,6 +172,7 @@ final class Kernel {
         $this->mailSlave = MailSlave::zap();
 
         $this->storageSlave = StorageSlave::zap();
+        $this->storageSlave->setFileUploadSizeLimit($this->config->getSecurityFileUploadSizeLimit());
     }
 
     /**

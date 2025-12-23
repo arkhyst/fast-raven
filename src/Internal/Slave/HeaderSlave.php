@@ -126,7 +126,7 @@ final class HeaderSlave {
      * @param int $rateLimitTimeRemaining The time remaining until the rate limit is reset.
      */
     public function writeRateLimitHeaders(int $configuredRateLimit, int $rateLimitRemaining, int $rateLimitTimeRemaining): void {
-        if($configuredRateLimit > 0) {
+        if($configuredRateLimit >= 0) {
             HeaderWorker::addHeader("RateLimit-Limit", $configuredRateLimit);
             HeaderWorker::addHeader("RateLimit-Remaining", max(0, $rateLimitRemaining));
             HeaderWorker::addHeader("RateLimit-Reset", time() + $rateLimitTimeRemaining);
