@@ -259,6 +259,11 @@ final class Kernel {
 
         $this->logSlave->writeCloseLogs($elapsedTime);
         $this->logSlave->dumpLogStashIntoFile();
+        
+        // TODO: Test performance impact.
+        if(random_int(0,100) < $this->config->getCacheFileGCProbability()) { 
+            $this->storageSlave->runGarbageCollector($this->config->getCacheFileGCPower());
+        }
     }
 
     #/ METHODS

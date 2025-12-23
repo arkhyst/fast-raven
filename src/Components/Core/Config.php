@@ -39,6 +39,10 @@ final class Config {
     private int $securityInputLengthLimit = 0;
         public function getSecurityInputLengthLimit(): int { return $this->securityInputLengthLimit; }
 
+    private int $cacheFileGCProbability = 0;
+        public function getCacheFileGCProbability(): int { return $this->cacheFileGCProbability; }
+    private int $cacheFileGCPower = 50;
+        public function getCacheFileGCPower(): int { return $this->cacheFileGCPower; }
     #/ VARIABLES
     #----------------------------------------------------------------------
 
@@ -130,6 +134,17 @@ final class Config {
     public function configureSecurity(int $rateLimit = 0, int $inputLengthLimit = 0): void {
         $this->securityRateLimit = $rateLimit;
         $this->securityInputLengthLimit = $inputLengthLimit * 1024;
+    }
+
+    /**
+     * Configure the cache settings.
+     *
+     * @param int $gcProbability The probability of cache garbage collection in percentage. Set to 0 to disable cache garbage collection.
+     * @param int $gcPower The power of cache garbage collection (amount of files to check). Set to 50 by default.
+     */
+    public function configureCache(int $gcProbability = 0, int $gcPower = 50): void {
+        $this->cacheFileGCProbability = $gcProbability;
+        $this->cacheFileGCPower = $gcPower;
     }
 
     #/ METHODS

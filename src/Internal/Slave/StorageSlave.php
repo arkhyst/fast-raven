@@ -63,19 +63,40 @@ final class StorageSlave {
     #----------------------------------------------------------------------
     #\ METHODS
 
+    /**
+     * Checks if a cache file exists.
+     * 
+     * @param string $key The key of the cache file to check.
+     * 
+     * @return bool True if the cache file exists, false otherwise.
+     */
     public function cacheExists(string $key): bool {
         return file_exists($this->getCacheFilePath($key));
     }
 
+    /**
+     * Checks if an upload file exists.
+     * 
+     * @param string $file The file to check.
+     * 
+     * @return bool True if the upload file exists, false otherwise.
+     */
     public function uploadExists(string $file): bool {
         return file_exists($this->getUploadFilePath($file));
     }
 
+    /**
+     * Retrieves a cache item.
+     * 
+     * @param string $key The key of the cache item to retrieve.
+     * 
+     * @return ?array The cache item if it exists, null otherwise.
+     */
     public function getCache(string $key): ?array {
         if($this->cacheExists($key)) {
             $item = json_decode(file_get_contents($this->getCacheFilePath($key)), true);
 
-            if($item["expires"] > time()) {
+            if(($item["expires"] ?? 0) > time()) {
                 return $item;
             } else {
                 $this->deleteCache($key);
@@ -86,6 +107,15 @@ final class StorageSlave {
         return null;
     }
 
+    /**
+     * Sets a cache item.
+     * 
+     * @param string $key The key of the cache item to set.
+     * @param mixed $value The value of the cache item to set.
+     * @param int $expires The number of seconds until the cache item expires.
+     * 
+     * @return bool True if the cache item was successfully set, false otherwise.
+     */
     public function setCache(string $key, mixed $value, int $expires): bool {
         $item = $this->getCache($key);
 
@@ -102,12 +132,35 @@ final class StorageSlave {
         return file_put_contents($path, json_encode($item)) !== false;
     }
 
+    /**
+     * Deletes a cache item.
+     * 
+     * @param string $key The key of the cache item to delete.
+     * 
+     * @return bool True if the cache item was successfully deleted, false otherwise.
+     */
     public function deleteCache(string $key): bool {
         if($this->cacheExists($key)) {
             return unlink($this->getCacheFilePath($key));
         }
 
         return false;
+    }
+
+    /**
+     * Runs the garbage collector.
+     * 
+     * @param int $power The power of the garbage collector. The higher the power, the more files will be checked.
+     */
+    public function runGarbageCollector(int $power): void {
+        if($power > 0) {
+            $files = glob(SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "*.cache", GLOB_NOSORT);
+            shuffle($files);
+
+            for($i = 0; $i < count($files) && $i < $power; $i++) {
+                $this->getCache(pathinfo($files[$i], PATHINFO_FILENAME));
+            }
+        }
     }
 
     #/ METHODS

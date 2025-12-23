@@ -10,6 +10,8 @@
 - DataSlave optional SSL/TLS support via DB_USE_SSL and DB_SSL_CA environment variables.
 - StorageWorker and StorageSlave for managing lightweight cache and file uploads.
 - Support for non-apcu cache via StorageWorker and files inside storage/cache folder.
+- Config::configureCache(...) for defining file cache configuration.
+- Cache garbage collector via StorageSlave::runGarbageCollector().
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).

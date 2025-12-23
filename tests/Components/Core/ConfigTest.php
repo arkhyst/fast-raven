@@ -169,4 +169,44 @@ class ConfigTest extends TestCase
         $this->assertEquals('/unauthorized', $config->getDefaultUnauthorizedPathRedirect());
         $this->assertEquals('auth.mydomain.com', $config->getDefaultUnauthorizedSubdomainRedirect());
     }
+
+    public function testDefaultCacheFileGCProbability(): void
+    {
+        $config = Config::new('test', false);
+
+        $this->assertEquals(0, $config->getCacheFileGCProbability());
+    }
+
+    public function testDefaultCacheFileGCPower(): void
+    {
+        $config = Config::new('test', false);
+
+        $this->assertEquals(50, $config->getCacheFileGCPower());
+    }
+
+    public function testConfigureCacheSetsProbability(): void
+    {
+        $config = Config::new('test', false);
+
+        $config->configureCache(5, 100);
+
+        $this->assertEquals(5, $config->getCacheFileGCProbability());
+    }
+
+    public function testConfigureCacheSetsPower(): void
+    {
+        $config = Config::new('test', false);
+
+        $config->configureCache(5, 100);
+
+        $this->assertEquals(100, $config->getCacheFileGCPower());
+    }
+
+    public function testConfigureCacheDisabledByDefault(): void
+    {
+        $config = Config::new('test', false);
+
+        // Probability 0 means GC is disabled
+        $this->assertEquals(0, $config->getCacheFileGCProbability());
+    }
 }
