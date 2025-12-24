@@ -2,11 +2,7 @@
 
 namespace FastRaven\Components\Http;
 
-enum DataType: string {
-    case JSON = "application/json";
-    case HTML = "text/html";
-    case TEXT = "text";
-}
+use FastRaven\Components\Types\DataType;
 
 final class Response {
     #----------------------------------------------------------------------
@@ -20,6 +16,9 @@ final class Response {
         public function getMessage(): string { return $this->message; }
     private mixed $data = [];
         public function getData(): mixed { return $this->data; }
+    private DataType $dataType = DataType::TEXT;
+        public function getDataType(): DataType { return $this->dataType; }
+        public function setDataType(DataType $dataType): void { $this->dataType = $dataType; }
     
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -44,6 +43,13 @@ final class Response {
         return $response;
     }
 
+    public static function file(bool $success, string $path): Response {
+        $response = new Response($success, $success ? 200 : 500);
+        $response->setBody("", ["path" => $path]);
+        return $response;
+    }
+
+    
     private function __construct(bool $success, int $code) {
         $this->success = $success;
         $this->code = $code;

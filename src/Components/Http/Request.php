@@ -2,36 +2,21 @@
 
 namespace FastRaven\Components\Http;
 
-/**
- * Sanitization levels for request data. Levels cascade: higher levels include all previous transformations.
- * 
- * Hierarchy:
- *   RAW ───────────────────────────── No changes
- *     └─ SAFE ────────────────────── Strips null bytes + PHP tags
- *           ├─ ENCODED ───────────── + htmlspecialchars (non-destructive)
- *           └─ SANITIZED ─────────── + strip_tags (destructive)
- *                 └─ ONLY_ALPHA ──── + alphanumeric/spaces only
- */
-enum SanitizeType: int {
-    case RAW = 0;
-    case SAFE = 1;
-    case ENCODED = 2;
-    case SANITIZED = 3;
-    case ONLY_ALPHA = 4;
-}
+use FastRaven\Workers\Bee;
+
+use FastRaven\Components\Types\MiddlewareType;
+use FastRaven\Components\Types\SanitizeType;
 
 final class Request {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
+    private MiddlewareType $type;
+        public function getType(): MiddlewareType { return $this->type; }
     private string $internalID;
         public function getInternalID(): string { return $this->internalID; }
     private array $query = [];
     private array $data = [];
-        /**
-         * @deprecated Do not use this method to get request data. Use get() instead.
-         */
-        public function getDataItem(string $key): string|int|float|bool|null { return $this->data[$key] ?? null; }
     private array $files = [];
     private string $method;
         public function getMethod(): string { return $this->method; }
@@ -59,15 +44,20 @@ final class Request {
      */
     public function __construct(string $uri, string $method, string $dataStream, array $fileStream, string $remoteAddress) {
         $this->internalID = bin2hex(random_bytes(4));
-        parse_str(parse_url($uri, PHP_URL_QUERY) ?? '', $this->query);
+        $this->remoteAddress = $remoteAddress;
+       
+        parse_str(parse_url($uri, PHP_URL_QUERY) ?? "", $this->query);
         $this->data = json_decode($dataStream, true) ?? [];
         $this->files = empty($fileStream) ? [] : array_combine(array_keys($fileStream), array_column($fileStream, "tmp_name"));
         
         $this->method = strtoupper($method);
+        $this->path = "/".Bee::normalizePath(parse_url($uri, PHP_URL_PATH) ?? "");
+        if($this->path !== "/") $this->path .= "/";
+        $this->complexPath = $this->path."#".$this->method;
 
-        $this->path = parse_url($uri ?? "/", PHP_URL_PATH) ?? "/";
-        $this->complexPath = (($this->path !== "/") ? rtrim($this->path, "/") : "/") . "#" . $this->method;
-        $this->remoteAddress = $remoteAddress;
+        $this->type = MiddlewareType::VIEW;
+        if(str_starts_with($this->path, "/api/")) $this->type = MiddlewareType::API;
+        elseif(str_starts_with($this->path, "/cdn/")) $this->type = MiddlewareType::CDN;
     }
 
     #/ INIT
@@ -111,17 +101,6 @@ final class Request {
 
     #----------------------------------------------------------------------
     #\ METHODS
-
-    /**
-     * Checks if the request is an API request.
-     *
-     * This method checks if the request's complex path starts with "/api/".
-     *
-     * @return bool True if the request is an API request, false otherwise.
-     */
-    public function isApi(): bool {
-        return str_starts_with($this->complexPath,"/api/");
-    }
 
     /**
      * Retrieves a value from the URI query string with optional sanitization.

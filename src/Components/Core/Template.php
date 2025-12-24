@@ -12,31 +12,34 @@ final class Template {
 
     private string $file = "";
         public function getFile(): string { return $this->file; }
-        public function setFile(string $file): void { $this->file = $file; }
+        public function setFile(string $file): Template { $this->file = $file; return $this; }
     private string $title = "";
         public function getTitle(): string { return $this->title; }
+        public function setTitle(string $title): Template { $this->title = $title; return $this; }
     private string $version = "";
         public function getVersion(): string { return $this->version; }
+        public function setVersion(string $version): Template { $this->version = $version; return $this; }
     private string $lang = "";
         public function getLang(): string { return $this->lang; }
+        public function setLang(string $lang): Template { $this->lang = $lang; return $this; }
     private string $favicon = "favicon.png";
         public function getFavicon(): string { return $this->favicon; }
-        public function setFavicon(string $favicon): void { $this->favicon = $favicon; }
+        public function setFavicon(string $favicon): Template { $this->favicon = $favicon; return $this; }
     private array $styles = [];
         public function getStyles(): array { return $this->styles; }
-        public function addStyle(string $style): void { $this->styles[] = $style; }
+        public function addStyle(string $style): Template { $this->styles[] = $style; return $this; }
     private array $scripts = [];
         public function getScripts(): array { return $this->scripts; }
-        public function addScript(string $script): void { $this->scripts[] = $script; }
+        public function addScript(string $script): Template { $this->scripts[] = $script; return $this; }
     private Collection $autofill;
         public function getAutofill(): Collection { return $this->autofill; }
-        public function addAutofill(string $dom, string $api): void { $this->autofill->add(Item::new($dom, $api)); }
+        public function addAutofill(string $dom, string $api): Template { $this->autofill->add(Item::new($dom, $api)); return $this; }
     private array $beforeFragments = [];
         public function getBeforeFragments(): array { return $this->beforeFragments; }
-        public function setBeforeFragments(array $fragments): void { $this->beforeFragments = $fragments; }
+        public function setBeforeFragments(array $fragments): Template { $this->beforeFragments = $fragments; return $this; }
     private array $afterFragments = [];
         public function getAfterFragments(): array { return $this->afterFragments; }
-        public function setAfterFragments(array $fragments): void { $this->afterFragments = $fragments; }
+        public function setAfterFragments(array $fragments): Template { $this->afterFragments = $fragments; return $this; }
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -104,23 +107,27 @@ final class Template {
      *
      * @param Template $template The Template instance to merge into this instance.
      */
-    public function merge(Template $template): void {
-        $this->title = $template->getTitle() ? $template->getTitle() : $this->title;
-        $this->lang = $template->getLang() ? $template->getLang() : $this->lang;
-        $this->favicon = $template->getFavicon() ? $template->getFavicon() : $this->favicon;
-        $this->styles = array_merge($this->styles, $template->getStyles());
-        $this->scripts = array_merge($this->scripts, $template->getScripts());
-        $this->autofill->merge($template->getAutofill());
-        $this->beforeFragments = array_merge($this->beforeFragments, $template->getBeforeFragments());
-        $this->afterFragments = array_merge($this->afterFragments, $template->getAfterFragments());
+    public function merge(?Template $template): Template {
+        if($template) {
+            $this->title = $template->getTitle() ? $template->getTitle() : $this->title;
+            $this->lang = $template->getLang() ? $template->getLang() : $this->lang;
+            $this->favicon = $template->getFavicon() ? $template->getFavicon() : $this->favicon;
+            $this->styles = array_merge($this->styles, $template->getStyles());
+            $this->scripts = array_merge($this->scripts, $template->getScripts());
+            $this->autofill->merge($template->getAutofill());
+            $this->beforeFragments = array_merge($this->beforeFragments, $template->getBeforeFragments());
+            $this->afterFragments = array_merge($this->afterFragments, $template->getAfterFragments());
+        }
+        return $this;
     }
 
-    public function sanitize(): void {
+    public function sanitize(): Template {
         $this->favicon = Bee::normalizePath($this->favicon);
         $this->styles = array_map(fn($style) => Bee::normalizePath($style), $this->styles);
         $this->scripts = array_map(fn($script) => Bee::normalizePath($script), $this->scripts);
         $this->beforeFragments = array_map(fn($fragment) => Bee::normalizePath($fragment), $this->beforeFragments);
         $this->afterFragments = array_map(fn($fragment) => Bee::normalizePath($fragment), $this->afterFragments);
+        return $this;
     }
 
     /**
