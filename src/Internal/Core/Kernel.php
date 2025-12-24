@@ -304,8 +304,10 @@ final class Kernel {
         $diff = microtime(true) - $this->startRequestTime;
         $elapsedTime = round(($diff - floor($diff)) * 1000);
 
-        $this->logSlave->writeCloseLogs($elapsedTime);
-        $this->logSlave->dumpLogStashIntoFile();
+        if($this->logSlave) {
+            $this->logSlave->writeCloseLogs($elapsedTime);
+            $this->logSlave->dumpLogStashIntoFile();
+        }
         
         // TODO: Test performance impact.
         if(random_int(0,100) < $this->config->getCacheFileGCProbability()) { 
