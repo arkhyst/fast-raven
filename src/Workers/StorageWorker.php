@@ -37,6 +37,38 @@ class StorageWorker {
     #----------------------------------------------------------------------
     #\ METHODS
     
+    public static function getCacheFilePath(string $key): ?string {
+        if(self::$busy) { 
+            return self::$slave->getCacheFilePath($key); 
+        }
+
+        return null;
+    }
+
+    public static function getUploadFilePath(string $file): ?string {
+        if(self::$busy) { 
+            return self::$slave->getUploadFilePath($file);
+        }
+
+        return null;
+    }
+
+    public static function cacheExists(string $key): bool {
+        if(self::$busy) { 
+            return self::$slave->cacheExists($key); 
+        }
+
+        return false;
+    }
+
+    public static function fileExists(string $path): bool {
+        if(self::$busy) { 
+            return self::$slave->fileExists($path); 
+        }
+
+        return false;
+    }
+
     /**
      * Retrieves a cache item.
      * 

@@ -2,6 +2,8 @@
 
 namespace FastRaven\Workers;
 
+use FastRaven\Components\Types\DataType;
+
 class Bee {
     #----------------------------------------------------------------------
     #\ VARIABLES
@@ -114,16 +116,26 @@ class Bee {
      * Returns the MIME type of a file.
      * 
      * @param string $file the path to the file
+     * @param bool $returnType whether to return the MIME type as a DataType enum value
      * 
-     * @return string the MIME type of the file. If the file does not exist or cannot be read, returns "application/octet-stream".
+     * @return string|DataType the MIME type of the file. If the file does not exist or cannot be read, returns "application/octet-stream".
      */
-    public static function getFileMimeType(string $file): string {
+    public static function getFileMimeType(string $file, bool $returnType = false): string|DataType {
         if (!is_file($file)) {
             return "application/octet-stream";
         }
 
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        return $finfo->file($file) ?: "application/octet-stream";
+        $mimeType = $finfo->file($file);
+
+        if($mimeType === false) return $returnType ? DataType::BINARY : "application/octet-stream";
+
+        if ($returnType) {
+            try { return DataType::from($mimeType); }
+            catch (\ValueError $e) { return DataType::BINARY; }
+        }
+        
+        return $mimeType;
     }
 
     #/ METHODS
