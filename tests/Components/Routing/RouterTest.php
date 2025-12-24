@@ -5,50 +5,49 @@ namespace FastRaven\Tests\Components\Routing;
 use PHPUnit\Framework\TestCase;
 use FastRaven\Components\Routing\Router;
 use FastRaven\Components\Routing\Endpoint;
+use FastRaven\Components\Types\MiddlewareType;
 
 class RouterTest extends TestCase
 {
-    public function testEndpointsCreatesRouterWithEndpointList(): void
+    public function testViewsCreatesRouterWithEndpointList(): void
     {
         $endpoints = [
             Endpoint::view(false, '/', 'home.php'),
-            Endpoint::api(false, 'GET', '/users', 'users.php')
         ];
 
-        $router = Router::endpoints($endpoints);
+        $router = Router::views($endpoints);
 
         $this->assertEquals($endpoints, $router->getEndpointList());
+        $this->assertEquals(MiddlewareType::VIEW, $router->getType());
     }
 
-    public function testEndpointsCreatesRouterWithEmptyEndpointList(): void
+    public function testApiCreatesRouterWithEndpointList(): void
     {
-        $router = Router::endpoints([]);
+        $router = Router::api([]);
 
         $this->assertEquals([], $router->getEndpointList());
+        $this->assertEquals(MiddlewareType::API, $router->getType());
+    }
+
+    public function testCdnCreatesRouterWithEndpointList(): void
+    {
+        $endpoint = Endpoint::cdn(false, 'GET', '/favicon', 'Favicon.php');
+
+        $router = Router::cdn([$endpoint]);
+
+        $this->assertCount(1, $router->getEndpointList());
+        $this->assertEquals(MiddlewareType::CDN, $router->getType());
     }
 
     public function testGetEndpointListReturnsCorrectList(): void
     {
         $endpoint1 = Endpoint::view(false, '/home', 'home.php');
         $endpoint2 = Endpoint::view(false, '/about', 'about.php');
-        $endpoints = [$endpoint1, $endpoint2];
 
-        $router = Router::endpoints($endpoints);
+        $router = Router::views([$endpoint1, $endpoint2]);
 
         $this->assertCount(2, $router->getEndpointList());
         $this->assertSame($endpoint1, $router->getEndpointList()[0]);
         $this->assertSame($endpoint2, $router->getEndpointList()[1]);
-    }
-
-    public function testEndpointsRouterContainsMixedEndpoints(): void
-    {
-        $viewEndpoint = Endpoint::view(true, '/dashboard', 'dashboard.php');
-        $apiEndpoint = Endpoint::api(true, 'POST', '/api/update', 'update.php');
-        
-        $router = Router::endpoints([$viewEndpoint, $apiEndpoint]);
-
-        $this->assertCount(2, $router->getEndpointList());
-        $this->assertSame($viewEndpoint, $router->getEndpointList()[0]);
-        $this->assertSame($apiEndpoint, $router->getEndpointList()[1]);
     }
 }

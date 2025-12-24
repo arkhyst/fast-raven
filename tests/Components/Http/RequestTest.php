@@ -4,7 +4,8 @@ namespace FastRaven\Tests\Components\Http;
 
 use PHPUnit\Framework\TestCase;
 use FastRaven\Components\Http\Request;
-use FastRaven\Components\Http\SanitizeType;
+use FastRaven\Components\Types\SanitizeType;
+use FastRaven\Components\Types\MiddlewareType;
 
 class RequestTest extends TestCase
 {
@@ -12,7 +13,7 @@ class RequestTest extends TestCase
     {
         $request = new Request('/home', 'GET', '', [], '127.0.0.1');
 
-        $this->assertEquals('/home', $request->getPath());
+        $this->assertEquals('/home/', $request->getPath());
         $this->assertEquals('GET', $request->getMethod());
     }
 
@@ -27,9 +28,9 @@ class RequestTest extends TestCase
     {
         $request = new Request('/about/', 'GET', '', [], '127.0.0.1');
 
-        // Path keeps trailing slash, but complexPath removes it
+        // Path always has trailing slash
         $this->assertEquals('/about/', $request->getPath());
-        $this->assertEquals('/about#GET', $request->getComplexPath());
+        $this->assertEquals('/about/#GET', $request->getComplexPath());
     }
 
     public function testConstructorKeepsRootSlash(): void
@@ -43,21 +44,21 @@ class RequestTest extends TestCase
     {
         $request = new Request('/search?q=test&page=1', 'GET', '', [], '127.0.0.1');
 
-        $this->assertEquals('/search', $request->getPath());
+        $this->assertEquals('/search/', $request->getPath());
     }
 
     public function testComplexPathGenerationForGetRequest(): void
     {
         $request = new Request('/home', 'GET', '', [], '127.0.0.1');
 
-        $this->assertEquals('/home#GET', $request->getComplexPath());
+        $this->assertEquals('/home/#GET', $request->getComplexPath());
     }
 
     public function testComplexPathGenerationForPostRequest(): void
     {
         $request = new Request('/submit', 'POST', '', [], '127.0.0.1');
 
-        $this->assertEquals('/submit#POST', $request->getComplexPath());
+        $this->assertEquals('/submit/#POST', $request->getComplexPath());
     }
 
     public function testComplexPathGenerationForRootPath(): void
@@ -67,25 +68,32 @@ class RequestTest extends TestCase
         $this->assertEquals('/#GET', $request->getComplexPath());
     }
 
-    public function testIsApiReturnsTrueForApiPaths(): void
+    public function testGetTypeReturnsApiForApiPaths(): void
     {
         $request = new Request('/api/users', 'GET', '', [], '127.0.0.1');
 
-        $this->assertTrue($request->isApi());
+        $this->assertEquals(MiddlewareType::API, $request->getType());
     }
 
-    public function testIsApiReturnsFalseForNonApiPaths(): void
+    public function testGetTypeReturnsViewForNonApiPaths(): void
     {
         $request = new Request('/home', 'GET', '', [], '127.0.0.1');
 
-        $this->assertFalse($request->isApi());
+        $this->assertEquals(MiddlewareType::VIEW, $request->getType());
     }
 
-    public function testIsApiReturnsTrueForNestedApiPaths(): void
+    public function testGetTypeReturnsApiForNestedApiPaths(): void
     {
         $request = new Request('/api/v1/users/123', 'GET', '', [], '127.0.0.1');
 
-        $this->assertTrue($request->isApi());
+        $this->assertEquals(MiddlewareType::API, $request->getType());
+    }
+
+    public function testGetTypeReturnsCdnForCdnPaths(): void
+    {
+        $request = new Request('/cdn/images/logo.png', 'GET', '', [], '127.0.0.1');
+
+        $this->assertEquals(MiddlewareType::CDN, $request->getType());
     }
 
     // =====================================================================

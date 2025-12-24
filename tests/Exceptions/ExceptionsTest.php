@@ -14,7 +14,7 @@ class ExceptionsTest extends TestCase
     public function testBadImplementationExceptionCanBeThrownAndCaught(): void
     {
         $this->expectException(BadImplementationException::class);
-        $this->expectExceptionMessage("Endpoint does not return Response object. (/path/to/endpoint.php)");
+        $this->expectExceptionMessage("Endpoint does not return a valid Response object. (/path/to/endpoint.php)");
 
         throw new BadImplementationException("/path/to/endpoint.php");
     }
@@ -148,6 +148,6 @@ class ExceptionsTest extends TestCase
     public function testNotFoundExceptionHasCorrectPublicMessage(): void
     {
         $exception = new NotFoundException();
-        $this->assertEquals("Not found.", $exception->getPublicMessage());
+        $this->assertEquals("Resource not found.", $exception->getPublicMessage());
     }
 }
