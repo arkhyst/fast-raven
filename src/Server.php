@@ -36,22 +36,6 @@ final class Server {
     #----------------------------------------------------------------------
     #\ INIT
 
-    /**
-     * Preloads the environment configuration.
-     *
-     * This function is used to load the configuration from the .env files before the server is configured.
-     * It is useful for setting up the environment variables before the server is configured.
-     *
-     * @param string $sitePath The local path of the site. Use __DIR__ unless you know what you are doing.
-     */
-    public static function preload(string $sitePath): void {
-        define("SITE_PATH", DIRECTORY_SEPARATOR . Bee::normalizePath($sitePath) . DIRECTORY_SEPARATOR);
-
-        $envPath = SITE_PATH . "config" . DIRECTORY_SEPARATOR . "env" . DIRECTORY_SEPARATOR;
-        Dotenv::createImmutable($envPath, ".env")->safeLoad();
-        Dotenv::createImmutable($envPath, Bee::isDev() ? ".env.dev" : ".env.prod")->safeLoad();
-    }
-
     public static function getConfiguration(): Config {
         return require_once SITE_PATH . "config" . DIRECTORY_SEPARATOR . "config.php";
     }
@@ -68,12 +52,23 @@ final class Server {
         return require_once SITE_PATH . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . "api.php";
     }
 
+    public static function getCdnRouter(): Router {
+        return require_once SITE_PATH . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . "cdn.php";
+    }
+
     /**
-     * Creates a new instance of the Server class.
+     * Initializes the server.
      *
+     * @param string $sitePath The local path of the site. Use __DIR__ unless you know what you are doing.
      * @return Server
      */
-    public static function createInstance(): Server {
+    public static function initialize(string $sitePath): Server {
+        define("SITE_PATH", DIRECTORY_SEPARATOR . Bee::normalizePath($sitePath) . DIRECTORY_SEPARATOR);
+
+        $envPath = SITE_PATH . "config" . DIRECTORY_SEPARATOR . "env" . DIRECTORY_SEPARATOR;
+        Dotenv::createImmutable($envPath, ".env")->safeLoad();
+        Dotenv::createImmutable($envPath, Bee::isDev() ? ".env.dev" : ".env.prod")->safeLoad();
+
         return new Server();
     }
 
@@ -88,12 +83,14 @@ final class Server {
      * @param Template $template The default template for all views.
      * @param Router $viewRouter The View Router to use.
      * @param Router $apiRouter The API Router to use.
+     * @param Router $cdnRouter The CDN Router to use.
      */
-    public function configure(Config $config, Template $template, Router $viewRouter, Router $apiRouter): void {
+    public function configure(Config $config, Template $template, Router $viewRouter, Router $apiRouter, Router $cdnRouter): void {
         $this->kernel->setConfig($config);
         $this->kernel->setTemplate($template);
         $this->kernel->setViewRouter($viewRouter);
         $this->kernel->setApiRouter($apiRouter);
+        $this->kernel->setCdnRouter($cdnRouter);
         $this->ready = true;
     }
 

@@ -2,20 +2,10 @@
 
 namespace FastRaven\Internal\Core;
 
-use FastRaven\Components\Core\Config;
-use FastRaven\Components\Http\Response;
-use FastRaven\Components\Http\Request;
-use FastRaven\Components\Http\DataType;
-use FastRaven\Components\Core\Template;
-use FastRaven\Components\Routing\Router;
-use FastRaven\Components\Routing\Endpoint;
-
-use FastRaven\Exceptions\NotFoundException;
-use FastRaven\Exceptions\RateLimitExceededException;
-
 use FastRaven\Workers\AuthWorker;
 use FastRaven\Workers\HeaderWorker;
 use FastRaven\Workers\StorageWorker;
+use FastRaven\Workers\Bee;
 
 use FastRaven\Internal\Slave\LogSlave;
 use FastRaven\Internal\Slave\HeaderSlave;
@@ -25,10 +15,22 @@ use FastRaven\Internal\Slave\ValidationSlave;
 use FastRaven\Internal\Slave\MailSlave;
 use FastRaven\Internal\Slave\StorageSlave;
 
+use FastRaven\Components\Core\Config;
+use FastRaven\Components\Http\Response;
+use FastRaven\Components\Http\Request;
+use FastRaven\Components\Core\Template;
+use FastRaven\Components\Routing\Router;
+use FastRaven\Components\Routing\Endpoint;
+
 use FastRaven\Exceptions\BadImplementationException;
 use FastRaven\Exceptions\EndpointFileNotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
 use FastRaven\Exceptions\AlreadyAuthorizedException;
+use FastRaven\Exceptions\NotFoundException;
+use FastRaven\Exceptions\RateLimitExceededException;
+use FastRaven\Exceptions\UploadedFileNotFoundException;
+
+use FastRaven\Components\Types\MiddlewareType;
 
 final class Kernel {
     #----------------------------------------------------------------------
@@ -43,6 +45,8 @@ final class Kernel {
         public function setViewRouter(Router $router): void { $this->viewRouter = $router; }
     private Router $apiRouter;
         public function setApiRouter(Router $router): void { $this->apiRouter = $router; }
+    private Router $cdnRouter;
+        public function setCdnRouter(Router $router): void { $this->cdnRouter = $router; }
 
     private Request $request;
         public function getRequest(): Request { return $this->request; }
@@ -84,8 +88,15 @@ final class Kernel {
      */
     private function handleRouting(Router $router): ?Endpoint {
         foreach($router->getEndpointList() as $ep) {
-            if($ep instanceof Endpoint && $ep->getComplexPath() === $this->request->getComplexPath()) {
-                return $ep;
+            if($ep instanceof Endpoint) {
+                if($ep->getType() !== MiddlewareType::ROUTER && $ep->getComplexPath() === $this->request->getComplexPath()) {
+                    return $ep;
+                } else if($ep->getType() === MiddlewareType::ROUTER && str_starts_with($this->request->getPath(), $ep->getPath())) {
+                    $nestedRouter = require SITE_PATH . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . $ep->getFile();
+                    if($nestedRouter instanceof Router) {
+                        return $this->handleRouting($nestedRouter);
+                    }
+                }
             }
         }
 
@@ -134,7 +145,8 @@ final class Kernel {
     #----------------------------------------------------------------------
     #\ METHODS
     
-    public function isApiRequest(): bool { return $this->request->isApi(); }
+    public function isApiRequest(): bool { return $this->request->getType() === MiddlewareType::API; }
+    public function isCdnRequest(): bool { return $this->request->getType() === MiddlewareType::CDN; }
 
     /**
      * This function initializes the kernel and prepares it for processing the request.
@@ -150,8 +162,7 @@ final class Kernel {
     public function open(): void {
         $this->startRequestTime = microtime(true);
 
-        $inputLengthLimit = $this->config->getSecurityInputLengthLimit() >= 0 ? $this->config->getSecurityInputLengthLimit() : null;
-        // Add security for remote address
+        $inputLengthLimit = $this->config->getLengthLimitInput() >= 0 ? $this->config->getLengthLimitInput() : null;
         $this->request = new Request(
             $_SERVER["REQUEST_URI"],
             $_SERVER["REQUEST_METHOD"],
@@ -165,7 +176,7 @@ final class Kernel {
             $this->logSlave->writeOpenLogs($this->request);
         }
 
-        if(!$this->handleRateLimit($this->config->getSecurityRateLimit()))
+        if(!$this->handleRateLimit($this->config->getRateLimit($this->request->getType())))
             throw new RateLimitExceededException($this->request->getRemoteAddress(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
 
         $this->authSlave = AuthSlave::zap();
@@ -176,8 +187,8 @@ final class Kernel {
 
         $this->headerSlave = HeaderSlave::zap();
         $this->headerSlave->writeSecurityHeaders($_SERVER["HTTPS"]);
-        $this->headerSlave->writeUtilityHeaders($this->request->isApi());
-        $this->headerSlave->writeRateLimitHeaders($this->config->getSecurityRateLimit(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
+        $this->headerSlave->writeUtilityHeaders($this->request->getType() === MiddlewareType::API);
+        $this->headerSlave->writeRateLimitHeaders($this->config->getRateLimit($this->request->getType()), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
 
         $this->dataSlave = DataSlave::zap();
 
@@ -187,7 +198,7 @@ final class Kernel {
         $this->mailSlave = MailSlave::zap();
 
         $this->storageSlave = StorageSlave::zap();
-        $this->storageSlave->setFileUploadSizeLimit($this->config->getSecurityFileUploadSizeLimit());
+        $this->storageSlave->setFileUploadSizeLimit($this->config->getLengthLimitFileUpload());
     }
 
     /**
@@ -208,9 +219,17 @@ final class Kernel {
      * @throws BadImplementationException If the API function does not return a Response object.
      */
     public function process(): Response {
-        $api = $this->request->isApi();
-        $mid = $api ? "api" : "web/views/pages";
-        $endpoint = $this->handleRouting($api ? $this->apiRouter : $this->viewRouter);
+        $mid = "web/views/pages";
+        $router = $this->viewRouter;
+        if($this->request->getType() == MiddlewareType::API) {
+            $router = $this->apiRouter;
+            $mid = "api";
+        } elseif($this->request->getType() == MiddlewareType::CDN) {
+            $router = $this->cdnRouter;
+            $mid = "cdn";
+        }
+
+        $endpoint = $this->handleRouting($router);
         $response = null;
 
         if(!$endpoint) throw new NotFoundException();
@@ -226,21 +245,25 @@ final class Kernel {
         $filePath = SITE_PATH . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
         if(!file_exists($filePath)) throw new EndpointFileNotFoundException($filePath);
         
-        if($this->request->isApi()) {
+        if($this->request->getType() === MiddlewareType::VIEW) {
+            $response = Response::new(true, 200, "", [
+                "path" => __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php",
+                "template"=> $this->template->merge($endpoint->getTemplate())->setFile($filePath)->sanitize()
+            ]);
+        } else {
             $fn = require_once $filePath;
             if (is_callable($fn)) $response = $fn($this->request);
-
             if ($response === null || !$response instanceof Response) throw new BadImplementationException($endpoint->getFile());
-        } else {
-            $template = $this->template;
-            $epTemplate = $endpoint->getTemplate();
-            if($epTemplate) $template->merge($epTemplate);
             
-            $template->setFile($filePath);
-            $template->sanitize();
-            require_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
-
-            $response = Response::new(true, 200);
+            $resPath = $response->getData()["path"] ?? null;
+            if($resPath) {
+                if(!StorageWorker::fileExists($resPath)) throw new UploadedFileNotFoundException($resPath);
+                else {
+                    $fullPath = StorageWorker::getUploadFilePath($resPath);
+                    $response->setDataType(Bee::getFileMimeType($fullPath, true));
+                    $response->setBody("", ["path" => $fullPath]);
+                }
+            }
         }
 
         return $response;
@@ -260,15 +283,20 @@ final class Kernel {
         http_response_code($response->getCode());
         session_write_close();
 
-        $type = $this->request->isApi() ? DataType::JSON : DataType::HTML;
-        HeaderWorker::addHeader( "Content-Type", "{$type->value}; charset=utf-8");
-
-        if ($type == DataType::JSON) {
+        if($this->request->getType() == MiddlewareType::VIEW) {
+            HeaderWorker::addHeader( "Content-Type", "text/html; charset=utf-8");
+            $template = $response->getData()["template"];
+            require_once $response->getData()["path"];
+        } else if ($this->request->getType() == MiddlewareType::API) {
+            HeaderWorker::addHeader( "Content-Type", "application/json; charset=utf-8");
             echo json_encode([
                 "success" => $response->getSuccess(),
                 "msg" => $response->getMessage(),
                 "data" => $response->getData()
             ]);
+        } elseif($this->request->getType() == MiddlewareType::CDN) {
+            HeaderWorker::addHeader( "Content-Type", $response->getDataType()->value);
+            readfile($response->getData()["path"]);
         }
 
         if (function_exists("fastcgi_finish_request")) fastcgi_finish_request();

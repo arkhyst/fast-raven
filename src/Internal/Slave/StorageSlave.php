@@ -51,19 +51,35 @@ final class StorageSlave {
     #----------------------------------------------------------------------
     #\ PRIVATE FUNCTIONS
 
-    private function getCacheFilePath(string $key): string {
-        return SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . Bee::normalizePath($key) . ".cache";
-    }
-
-    private function getUploadFilePath(string $file): string {
-        return SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "uploads" . DIRECTORY_SEPARATOR . Bee::normalizePath($file);
-    }
+    
 
     #/ PRIVATE FUNCTIONS
     #----------------------------------------------------------------------
 
     #----------------------------------------------------------------------
     #\ METHODS
+
+    /**
+     * Retrieves the path to a cache file.
+     * 
+     * @param string $key The key of the cache file.
+     * 
+     * @return string The path to the cache file.
+     */
+    public function getCacheFilePath(string $key): string {
+        return SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . Bee::normalizePath($key) . ".cache";
+    }
+
+    /**
+     * Retrieves the path to an uploaded file.
+     * 
+     * @param string $file The file to retrieve the path for.
+     * 
+     * @return string The path to the uploaded file.
+     */
+    public function getUploadFilePath(string $file): string {
+        return SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "uploads" . DIRECTORY_SEPARATOR . Bee::normalizePath($file);
+    }
 
     /**
      * Checks if a cache file exists.
@@ -77,13 +93,13 @@ final class StorageSlave {
     }
 
     /**
-     * Checks if an upload file exists.
+     * Checks if an uploaded file exists.
      * 
      * @param string $file The file to check.
      * 
-     * @return bool True if the upload file exists, false otherwise.
+     * @return bool True if the file exists, false otherwise.
      */
-    public function uploadExists(string $file): bool {
+    public function fileExists(string $file): bool {
         return file_exists($this->getUploadFilePath($file));
     }
 

@@ -89,8 +89,7 @@ final class LogSlave {
      * @param Request $request The request object for which the open log entry should be written.
      */
     public function writeOpenLogs(Request $request): void {
-        $type = $request->isApi() ? "API" : "VIEW";
-        LogWorker::log("{$type}[{$request->getMethod()}] > {$request->getPath()} <-> {$request->getRemoteAddress()} < ELAPSED_TIMEms");
+        LogWorker::log("{$request->getType()->value}[{$request->getMethod()}] > {$request->getPath()} <-> {$request->getRemoteAddress()} < ELAPSED_TIMEms");
     }
 
     /**
