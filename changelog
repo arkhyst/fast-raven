@@ -1,4 +1,4 @@
-### [v0.4] - 2026-01-XX
+### [v0.4] - 2025-12-XX
 #### Added
 - Kernel::handleRateLimit() for handling global rate limit configuration and endpoint specific rate limit.
 - HeaderSlave::writeRateLimitHeaders() for writing rate limit headers.
@@ -15,12 +15,27 @@
 - fileUploadSizeLimit in Config::configureSecurity(...) for defining maximum file upload size allowed.
 - Request::file() for getting uploaded files tmp path.
 - Bee::getFileMimeType() for getting accurate file mime type.
+- CDN Router for handling CDN routes.
+- MiddlewareType enum for defining middleware types. (VIEWS, API, CDN or ROUTER)
+- Response::file(...) for handling CDN endpoint responses.
+- Config::configureRedirects(...) for defining path redirects.
+- Config::configureRateLimit(...) for defining global rate limit configuration.
+- Config::getRateLimit() for getting global rate limit configuration depending of middleware.
+- Endpoint::cdn() for handling CDN endpoints.
+- Endpoint::rouuter() for nesting router files inside the main router.
+- Auto-trailing slashes for request and endpoint paths.
+- Request::getType() for getting request type.
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).
 - Request now sanitizes data in different levels of severity.
 - MailSlave::getMailTemplate() now uses realpath() to prevent directory traversal attacks.
 - MailSlave::setMailerAttachments() now uses realpath() to prevent directory traversal attacks.
+- Type enums have been relocated to a new namespace.
+- Skeleton has been updated to account for recent changes.
+- Template component now allows for nested setters.
+- DataType enum now supports 55 data types.
+- Router factories specific to each middleware.
 
 #### Fixed
 - Logs are not being stored inside storage directory.
@@ -31,6 +46,10 @@
 - getDataItem() method from Request component is getting deprecated.
 - getOriginInfo() method from Request component.
 - Permissions-Policy meta tag from main.php template.
+- initializeServer() method from Server class.
+- preload(...) method from Server class.
+- isApi() method from Request component.
+- new(...) method from Router component.
 
 ---
 
