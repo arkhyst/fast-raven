@@ -2,6 +2,8 @@
 
 namespace FastRaven\Components\Http;
 
+use FastRaven\Workers\Bee;
+
 use FastRaven\Components\Types\DataType;
 
 final class Response {
@@ -43,9 +45,17 @@ final class Response {
         return $response;
     }
 
+    /**
+     * Creates a new Response instance with a file as the data.
+     *
+     * @param bool $success Whether the response is a success or not.
+     * @param string $path The path to the file to be sent relative to storage/uploads.
+     * 
+     * @return Response The new Response instance.
+     */
     public static function file(bool $success, string $path): Response {
         $response = new Response($success, $success ? 200 : 500);
-        $response->setBody("", ["path" => $path]);
+        $response->setBody("", ["path" => Bee::normalizePath($path)]);
         return $response;
     }
 
