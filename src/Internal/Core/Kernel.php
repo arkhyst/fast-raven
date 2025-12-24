@@ -284,19 +284,21 @@ final class Kernel {
         session_write_close();
 
         if($this->request->getType() == MiddlewareType::VIEW) {
-            HeaderWorker::addHeader( "Content-Type", "text/html; charset=utf-8");
+            HeaderWorker::addHeader("Content-Type", "text/html; charset=utf-8");
             $template = $response->getData()["template"];
             require_once $response->getData()["path"];
         } else if ($this->request->getType() == MiddlewareType::API) {
-            HeaderWorker::addHeader( "Content-Type", "application/json; charset=utf-8");
+            HeaderWorker::addHeader("Content-Type", "application/json; charset=utf-8");
             echo json_encode([
                 "success" => $response->getSuccess(),
                 "msg" => $response->getMessage(),
                 "data" => $response->getData()
             ]);
         } elseif($this->request->getType() == MiddlewareType::CDN) {
-            HeaderWorker::addHeader( "Content-Type", $response->getDataType()->value);
-            readfile($response->getData()["path"]);
+            if($response->getSuccess()) {
+                HeaderWorker::addHeader("Content-Type", $response->getDataType()->value);
+                readfile($response->getData()["path"]);
+            }
         }
 
         if (function_exists("fastcgi_finish_request")) fastcgi_finish_request();
