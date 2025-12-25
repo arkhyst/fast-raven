@@ -37,6 +37,7 @@
 - Template component now allows for nested setters.
 - DataType enum now supports 55 data types.
 - Router factories specific to each middleware.
+- AuthSlave now calls session_start() only when needed, improving performance.
 
 #### Fixed
 - Logs are not being stored inside storage directory.

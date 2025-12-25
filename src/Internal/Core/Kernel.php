@@ -176,8 +176,9 @@ final class Kernel {
         $this->authSlave = AuthSlave::zap();
         $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->isAuthGlobal());
 
-        if($this->config->isRestricted() && !AuthWorker::isAuthorized($this->request))
-            throw new NotAuthorizedException();
+        if($this->config->isRestricted()) {
+            if(!AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
+        }
 
         $this->headerSlave = HeaderSlave::zap();
         $this->headerSlave->writeSecurityHeaders($_SERVER["HTTPS"]);
@@ -227,8 +228,11 @@ final class Kernel {
             throw new RateLimitExceededException($this->request->getRemoteAddress(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
         }
 
-        if($endpoint->getRestricted() && !AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
-        if($endpoint->getUnauthorizedExclusive() && AuthWorker::isAuthorized($this->request)) throw new AlreadyAuthorizedException();
+        if($endpoint->getRestricted())
+            if(!AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
+        
+        if($endpoint->getUnauthorizedExclusive())
+            if(AuthWorker::isAuthorized($this->request)) throw new AlreadyAuthorizedException();
 
         $filePath = SITE_PATH . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
         if(!file_exists($filePath)) throw new EndpointFileNotFoundException($filePath);

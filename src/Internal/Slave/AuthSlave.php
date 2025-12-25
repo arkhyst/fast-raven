@@ -93,7 +93,6 @@ final class AuthSlave {
         }
 
         session_set_cookie_params($options);
-        session_start();
     }
 
     /**

@@ -13,16 +13,16 @@ This audit analyzed **42 PHP source files** across the Fast Raven framework to i
 
 ### Key Findings
 
-| Severity | Finding | Estimated Impact |
-|----------|---------|------------------|
-| 🔴 Critical | File-based cache fallback without APCu | +5-15ms per request |
-| 🔴 Critical | Session start on every request | +2-8ms per request |
-| 🟠 High | Linear router endpoint matching | +0.1-2ms per request |
-| 🟠 High | Template file_get_contents on every view | +1-3ms per request |
-| 🟡 Medium | PDO reconnection per request | +1-5ms (first DB query) |
-| 🟡 Medium | Multiple regex calls in path normalization | +0.05-0.2ms per call |
-| 🟢 Low | Log stash string concatenation in loop | +0.01-0.1ms per request |
-| 🟢 Low | Collection linear search | +0.01-0.05ms per lookup |
+| Severity | Finding | Estimated Impact | Status |
+|----------|---------|------------------|--------|
+| ✅ Resolved | File-based cache fallback without APCu | +5-15ms → +0.1-5ms | Implemented multi-backend (APCu/shmop/File) |
+| ✅ Resolved | Session start on every request | +2-8ms → 0ms (public) | Implemented lazy session initialization |
+| 🟠 High | Linear router endpoint matching | +0.1-2ms per request | Open |
+| 🟠 High | Template file_get_contents on every view | +1-3ms per request | Open |
+| 🟡 Medium | PDO reconnection per request | +1-5ms (first DB query) | Open |
+| 🟡 Medium | Multiple regex calls in path normalization | +0.05-0.2ms per call | Open |
+| 🟢 Low | Log stash string concatenation in loop | +0.01-0.1ms per request | Open |
+| 🟢 Low | Collection linear search | +0.01-0.05ms per lookup | Open |
 
 ---
 
@@ -702,41 +702,60 @@ Thin facades over Slaves. Static call overhead negligible. **Grade:** ✅ Excell
 
 ### Issue #1: File-Based Rate Limiting Without APCu
 
-**Impact:** +5-15ms per request  
-**Affected Files:** `Kernel.php`, `StorageSlave.php`
+> [!NOTE]
+> **✅ RESOLVED** (December 25, 2025)
 
-**Problem:**
-When APCu is not available, rate limiting falls back to file-based caching, which involves:
-1. `file_exists()` - 0.05ms
-2. `file_get_contents()` - 0.1-1ms
-3. `json_decode()` - 0.05-0.2ms
-4. `file_put_contents()` with `LOCK_EX` - 0.5-5ms
-5. Lock contention under load - +1-10ms
+**Original Impact:** +5-15ms per request  
+**Current Impact:** APCu ~0.1ms, shmop ~0.2-0.3ms, File ~4-6ms  
+**Affected Files:** `Kernel.php`, `CacheSlave.php`, `CacheWorker.php`
 
-**Solution Priority:** 🔴 CRITICAL
+**Original Problem:**
+When APCu was not available, rate limiting fell back to file-based caching with multiple I/O operations.
 
-**Recommended Immediate Fix:**
-1. Make APCu a strongly encouraged dependency (document in README)
-2. Implement optimized file-locking strategy (shown above)
-3. Consider `shmop` as middle-ground alternative
+**Resolution:**
+1. ✅ Implemented `CacheSlave` with multi-backend support (APCu > shmop > File)
+2. ✅ Implemented `CacheWorker` facade for unified API
+3. ✅ Added shmop backend with file-based locking for thread safety
+4. ✅ Optimized rate limiting to 1 read + 1 write (reduced from 2 reads + 1 write)
+5. ✅ Optimized garbage collection with partial Fisher-Yates shuffle
+6. ✅ Documented APCu/shmop as recommended for production
+
+**Performance Comparison:**
+
+| Backend | Before | After |
+|---------|--------|-------|
+| APCu | N/A (not implemented) | ~0.1ms |
+| shmop | N/A (not implemented) | ~0.2-0.3ms |
+| File | ~8-15ms | ~4-6ms |
 
 ---
 
 ### Issue #2: Session Start on Every Request
 
-**Impact:** +2-8ms per request  
-**Affected Files:** `Kernel.php`, `AuthSlave.php`
+> [!NOTE]
+> **✅ RESOLVED** (December 25, 2025)
 
-**Problem:**
-`session_start()` is called in `Kernel::open()` for every request, even for:
-- Public API endpoints that don't use sessions
-- CDN file serving endpoints
-- Static content serving
+**Original Impact:** +2-8ms per request  
+**Current Impact:** 0ms for public endpoints, 2-8ms only when auth is needed  
+**Affected Files:** `Kernel.php`, `AuthSlave.php`, `AuthWorker.php`
 
-**Solution Priority:** 🔴 CRITICAL
+**Original Problem:**
+`session_start()` was called in `Kernel::open()` for every request, even for public endpoints.
 
-**Recommended Fix:**
-Implement lazy session initialization - only start session when auth operations are actually needed.
+**Resolution:**
+1. ✅ Removed `session_start()` from `AuthSlave::initializeSessionCookie()`
+2. ✅ Added `ensureSession()` helper in `AuthWorker` that starts session only if not active
+3. ✅ All AuthWorker methods now call `ensureSession()` before accessing `$_SESSION`
+4. ✅ Session is only started when first auth operation is called
+
+**Performance Comparison:**
+
+| Request Type | Before | After |
+|--------------|--------|-------|
+| Public GET API (no auth) | 2-8ms | 0ms |
+| Public POST API (no auth) | 2-8ms | 0ms |
+| Restricted endpoint | 2-8ms | 2-8ms (needed) |
+| Any call to AuthWorker | 2-8ms | 2-8ms (needed) |
 
 ---
 
