@@ -271,7 +271,7 @@ final class Kernel {
      */
     public function close(Response $response): void {
         http_response_code($response->getCode());
-        session_write_close();
+        if(session_status() === PHP_SESSION_ACTIVE) session_write_close();
 
         if($this->request->getType() == MiddlewareType::VIEW) {
             HeaderWorker::addHeader("Content-Type", "text/html; charset=utf-8");
