@@ -4,8 +4,8 @@ namespace FastRaven\Components\Http;
 
 use FastRaven\Workers\Bee;
 
-use FastRaven\Components\Types\MiddlewareType;
-use FastRaven\Components\Types\SanitizeType;
+use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\SanitizeType;
 
 final class Request {
     #----------------------------------------------------------------------

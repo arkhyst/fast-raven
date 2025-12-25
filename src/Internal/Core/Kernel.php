@@ -32,7 +32,7 @@ use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\RateLimitExceededException;
 use FastRaven\Exceptions\UploadedFileNotFoundException;
 
-use FastRaven\Components\Types\MiddlewareType;
+use FastRaven\Types\MiddlewareType;
 
 final class Kernel {
     #----------------------------------------------------------------------

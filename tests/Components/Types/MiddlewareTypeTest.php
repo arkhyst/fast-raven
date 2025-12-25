@@ -3,7 +3,7 @@
 namespace FastRaven\Tests\Components\Types;
 
 use PHPUnit\Framework\TestCase;
-use FastRaven\Components\Types\MiddlewareType;
+use FastRaven\Types\MiddlewareType;
 
 class MiddlewareTypeTest extends TestCase
 {

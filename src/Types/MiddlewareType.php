@@ -1,6 +1,6 @@
 <?php
 
-namespace FastRaven\Components\Types;
+namespace FastRaven\Types;
 
 /**
  * Enum MiddlewareType

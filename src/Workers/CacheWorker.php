@@ -3,7 +3,7 @@
 namespace FastRaven\Workers;
 
 use FastRaven\Internal\Slave\CacheSlave;
-use FastRaven\Components\Types\CacheType;
+use FastRaven\Types\CacheType;
 
 class CacheWorker {
     #----------------------------------------------------------------------

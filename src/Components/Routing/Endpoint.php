@@ -6,7 +6,7 @@ use FastRaven\Workers\Bee;
 
 use FastRaven\Components\Core\Template;
 
-use FastRaven\Components\Types\MiddlewareType;
+use FastRaven\Types\MiddlewareType;
 
 class Endpoint {
     #----------------------------------------------------------------------

@@ -4,8 +4,8 @@ namespace FastRaven\Tests\Components\Http;
 
 use PHPUnit\Framework\TestCase;
 use FastRaven\Components\Http\Request;
-use FastRaven\Components\Types\SanitizeType;
-use FastRaven\Components\Types\MiddlewareType;
+use FastRaven\Types\SanitizeType;
+use FastRaven\Types\MiddlewareType;
 
 class RequestTest extends TestCase
 {

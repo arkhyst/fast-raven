@@ -2,7 +2,7 @@
 
 namespace FastRaven\Components\Routing;
 
-use FastRaven\Components\Types\MiddlewareType;
+use FastRaven\Types\MiddlewareType;
 
 final class Router {
     #----------------------------------------------------------------------

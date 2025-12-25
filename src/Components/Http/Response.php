@@ -4,7 +4,7 @@ namespace FastRaven\Components\Http;
 
 use FastRaven\Workers\Bee;
 
-use FastRaven\Components\Types\DataType;
+use FastRaven\Types\DataType;
 
 final class Response {
     #----------------------------------------------------------------------

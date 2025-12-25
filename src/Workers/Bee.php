@@ -2,7 +2,7 @@
 
 namespace FastRaven\Workers;
 
-use FastRaven\Components\Types\DataType;
+use FastRaven\Types\DataType;
 
 class Bee {
     #----------------------------------------------------------------------

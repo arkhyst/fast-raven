@@ -3,7 +3,7 @@
 namespace FastRaven\Tests\Components\Types;
 
 use PHPUnit\Framework\TestCase;
-use FastRaven\Components\Types\DataType;
+use FastRaven\Types\DataType;
 
 class DataTypeTest extends TestCase
 {

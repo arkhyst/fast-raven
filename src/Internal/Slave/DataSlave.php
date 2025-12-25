@@ -9,13 +9,7 @@ use FastRaven\Exceptions\SecurityVulnerabilityException;
 
 use FastRaven\Workers\Bee;
 
-enum QueryType: string {
-    case SELECT = "SELECT";
-    case INSERT = "INSERT";
-    case UPDATE = "UPDATE";
-    case DELETE = "DELETE";
-    case COUNT = "COUNT";
-}
+use FastRaven\Types\QueryType;
 
 final class DataSlave {
     #----------------------------------------------------------------------

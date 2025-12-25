@@ -5,7 +5,7 @@ namespace FastRaven\Internal\Slave;
 use FastRaven\Workers\CacheWorker;
 use FastRaven\Workers\Bee;
 
-use FastRaven\Components\Types\CacheType;
+use FastRaven\Types\CacheType;
 
 final class CacheSlave {
     #----------------------------------------------------------------------
@@ -14,8 +14,8 @@ final class CacheSlave {
     private static bool $busy = false;
     private CacheType $type = CacheType::FILE;
 
-    private const SHMOP_SEGMENT_SIZE = 1024; // Max bytes per cache entry for shmop
-    private const SHMOP_MODE = 0644;
+    private const int SHMOP_SEGMENT_SIZE = 1024;
+    private const int SHMOP_MODE = 0644;
 
     #/ VARIABLES
     #----------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 namespace FastRaven\Components\Core;
 
-use FastRaven\Components\Types\MiddlewareType;
+use FastRaven\Types\MiddlewareType;
 
 
 final class Config {
