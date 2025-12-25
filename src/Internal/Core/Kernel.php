@@ -3,8 +3,9 @@
 namespace FastRaven\Internal\Core;
 
 use FastRaven\Workers\AuthWorker;
+use FastRaven\Workers\FileWorker;
 use FastRaven\Workers\HeaderWorker;
-use FastRaven\Workers\StorageWorker;
+use FastRaven\Workers\CacheWorker;
 use FastRaven\Workers\Bee;
 
 use FastRaven\Internal\Slave\LogSlave;
@@ -13,7 +14,8 @@ use FastRaven\Internal\Slave\AuthSlave;
 use FastRaven\Internal\Slave\DataSlave;
 use FastRaven\Internal\Slave\ValidationSlave;
 use FastRaven\Internal\Slave\MailSlave;
-use FastRaven\Internal\Slave\StorageSlave;
+use FastRaven\Internal\Slave\FileSlave;
+use FastRaven\Internal\Slave\CacheSlave;
 
 use FastRaven\Components\Core\Config;
 use FastRaven\Components\Http\Response;
@@ -38,18 +40,13 @@ final class Kernel {
 
     private Config $config;
         public function getConfig(): Config { return $this->config; }
-        public function setConfig(Config $config): void { $this->config = $config; }
-    private Template $template;
-        public function setTemplate(Template $template): void { $this->template = $template; }
-    private Router $viewRouter;
-        public function setViewRouter(Router $router): void { $this->viewRouter = $router; }
-    private Router $apiRouter;
-        public function setApiRouter(Router $router): void { $this->apiRouter = $router; }
-    private Router $cdnRouter;
-        public function setCdnRouter(Router $router): void { $this->cdnRouter = $router; }
-
     private Request $request;
         public function getRequest(): Request { return $this->request; }
+
+    private Template $template;
+    private Router $viewRouter;
+    private Router $apiRouter;
+    private Router $cdnRouter;
 
     private LogSlave $logSlave;
     private HeaderSlave $headerSlave;
@@ -57,7 +54,8 @@ final class Kernel {
     private DataSlave $dataSlave;
     private ValidationSlave $validationSlave;
     private MailSlave $mailSlave;
-    private StorageSlave $storageSlave;
+    private FileSlave $fileSlave;
+    private CacheSlave $cacheSlave;
 
     private float $startRequestTime;
     private int $rateLimitRemaining = 0;
@@ -69,8 +67,12 @@ final class Kernel {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public function  __construct() {
-        
+    public function  __construct(Config $config, Template $template, Router $viewRouter, Router $apiRouter, Router $cdnRouter) {
+        $this->config = $config;
+        $this->template = $template;
+        $this->viewRouter = $viewRouter;
+        $this->apiRouter = $apiRouter;
+        $this->cdnRouter = $cdnRouter;
     }
 
     #/ INIT
@@ -114,26 +116,18 @@ final class Kernel {
     private function handleRateLimit(int $limit, ?string $endpoint = null): bool {
         if ($limit > 0) {
             $rateLimitID = "fastraven:". $this->config->getSiteName().($endpoint ? "/$endpoint" : "").":ratelimit:". md5($_SERVER["REMOTE_ADDR"]);
-            if (function_exists("apcu_enabled") && apcu_enabled()) {
-                $count = apcu_inc($rateLimitID, 1, $success, 60);
-                $this->rateLimitRemaining = $limit - $count;
-                $this->rateLimitTimeRemaining = apcu_key_info($rateLimitID)["ttl"];
+            
+            $cacheItem = CacheWorker::readWithMeta($rateLimitID);
+            if ($cacheItem) {
+                $this->rateLimitRemaining = $limit - CacheWorker::increment($rateLimitID, 1);
+                $this->rateLimitTimeRemaining = max(0, $cacheItem["expires"] - time());
             } else {
-                $cacheItem = StorageWorker::getCache($rateLimitID);
-                $count = 0;
-                if($cacheItem) {
-                    StorageWorker::incrementCache($rateLimitID, 1);
-                    $count = $cacheItem["value"] + 1;
-                } else {
-                    StorageWorker::setCache($rateLimitID, 1, 60);
-                    $count = 1;
-                }
-                
-                $this->rateLimitRemaining = $limit - $count;
-                $this->rateLimitTimeRemaining = $cacheItem ? $cacheItem["expires"] - time() : 60;
+                CacheWorker::write($rateLimitID, 1, 60);
+                $this->rateLimitRemaining = $limit - 1;
+                $this->rateLimitTimeRemaining = 60;
             }
 
-            if($this->rateLimitRemaining < 0 && $this->rateLimitTimeRemaining > 0) return false;
+            if ($this->rateLimitRemaining < 0 && $this->rateLimitTimeRemaining > 0) return false;
         }
 
         return true;
@@ -176,6 +170,8 @@ final class Kernel {
             $this->logSlave->writeOpenLogs($this->request);
         }
 
+        $this->cacheSlave = CacheSlave::zap();
+
         if(!$this->handleRateLimit($this->config->getRateLimit($this->request->getType())))
             throw new RateLimitExceededException($this->request->getRemoteAddress(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
 
@@ -192,13 +188,11 @@ final class Kernel {
 
         $this->dataSlave = DataSlave::zap();
 
-
         $this->validationSlave = ValidationSlave::zap();
 
         $this->mailSlave = MailSlave::zap();
 
-        $this->storageSlave = StorageSlave::zap();
-        $this->storageSlave->setFileUploadSizeLimit($this->config->getLengthLimitFileUpload());
+        $this->fileSlave = FileSlave::zap($this->config->getLengthLimitFileUpload());
     }
 
     /**
@@ -219,15 +213,11 @@ final class Kernel {
      * @throws BadImplementationException If the API function does not return a Response object.
      */
     public function process(): Response {
-        $mid = "web/views/pages";
-        $router = $this->viewRouter;
-        if($this->request->getType() == MiddlewareType::API) {
-            $router = $this->apiRouter;
-            $mid = "api";
-        } elseif($this->request->getType() == MiddlewareType::CDN) {
-            $router = $this->cdnRouter;
-            $mid = "cdn";
-        }
+        [$router, $mid] = match ($this->request->getType()) {
+            MiddlewareType::API => [$this->apiRouter, 'api'],
+            MiddlewareType::CDN => [$this->cdnRouter, 'cdn'],
+            default => [$this->viewRouter, 'web/views/pages'],
+        };
 
         $endpoint = $this->handleRouting($router);
         $response = null;
@@ -257,9 +247,9 @@ final class Kernel {
             
             $resPath = $response->getData()["path"] ?? null;
             if($resPath) {
-                if(!StorageWorker::fileExists($resPath)) throw new UploadedFileNotFoundException($resPath);
+                if(!FileWorker::exists($resPath)) throw new UploadedFileNotFoundException($resPath);
                 else {
-                    $fullPath = StorageWorker::getUploadFilePath($resPath);
+                    $fullPath = FileWorker::getUploadFilePath($resPath);
                     $response->setDataType(Bee::getFileMimeType($fullPath, true));
                     $response->setBody("", ["path" => $fullPath]);
                 }
@@ -311,9 +301,8 @@ final class Kernel {
             $this->logSlave->dumpLogStashIntoFile();
         }
         
-        // TODO: Test performance impact.
-        if(random_int(0,100) < $this->config->getCacheFileGCProbability()) { 
-            $this->storageSlave->runGarbageCollector($this->config->getCacheFileGCPower());
+        if (random_int(0, 100) < $this->config->getCacheFileGCProbability()) { 
+            CacheWorker::runGarbageCollector($this->config->getCacheFileGCPower());
         }
     }
 

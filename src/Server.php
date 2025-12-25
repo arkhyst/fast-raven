@@ -73,7 +73,7 @@ final class Server {
     }
 
     private function __construct() {
-        $this->kernel = new Kernel();
+        
     }
 
     /**
@@ -86,11 +86,7 @@ final class Server {
      * @param Router $cdnRouter The CDN Router to use.
      */
     public function configure(Config $config, Template $template, Router $viewRouter, Router $apiRouter, Router $cdnRouter): void {
-        $this->kernel->setConfig($config);
-        $this->kernel->setTemplate($template);
-        $this->kernel->setViewRouter($viewRouter);
-        $this->kernel->setApiRouter($apiRouter);
-        $this->kernel->setCdnRouter($cdnRouter);
+        $this->kernel = new Kernel($config, $template, $viewRouter, $apiRouter, $cdnRouter);
         $this->ready = true;
     }
 

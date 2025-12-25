@@ -8,11 +8,11 @@
 - Request::getRemoteAddress() for getting remote address (unless is defined as hidden).
 - AuthWorker::regenerateCSRF() for regenerating CSRF token.
 - DataSlave optional SSL/TLS support via DB_USE_SSL and DB_SSL_CA environment variables.
-- StorageWorker and StorageSlave for managing lightweight cache and file uploads.
-- Support for non-apcu cache via StorageWorker and files inside storage/cache folder.
+- FileWorker and FileSlave for managing file uploads.
+- CacheWorker and CacheSlave for managing cache.
+- Support for APCU, SHMOP and File cache.
 - Config::configureCache(...) for defining file cache configuration.
-- Cache garbage collector via StorageSlave::runGarbageCollector().
-- fileUploadSizeLimit in Config::configureSecurity(...) for defining maximum file upload size allowed.
+- Cache garbage collector via CacheSlave::runGarbageCollector().
 - Request::file() for getting uploaded files tmp path.
 - Bee::getFileMimeType() for getting accurate file mime type.
 - CDN Router for handling CDN routes.
@@ -20,9 +20,10 @@
 - Response::file(...) for handling CDN endpoint responses.
 - Config::configureRedirects(...) for defining path redirects.
 - Config::configureRateLimit(...) for defining global rate limit configuration.
+- Config::configureLengthLimit(...) for defining maximum input length and file upload size allowed.
 - Config::getRateLimit() for getting global rate limit configuration depending of middleware.
 - Endpoint::cdn() for handling CDN endpoints.
-- Endpoint::rouuter() for nesting router files inside the main router.
+- Endpoint::router() for nesting router files inside the main router.
 - Auto-trailing slashes for request and endpoint paths.
 - Request::getType() for getting request type.
 
@@ -50,6 +51,7 @@
 - preload(...) method from Server class.
 - isApi() method from Request component.
 - new(...) method from Router component.
+- configureSecurity(...) method from Config class.
 
 ---
 
