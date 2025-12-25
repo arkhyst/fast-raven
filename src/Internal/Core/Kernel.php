@@ -118,14 +118,12 @@ final class Kernel {
             $rateLimitID = "fastraven:". $this->config->getSiteName().($endpoint ? "/$endpoint" : "").":ratelimit:". md5($_SERVER["REMOTE_ADDR"]);
             
             $cacheItem = CacheWorker::readWithMeta($rateLimitID);
-            if ($cacheItem) {
-                $this->rateLimitRemaining = $limit - CacheWorker::increment($rateLimitID, 1);
-                $this->rateLimitTimeRemaining = max(0, $cacheItem["expires"] - time());
-            } else {
-                CacheWorker::write($rateLimitID, 1, 60);
-                $this->rateLimitRemaining = $limit - 1;
-                $this->rateLimitTimeRemaining = 60;
-            }
+            $newValue = ($cacheItem["value"] ?? 0) + 1;
+            $expires = $cacheItem["expires"] ?? time() + 60;
+            
+            CacheWorker::write($rateLimitID, $newValue, $cacheItem ? max(1, $expires - time()) : 60);
+            $this->rateLimitRemaining = $limit - $newValue;
+            $this->rateLimitTimeRemaining = max(0, $expires - time());
 
             if ($this->rateLimitRemaining < 0 && $this->rateLimitTimeRemaining > 0) return false;
         }
