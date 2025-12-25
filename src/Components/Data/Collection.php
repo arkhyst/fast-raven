@@ -7,9 +7,8 @@ class Collection {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    protected array $data;
+    protected array $data = [];
         public function getRawData(): array { return $this->data; }
-        public function add(Item $pair): void { $this->data[] = $pair; }
         
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -20,7 +19,7 @@ class Collection {
     /**
      * Create a new Collection instance.
      *
-     * @param array $data The list of Item objects to store in the Collection.
+     * @param Item[] $data The list of Item objects to store in the Collection.
      *
      * @return Collection
      */
@@ -32,7 +31,7 @@ class Collection {
         $this->data = [];
         foreach($data as $item) {
             if($item instanceof Item) {
-                $this->data[] = $item;
+                $this->data[$item->getKey()] = $item->getValue();
             }
         }
     }
@@ -57,11 +56,14 @@ class Collection {
      * This will overwrite any existing values with the values from the given Collection.
      *
      * @param Collection $collection The Collection to merge into this instance.
+     *
+     * @return Collection The updated Collection.
      */
-    public function merge(Collection $collection): void {
-        foreach($collection->getRawData() as $item) {
-            $this->data[] = $item;
+    public function merge(Collection $collection): Collection {
+        foreach($collection->getRawData() as $key => $value) {
+            $this->data[$key] = $value;
         }
+        return $this;
     }
     
     /**
@@ -72,10 +74,8 @@ class Collection {
      * @return Item|null The Item with the given key, or null if not found.
      */
     public function get(string $key): ?Item {
-        foreach($this->data as $item) {
-            if($item->getKey() === $key) {
-                return $item;
-            }
+        if (isset($this->data[$key])) {
+            return Item::new($key, $this->data[$key]);
         }
         return null;
     }
@@ -86,11 +86,7 @@ class Collection {
      * @return array The list of keys in the Collection.
      */
     public function getAllKeys(): array {
-        $keys = [];
-        foreach($this->data as $item) {
-            $keys[] = $item->getKey();
-        }
-        return $keys;
+        return array_keys($this->data);
     }
 
     /**
@@ -99,11 +95,19 @@ class Collection {
      * @return array The list of values in the Collection.
      */
     public function getAllValues(): array {
-        $values = [];
-        foreach($this->data as $item) {
-            $values[] = $item->getValue();
-        }
-        return $values;
+        return array_values($this->data);
+    }
+
+    /**
+     * Adds an Item to the Collection.
+     *
+     * @param Item $pair The Item to add to the Collection.
+     *
+     * @return Collection The updated Collection.
+     */
+    public function add(Item $pair): Collection {
+        $this->data[$pair->getKey()] = $pair->getValue();
+        return $this;
     }
 
     /**
@@ -113,26 +117,24 @@ class Collection {
      *
      * @param string $key The key of the Item to set.
      * @param Item $pair The Item to set in the Collection.
+     *
+     * @return Collection The updated Collection.
      */
-    public function set(string $key, Item $pair): void {
-        foreach($this->data as $index => $item) {
-            if($item->getKey() === $key) {
-                $this->data[$index] = $pair;
-            }
-        }
+    public function set(string $key, Item $pair): Collection {
+        $this->data[$pair->getKey()] = $pair->getValue();
+        return $this;
     }
 
     /**
      * Removes an Item from the Collection by its key.
      *
      * @param string $key The key of the Item to remove.
+     *
+     * @return Collection The updated Collection.
      */
-    public function remove(string $key): void {
-        foreach($this->data as $index => $item) {
-            if($item->getKey() === $key) {
-                unset($this->data[$index]);
-            }
-        }
+    public function remove(string $key): Collection {
+        unset($this->data[$key]);
+        return $this;
     }
 
     #/ METHODS

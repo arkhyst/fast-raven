@@ -39,6 +39,7 @@
 - DataType enum now supports 55 data types.
 - Router factory now only specifies middleware type. 
 - Router now uses O(1) hash map lookup for endpoint matching.
+- Collection now stores values internally with key-based O(1) lookup.
 - AuthSlave now calls session_start() only when needed, improving performance.
 
 #### Fixed

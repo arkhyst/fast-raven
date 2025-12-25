@@ -13,18 +13,28 @@ This audit analyzed **42 PHP source files** across the Fast Raven framework to i
 
 ### Key Findings
 
-| Severity | Finding | Estimated Impact | Status |
-|----------|---------|------------------|--------|
-| ✅ Resolved | File-based cache fallback without APCu | +5-15ms → +0.1-5ms | Implemented multi-backend (APCu/shmop/File) |
-| ✅ Resolved | Session start on every request | +2-8ms → 0ms (public) | Implemented lazy session initialization |
-| ✅ Resolved | Linear router endpoint matching | +0.1-2ms → ~0.01ms | Implemented O(1) hash map lookup |
-| 🟠 High | Template file_get_contents on every view | +1-3ms per request | Open |
-| 🟡 Medium | PDO reconnection per request | +1-5ms (first DB query) | Open |
-| 🟡 Medium | Multiple regex calls in path normalization | +0.05-0.2ms per call | Open |
-| 🟢 Low | Log stash string concatenation in loop | +0.01-0.1ms per request | Open |
-| 🟢 Low | Collection linear search | +0.01-0.05ms per lookup | Open |
+#### ✅ Resolved Issues
 
----
+| Finding | Original Impact | Current Impact | Resolution |
+|---------|-----------------|----------------|------------|
+| File-based cache fallback | +5-15ms | +0.1-5ms | Multi-backend (APCu/shmop/File) |
+| Session start on every request | +2-8ms | 0ms (public) | Lazy session initialization |
+| Linear router endpoint matching | +0.1-2ms | ~0.01ms | O(1) hash map lookup |
+| Collection linear search | O(n) | O(1) | Key-based hash map storage |
+
+#### � Acceptable (Low Priority)
+
+| Finding | Impact | Reason |
+|---------|--------|--------|
+| Template file_get_contents | ~0.15ms | Minor cost, avoids exposing framework internals |
+| Log stash string concatenation | ~0.01-0.1ms | Negligible impact |
+
+#### 🟡 Open (Future Consideration)
+
+| Finding | Impact | Notes |
+|---------|--------|-------|
+| PDO reconnection per request | +1-5ms (first query) | Could use persistent connections |
+| Multiple regex in normalization | +0.05-0.2ms per call | Low priority, acceptable overhead |
 
 ## Table of Contents
 
