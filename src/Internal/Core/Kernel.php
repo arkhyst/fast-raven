@@ -89,18 +89,16 @@ final class Kernel {
      * @return Endpoint|null The matched endpoint, or null if no match is found.
      */
     private function handleRouting(Router $router): ?Endpoint {
-        foreach($router->getEndpointList() as $ep) {
-            if($ep instanceof Endpoint) {
-                if($ep->getType() !== MiddlewareType::ROUTER && $ep->getComplexPath() === $this->request->getComplexPath()) {
-                    return $ep;
-                } else if($ep->getType() === MiddlewareType::ROUTER && str_starts_with($this->request->getPath(), $ep->getPath())) {
-                    $nestedRouter = require SITE_PATH . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . $ep->getFile();
-                    if($nestedRouter instanceof Router) {
-                        return $this->handleRouting($nestedRouter);
-                    }
-                }
+        foreach($router->getSubrouterList() as $ep) {
+            if(str_starts_with($this->request->getPath(), $ep->getPath())) {
+                $nestedRouter = require SITE_PATH . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . $ep->getFile();
+                
+                if($nestedRouter instanceof Router) return $this->handleRouting($nestedRouter);
             }
         }
+        
+        if(isset($router->getEndpointList()[$this->request->getComplexPath()]))
+            return $router->getEndpointList()[$this->request->getComplexPath()];
 
         return null;
     }
@@ -230,7 +228,7 @@ final class Kernel {
 
         if($endpoint->getRestricted())
             if(!AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
-        
+
         if($endpoint->getUnauthorizedExclusive())
             if(AuthWorker::isAuthorized($this->request)) throw new AlreadyAuthorizedException();
 

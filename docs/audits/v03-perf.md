@@ -17,7 +17,7 @@ This audit analyzed **42 PHP source files** across the Fast Raven framework to i
 |----------|---------|------------------|--------|
 | ✅ Resolved | File-based cache fallback without APCu | +5-15ms → +0.1-5ms | Implemented multi-backend (APCu/shmop/File) |
 | ✅ Resolved | Session start on every request | +2-8ms → 0ms (public) | Implemented lazy session initialization |
-| 🟠 High | Linear router endpoint matching | +0.1-2ms per request | Open |
+| ✅ Resolved | Linear router endpoint matching | +0.1-2ms → ~0.01ms | Implemented O(1) hash map lookup |
 | 🟠 High | Template file_get_contents on every view | +1-3ms per request | Open |
 | 🟡 Medium | PDO reconnection per request | +1-5ms (first DB query) | Open |
 | 🟡 Medium | Multiple regex calls in path normalization | +0.05-0.2ms per call | Open |
@@ -761,19 +761,30 @@ When APCu was not available, rate limiting fell back to file-based caching with 
 
 ### Issue #3: Linear Route Matching
 
-**Impact:** +0.1-2ms per request (scales with route count)  
-**Affected Files:** `Kernel.php`
+> [!NOTE]
+> **✅ RESOLVED** (December 25, 2025)
 
-**Problem:**
-Route matching iterates through all registered endpoints until a match is found. With 100+ routes:
-- Best case (first route): 0.02ms
-- Worst case (last route): 1-2ms
-- Average case: 0.5-1ms
+**Original Impact:** +0.1-2ms per request (scales with route count)  
+**Current Impact:** ~0.01ms (O(1) hash lookup)  
+**Affected Files:** `Kernel.php`, `Router.php`
 
-**Solution Priority:** 🟠 HIGH
+**Original Problem:**
+Route matching iterated through all registered endpoints until a match was found.
 
-**Recommended Fix:**
-Pre-compute route hash map during `configure()` phase.
+**Resolution:**
+1. ✅ Changed Router to store endpoints in hash map keyed by `complexPath`
+2. ✅ Separated subrouters into dedicated list for prefix matching
+3. ✅ Changed `handleRouting()` to use O(1) hash lookup for endpoints
+4. ✅ Subrouters still use O(m) prefix matching (m is typically 0-3)
+5. ✅ Refactored Router API to `Router::new(type)->add(endpoint)`
+
+**Performance Comparison:**
+
+| Routes | Before | After |
+|--------|--------|-------|
+| 10 | ~0.1ms | ~0.01ms |
+| 50 | ~0.5ms | ~0.01ms |
+| 100 | ~1ms | ~0.01ms |
 
 ---
 

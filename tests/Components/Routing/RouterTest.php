@@ -9,45 +9,75 @@ use FastRaven\Components\Types\MiddlewareType;
 
 class RouterTest extends TestCase
 {
-    public function testViewsCreatesRouterWithEndpointList(): void
+    public function testNewCreatesRouterWithType(): void
     {
-        $endpoints = [
-            Endpoint::view(false, '/', 'home.php'),
-        ];
+        $router = Router::new(MiddlewareType::VIEW);
 
-        $router = Router::views($endpoints);
-
-        $this->assertEquals($endpoints, $router->getEndpointList());
         $this->assertEquals(MiddlewareType::VIEW, $router->getType());
+        $this->assertEmpty($router->getEndpointList());
+        $this->assertEmpty($router->getSubrouterList());
     }
 
-    public function testApiCreatesRouterWithEndpointList(): void
+    public function testAddEndpointToRouter(): void
     {
-        $router = Router::api([]);
-
-        $this->assertEquals([], $router->getEndpointList());
-        $this->assertEquals(MiddlewareType::API, $router->getType());
-    }
-
-    public function testCdnCreatesRouterWithEndpointList(): void
-    {
-        $endpoint = Endpoint::cdn(false, 'GET', '/favicon', 'Favicon.php');
-
-        $router = Router::cdn([$endpoint]);
+        $endpoint = Endpoint::view(false, '/', 'home.php');
+        
+        $router = Router::new(MiddlewareType::VIEW)
+            ->add($endpoint);
 
         $this->assertCount(1, $router->getEndpointList());
-        $this->assertEquals(MiddlewareType::CDN, $router->getType());
+        $this->assertArrayHasKey($endpoint->getComplexPath(), $router->getEndpointList());
     }
 
-    public function testGetEndpointListReturnsCorrectList(): void
+    public function testAddMultipleEndpoints(): void
     {
         $endpoint1 = Endpoint::view(false, '/home', 'home.php');
         $endpoint2 = Endpoint::view(false, '/about', 'about.php');
 
-        $router = Router::views([$endpoint1, $endpoint2]);
+        $router = Router::new(MiddlewareType::VIEW)
+            ->add($endpoint1)
+            ->add($endpoint2);
 
         $this->assertCount(2, $router->getEndpointList());
-        $this->assertSame($endpoint1, $router->getEndpointList()[0]);
-        $this->assertSame($endpoint2, $router->getEndpointList()[1]);
+        $this->assertArrayHasKey($endpoint1->getComplexPath(), $router->getEndpointList());
+        $this->assertArrayHasKey($endpoint2->getComplexPath(), $router->getEndpointList());
+    }
+
+    public function testAddSubrouterToRouter(): void
+    {
+        $subrouter = Endpoint::router(MiddlewareType::API, false, '/admin', 'admin.php');
+        
+        $router = Router::new(MiddlewareType::API)
+            ->add($subrouter);
+
+        $this->assertEmpty($router->getEndpointList());
+        $this->assertCount(1, $router->getSubrouterList());
+    }
+
+    public function testApiRouterType(): void
+    {
+        $router = Router::new(MiddlewareType::API);
+
+        $this->assertEquals(MiddlewareType::API, $router->getType());
+    }
+
+    public function testCdnRouterType(): void
+    {
+        $router = Router::new(MiddlewareType::CDN);
+
+        $this->assertEquals(MiddlewareType::CDN, $router->getType());
+    }
+
+    public function testEndpointLookupByComplexPath(): void
+    {
+        $endpoint = Endpoint::api(false, 'GET', '/health', 'Health.php');
+        
+        $router = Router::new(MiddlewareType::API)
+            ->add($endpoint);
+
+        $complexPath = $endpoint->getComplexPath();
+        $found = $router->getEndpointList()[$complexPath] ?? null;
+
+        $this->assertSame($endpoint, $found);
     }
 }

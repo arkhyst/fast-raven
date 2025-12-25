@@ -10,6 +10,9 @@ final class Router {
 
     private MiddlewareType $type;
         public function getType(): MiddlewareType { return $this->type; }
+    
+    private array $subrouterList = [];
+        public function getSubrouterList(): array { return $this->subrouterList; }
     private array $endpointList = [];
         public function getEndpointList(): array { return $this->endpointList; }
     
@@ -20,47 +23,16 @@ final class Router {
     #\ INIT
 
     /**
-     * Returns a new Views Router instance with the given list of endpoints.
+     * Returns a new Router instance.
      *
-     * The list of endpoints should contain Endpoint instances.
-     *
-     * @param array $endpointList The list of Endpoint instances.
-     * 
      * @return Router The Router instance.
      */
-    public static function views(array $endpointList): Router {
-        return new Router(MiddlewareType::VIEW, $endpointList);
+    public static function new(MiddlewareType $type): Router {
+        return new Router($type);
     }
 
-    /**
-     * Returns a new API Router instance with the given list of endpoints.
-     *
-     * The list of endpoints should contain Endpoint instances.
-     *
-     * @param array $endpointList The list of Endpoint instances.
-     * 
-     * @return Router The Router instance.
-     */
-    public static function api(array $endpointList): Router {
-        return new Router(MiddlewareType::API, $endpointList);
-    }
-
-    /**
-     * Returns a new CDN Router instance with the given list of endpoints.
-     *
-     * The list of endpoints should contain Endpoint instances.
-     *
-     * @param array $endpointList The list of Endpoint instances.
-     * 
-     * @return Router The Router instance.
-     */
-    public static function cdn(array $endpointList): Router {
-        return new Router(MiddlewareType::CDN, $endpointList);
-    }
-
-    private function __construct(MiddlewareType $type, array $endpointList = []) {
+    public function __construct(MiddlewareType $type) {
         $this->type = $type;
-        $this->endpointList = $endpointList;
     }
 
     #/ INIT
@@ -77,7 +49,12 @@ final class Router {
     #----------------------------------------------------------------------
     #\ METHODS
 
+    public function add(Endpoint $endpoint): Router {
+        if($endpoint->getType() !== MiddlewareType::ROUTER) $this->endpointList[$endpoint->getComplexPath()] = $endpoint;
+        else $this->subrouterList[] = $endpoint;
 
+        return $this;
+    }
 
     #/ METHODS
     #----------------------------------------------------------------------

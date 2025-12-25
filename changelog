@@ -26,6 +26,7 @@
 - Endpoint::router() for nesting router files inside the main router.
 - Auto-trailing slashes for request and endpoint paths.
 - Request::getType() for getting request type.
+- Router::add(...) for adding endpoints and subrouters.
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).
@@ -36,7 +37,8 @@
 - Skeleton has been updated to account for recent changes.
 - Template component now allows for nested setters.
 - DataType enum now supports 55 data types.
-- Router factories specific to each middleware.
+- Router factory now only specifies middleware type. 
+- Router now uses O(1) hash map lookup for endpoint matching.
 - AuthSlave now calls session_start() only when needed, improving performance.
 
 #### Fixed
@@ -51,7 +53,6 @@
 - initializeServer() method from Server class.
 - preload(...) method from Server class.
 - isApi() method from Request component.
-- new(...) method from Router component.
 - configureSecurity(...) method from Config class.
 
 ---
