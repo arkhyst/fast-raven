@@ -66,8 +66,8 @@ final class Template {
      * @param string $title       [optional] The title of the page.
      * @param string $version     [optional] The version to use for resources.
      * @param string $lang        [optional] The language of the page. Default is "en".
-     * @param array  $styles      [optional] An array of style files to include.
-     * @param array  $scripts     [optional] An array of script files to include.
+     * @param string[]  $styles      [optional] An array of style files to include.
+     * @param string[]  $scripts     [optional] An array of script files to include.
      * @param Collection $autofill [optional] A collection of DOM elements to autofill with API data.
      *
      * @return Template

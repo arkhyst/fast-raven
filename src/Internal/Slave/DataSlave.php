@@ -105,8 +105,8 @@ final class DataSlave {
      * It will then sanitize the given parameters and throw a SecurityVulnerabilityException if any are found.
      *
      * @param string $table The name of the table to sanitize.
-     * @param array $cols The array of column names to sanitize.
-     * @param array $cond The array of condition column names to sanitize.
+     * @param string[] $cols The array of column names to sanitize.
+     * @param string[] $cond The array of condition column names to sanitize.
      * @param string $orderBy The optional order by clause to sanitize.
      * 
      * @throws SecurityVulnerabilityException If any possible SQL injection is found.
@@ -144,8 +144,8 @@ final class DataSlave {
      *
      * @param QueryType $type The type of query to construct.
      * @param string $table The name of the table to query.
-     * @param array $cols The array of column names to query.
-     * @param array $cond The optional array of condition key-value pairs.
+     * @param string[] $cols The array of column names to query.
+     * @param string[] $cond The optional array of condition key-value pairs.
      * @param string $orderBy The optional order by clause.
      * @param int $limit The optional limit clause.
      * @param int $offset The optional offset clause.
@@ -240,8 +240,8 @@ final class DataSlave {
      * Executes a SQL query to retrieve one row from the database.
      *
      * @param string $table The table to retrieve data from.
-     * @param array $cols The columns to retrieve data from.
-     * @param array $cond The conditions to filter the data with.
+     * @param string[] $cols The columns to retrieve data from.
+     * @param string[] $cond The conditions to filter the data with.
      * @param array $vars The variables to bind to the query.
      * 
      * @return array|null The retrieved data, or null if an error occurred.
@@ -260,8 +260,8 @@ final class DataSlave {
      * Executes a SQL query to retrieve all rows from the database that match the given conditions.
      *
      * @param string $table The table to retrieve data from.
-     * @param array $cols The columns to retrieve data from.
-     * @param array $cond The conditions to filter the data with.
+     * @param string[] $cols The columns to retrieve data from.
+     * @param string[] $cond The conditions to filter the data with.
      * @param array $vars The variables to bind to the query.
      * 
      * @return array|null The retrieved data, or null if an error occurred.
@@ -280,7 +280,7 @@ final class DataSlave {
      * Inserts a new row into the database.
      *
      * @param string $table The table to insert into.
-     * @param array $cols The columns to insert data into.
+     * @param string[] $cols The columns to insert data into.
      * @param array $values The values to insert into the columns.
      * 
      * @return bool True if the insertion was successful, false otherwise.
@@ -312,8 +312,8 @@ final class DataSlave {
      * Updates rows in the database that match the given conditions.
      *
      * @param string $table The table to update rows in.
-     * @param array $cols The columns to update.
-     * @param array $cond The conditions to filter the rows to update with.
+     * @param string[] $cols The columns to update.
+     * @param string[] $cond The conditions to filter the rows to update with.
      * @param array $vars The variables to bind to the query.
      * 
      * @return bool True if the update was successful, false otherwise.
@@ -333,7 +333,7 @@ final class DataSlave {
      * Deletes rows from the database that match the given conditions.
      *
      * @param string $table The table to delete rows from.
-     * @param array $cond The conditions to filter the rows to delete.
+     * @param string[] $cond The conditions to filter the rows to delete.
      * @param array $vars The variables to bind to the query.
      * 
      * @return bool True if the deletion was successful, false otherwise.
@@ -353,7 +353,7 @@ final class DataSlave {
      * Counts rows in the database that match the given conditions.
      *
      * @param string $table The table to count rows from.
-     * @param array $cond The conditions to filter the rows to count.
+     * @param string[] $cond The conditions to filter the rows to count.
      * @param array $vars The variables to bind to the query.
      * 
      * @return int The number of rows that match the conditions.
@@ -373,7 +373,7 @@ final class DataSlave {
      * Inserts multiple rows into the database in a single transaction.
      *
      * @param string $table The table to insert into.
-     * @param array $cols The columns to insert data into.
+     * @param string[] $cols The columns to insert data into.
      * @param array $valuesArray Array of value arrays to insert.
      * 
      * @return bool True if all insertions were successful, false otherwise.
