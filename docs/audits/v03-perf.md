@@ -21,6 +21,7 @@ This audit analyzed **42 PHP source files** across the Fast Raven framework to i
 | Session start on every request | +2-8ms | 0ms (public) | Lazy session initialization |
 | Linear router endpoint matching | +0.1-2ms | ~0.01ms | O(1) hash map lookup |
 | Collection linear search | O(n) | O(1) | Key-based hash map storage |
+| PDO reconnection per request | +1-5ms | ~0.1ms | Persistent connections |
 
 #### � Acceptable (Low Priority)
 
@@ -33,7 +34,6 @@ This audit analyzed **42 PHP source files** across the Fast Raven framework to i
 
 | Finding | Impact | Notes |
 |---------|--------|-------|
-| PDO reconnection per request | +1-5ms (first query) | Could use persistent connections |
 | Multiple regex in normalization | +0.05-0.2ms per call | Low priority, acceptable overhead |
 
 ## Table of Contents
@@ -410,7 +410,7 @@ private function initializePDO(): void {
             \PDO::ATTR_STRINGIFY_FETCHES => false, // PHP 8.4: native types
         ];
         
-        if (Bee::env("DB_USE_SSL", "false") === "true") {
+        if (Bee::env("DB_SSL", "false") === "true") {
             // ... SSL config
         }
         

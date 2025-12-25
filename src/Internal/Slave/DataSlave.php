@@ -80,8 +80,12 @@ final class DataSlave {
     private function initializePDO(): void {
         if(!$this->pdo) {
             try {
-                $options = [];
-                if(Bee::env("DB_USE_SSL", "false") === "true") {
+                $options = [
+                    \PDO::ATTR_PERSISTENT => Bee::env("DB_PERSISTENT", "false") === "true",
+                    \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                    \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                ];
+                if(Bee::env("DB_SSL", "false") === "true") {
                     $caPath = realpath(Bee::env("DB_SSL_CA", ""));
                     if($caPath !== false) {
                         $options[\PDO::MYSQL_ATTR_SSL_CA] = $caPath;
@@ -90,8 +94,6 @@ final class DataSlave {
                 }
 
                 $this->pdo = new \PDO($this->buildDatabaseDSN(Bee::env("DB_HOST"), Bee::env("DB_NAME")), Bee::env("DB_USER"), Bee::env("DB_PASS"), $options);
-                $this->pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
-                $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             } catch (\PDOException $e) {
                 $this->pdo = null;
                 LogWorker::error("PDOException: ".$e->getMessage());

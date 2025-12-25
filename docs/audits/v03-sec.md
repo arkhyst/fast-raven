@@ -381,7 +381,7 @@ Apps requiring fingerprinting can implement it themselves.
 
 Implemented optional SSL support via environment variables:
 ```php
-if(Bee::env("DB_USE_SSL", "false") === "true") {
+if(Bee::env("DB_SSL", "false") === "true") {
     $caPath = realpath(Bee::env("DB_SSL_CA", ""));
     if($caPath !== false) {
         $options[\PDO::MYSQL_ATTR_SSL_CA] = $caPath;
@@ -391,7 +391,7 @@ if(Bee::env("DB_USE_SSL", "false") === "true") {
 ```
 
 **Configuration:**
-- `DB_USE_SSL=true` - Enable SSL
+- `DB_SSL=true` - Enable SSL
 - `DB_SSL_CA=/path/to/ca-cert.pem` - Path to CA certificate
 
 **Original Severity:** 🟡 Medium (CVSS 4.8)

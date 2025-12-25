@@ -7,7 +7,7 @@
 - SanitizeType enum for defining data sanitization levels.
 - Request::getRemoteAddress() for getting remote address (unless is defined as hidden).
 - AuthWorker::regenerateCSRF() for regenerating CSRF token.
-- DataSlave optional SSL/TLS support via DB_USE_SSL and DB_SSL_CA environment variables.
+- DataSlave optional SSL/TLS support via DB_SSL and DB_SSL_CA environment variables.
 - FileWorker and FileSlave for managing file uploads.
 - CacheWorker and CacheSlave for managing cache.
 - Support for APCU, SHMOP and File cache.
@@ -41,6 +41,7 @@
 - Router now uses O(1) hash map lookup for endpoint matching.
 - Collection now stores values internally with key-based O(1) lookup.
 - AuthSlave now calls session_start() only when needed, improving performance.
+- DataSlave now supports persistent PDO connections for better performance.
 
 #### Fixed
 - Logs are not being stored inside storage directory.
