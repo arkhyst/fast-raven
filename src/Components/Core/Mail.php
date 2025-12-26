@@ -56,10 +56,14 @@ final class Mail {
     }
 
     private function __construct(Item $origin, Item $destination, string $subject, string $bodyFile) {
-        $this->setOrigin($origin);
-        $this->setDestination($destination);
-        $this->setSubject($subject);
-        $this->setBodyFile($bodyFile);
+        $this->origin = $origin;
+        $this->destination = $destination;
+        $this->subject = $subject;
+        $this->bodyFile = $bodyFile;
+
+        $this->bccMails = Collection::new();
+        $this->replaceValues = Collection::new();
+        $this->attachments = Collection::new();
     }
 
     #/ INIT
