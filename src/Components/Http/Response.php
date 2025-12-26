@@ -54,7 +54,7 @@ final class Response {
      * @return Response The new Response instance.
      */
     public static function file(bool $success, string $path): Response {
-        return (new Response($success, $success ? 200 : 500))->setData(["path" => Bee::normalizePath($path)]);
+        return (new Response($success, $success ? 200 : 500))->setData(["path" => $path]);
     }
 
     

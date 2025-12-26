@@ -79,14 +79,13 @@ final class Bee {
     public static function getBaseDomain(): string {
         $host = Bee::env("SITE_ADDRESS", "localhost");
         $parts = explode(".", $host);
-        $count = count($parts);
 
-        if ($count >= 3) {
+        if (count($parts) >= 3) {
             $domain = array_slice($parts, -2); # UK... Why, common wealth, WHY???
             return implode(".", $domain);
+        } else {
+            return $host;
         }
-
-        return $host;
     }
 
     /**

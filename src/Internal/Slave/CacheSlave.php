@@ -189,14 +189,16 @@ final class CacheSlave {
     }
 
     /**
-     * Releases a file-based lock.
+     * Releases a file-based lock and removes the lock file.
      * 
      * @param mixed $lock The lock handle to release.
      */
     private function shmopUnlock(mixed $lock): void {
         if ($lock) {
+            $path = stream_get_meta_data($lock)['uri'];
             flock($lock, LOCK_UN);
             fclose($lock);
+            @unlink($path);
         }
     }
 

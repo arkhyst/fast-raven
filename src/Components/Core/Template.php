@@ -68,6 +68,8 @@ final class Template {
      * @param string $lang        [optional] The language of the page. Default is "en".
      * @param string[]  $styles      [optional] An array of style files to include.
      * @param string[]  $scripts     [optional] An array of script files to include.
+     * @param string[]  $beforeFragments [optional] An array of fragment files to include before the main content.
+     * @param string[]  $afterFragments [optional] An array of fragment files to include after the main content.
      * @param Collection $autofill [optional] A collection of DOM elements to autofill with API data.
      *
      * @return Template
@@ -83,6 +85,8 @@ final class Template {
         $this->favicon = $favicon;
         $this->styles = $styles;
         $this->scripts = $scripts;
+        $this->beforeFragments = $beforeFragments;
+        $this->afterFragments = $afterFragments;
         $this->autofill = $autofill ?? Collection::new();
     }
 

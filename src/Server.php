@@ -116,7 +116,7 @@ final class Server {
     #\ PRIVATE FUNCTIONS
 
     private function handleException(SmartException $e): Response {
-        $statusCode = $this->kernel->isApiRequest() ? $e->getStatusCode() : 301;
+        $statusCode = $this->kernel->isViewRequest() ? 301 : $e->getStatusCode();
         $response = Response::new(false, $statusCode, $e->getPublicMessage());
         LogWorker::error("SmartException: " . $e->getMessage());
 
@@ -124,15 +124,16 @@ final class Server {
             HeaderWorker::addHeader("Retry-After", $e->getTimeLeft());
         }
 
-        if(!$this->kernel->isApiRequest()) {
+        if($this->kernel->isViewRequest()) {
             if($e instanceof NotFoundException || is_subclass_of($e, NotFoundException::class) ||
             $e instanceof AlreadyAuthorizedException || is_subclass_of($e, AlreadyAuthorizedException::class)) {
                 HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultNotFoundPathRedirect());
             } else if($e instanceof NotAuthorizedException || is_subclass_of($e, NotAuthorizedException::class)) {
-                if($e->isDomainLevel())
+                if($e->isDomainLevel()) {
                     HeaderWorker::addHeader("Location", "https://".Bee::getBuiltDomain($this->kernel->getConfig()->getDefaultUnauthorizedSubdomainRedirect()));
-                else
+                } else {
                     HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultUnauthorizedPathRedirect());
+                }
             }
         }
 
@@ -162,7 +163,7 @@ final class Server {
      * If the server has not been configured, it will return a 500 status code.
      *
      * Handles NotFoundException, BadImplementationException, EndpointFileNotFoundException, NotAuthorizedException,
-     * AlreadyAuthorizedException, RateLimitExceededException, FilterDeniedException.
+     * AlreadyAuthorizedException, RateLimitExceededException, FilterDeniedException, UploadedFileNotFoundException
      */
     public function run(): void {
         if ($this->ready) {

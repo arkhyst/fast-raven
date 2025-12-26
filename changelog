@@ -54,6 +54,11 @@
 - AuthWorker::autologin() produces a timing attack vulnerability.
 - ValidationWorker::phone() returns false for a valid 9-digit phone number.
 - Mail component has not initialized variables.
+- CDN exceptions are not being handled correctly.
+- Headers are not being sent on unauthorized site access.
+- Shared Memory .lock files are not being deleted.
+- CSRF_TOKEN is not being injected into the main.php template.
+- CSRF_TOKEN is not being sent through FormData requests.
 
 #### Removed
 - sitePath parameter from Server::getConfiguration(), Server::getTemplate(), Server::getViewRouter(), Server::getApiRouter() 

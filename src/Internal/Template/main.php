@@ -34,8 +34,8 @@
             <?php include __DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "jquery.min.js"; ?>
         </script>
         <script>
-            <?php if (isset($_SESSION["sgas_csrf"])) { ?>
-                const CSRF_TOKEN = "<?= $_SESSION["sgas_csrf"]; ?>";
+            <?php if($csrfToken) { ?>
+                window.CSRF_TOKEN = "<?= $csrfToken; ?>";
             <?php } ?>
             <?php 
                 $comp = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "packedlib.js");

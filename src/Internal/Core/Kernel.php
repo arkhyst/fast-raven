@@ -135,6 +135,7 @@ final class Kernel {
     #----------------------------------------------------------------------
     #\ METHODS
     
+    public function isViewRequest(): bool { return $this->request->getType() === MiddlewareType::VIEW; }
     public function isApiRequest(): bool { return $this->request->getType() === MiddlewareType::API; }
     public function isCdnRequest(): bool { return $this->request->getType() === MiddlewareType::CDN; }
 
@@ -173,15 +174,15 @@ final class Kernel {
 
         $this->authSlave = AuthSlave::zap();
         $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->isAuthGlobal());
-
-        if($this->config->isRestricted()) {
-            if(!AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
-        }
-
+        
         $this->headerSlave = HeaderSlave::zap();
         $this->headerSlave->writeSecurityHeaders($_SERVER["HTTPS"]);
         $this->headerSlave->writeUtilityHeaders($this->request->getType() === MiddlewareType::API);
         $this->headerSlave->writeRateLimitHeaders($this->config->getRateLimit($this->request->getType()), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
+
+        if($this->config->isRestricted()) {
+            if(!AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException(true);
+        }
 
         $this->dataSlave = DataSlave::zap();
 
@@ -270,13 +271,13 @@ final class Kernel {
      * @param Response $response The response to output or process
      */
     public function close(Response $response): void {
-        http_response_code($response->getCode());
-        if(session_status() === PHP_SESSION_ACTIVE) session_write_close();
-
         if($this->request->getType() == MiddlewareType::VIEW) {
-            HeaderWorker::addHeader("Content-Type", "text/html; charset=utf-8");
-            $template = $response->getData()["template"];
-            require_once $response->getData()["path"];
+            if($response->getSuccess() && isset($response->getData()["path"])) {
+                HeaderWorker::addHeader("Content-Type", "text/html; charset=utf-8");
+                $template = $response->getData()["template"];
+                $csrfToken = AuthWorker::isAuthorized() ? $_SESSION["sgas_csrf"] : null;
+                require_once $response->getData()["path"];
+            }
         } else if ($this->request->getType() == MiddlewareType::API) {
             HeaderWorker::addHeader("Content-Type", "application/json; charset=utf-8");
             echo json_encode([
@@ -285,11 +286,14 @@ final class Kernel {
                 "data" => $response->getData()
             ]);
         } elseif($this->request->getType() == MiddlewareType::CDN) {
-            if($response->getSuccess()) {
+            if($response->getSuccess() && isset($response->getData()["path"])) {
                 HeaderWorker::addHeader("Content-Type", $response->getDataType()->value);
                 readfile($response->getData()["path"]);
             }
         }
+
+        http_response_code($response->getCode());
+        if(session_status() === PHP_SESSION_ACTIVE) session_write_close();
 
         if (function_exists("fastcgi_finish_request")) fastcgi_finish_request();
 

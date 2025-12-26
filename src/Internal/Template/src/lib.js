@@ -38,24 +38,20 @@ class Lib {
         return new Promise(function(resolve, reject) {
             const formData = new FormData();
             
-            // Handle different input types
             if (file instanceof HTMLInputElement) {
-                file = file.files;
+                file = file.files.length === 1 ? file.files[0] : file.files;
             }
             
             if (file instanceof FileList) {
-                const name = fieldName || 'files[]';
                 for (let i = 0; i < file.length; i++) {
-                    formData.append(name, file[i]);
+                    formData.append(fieldName || 'files[]', file[i]);
                 }
             } else if (file instanceof File) {
                 formData.append(fieldName || 'file', file);
             }
             
-            // Add CSRF token for POST validation
             formData.append('csrf_token', window.CSRF_TOKEN ?? '');
             
-            // Add extra data
             for (const [key, value] of Object.entries(extraData)) {
                 formData.append(key, value);
             }
