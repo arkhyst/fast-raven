@@ -4,6 +4,8 @@ namespace FastRaven\Workers;
 
 use FastRaven\Internal\Slave\FileSlave;
 
+use FastRaven\Components\Core\File;
+
 final class FileWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
@@ -56,14 +58,14 @@ final class FileWorker {
     /**
      * Uploads a file to the storage/uploads directory.
      * 
-     * @param string $tmpFile The temporary file path from $_FILES["name"]["tmp_name"].
+     * @param File $file The file to upload.
      * @param string $destPath The destination path relative to storage/uploads.
      * 
      * @return bool True if the file was successfully uploaded, false otherwise.
      */
-    public static function upload(string $tmpFile, string $destPath): bool {
+    public static function upload(File $file, string $destPath): bool {
         if(self::$busy) {
-            return self::$slave->upload($tmpFile, $destPath);
+            return self::$slave->upload($file->getPath(), $destPath);
         }
 
         return false;

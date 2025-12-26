@@ -2,6 +2,8 @@
 
 namespace FastRaven\Components\Http;
 
+use FastRaven\Components\Core\File;
+
 use FastRaven\Workers\Bee;
 
 use FastRaven\Types\MiddlewareType;
@@ -48,7 +50,12 @@ final class Request {
        
         parse_str(parse_url($uri, PHP_URL_QUERY) ?? "", $this->query);
         $this->data = json_decode($dataStream, true) ?? $_POST ?? [];
-        $this->files = empty($fileStream) ? [] : array_combine(array_keys($fileStream), array_column($fileStream, "tmp_name"));
+        $this->files = [];
+        foreach ($fileStream as $name => $data) {
+            if (isset($data["tmp_name"]) && $data["tmp_name"]) {
+                $this->files[$name] = File::new($data["name"], $data["tmp_name"]);
+            }
+        }
         
         $this->method = strtoupper($method);
         $this->path = "/".Bee::normalizePath(parse_url($uri, PHP_URL_PATH) ?? "");
@@ -139,9 +146,9 @@ final class Request {
      *
      * @param string $name The field name from the form/FormData.
      * 
-     * @return ?string The temporary file path, or null if not found.
+     * @return ?File The temporary file path, or null if not found.
      */
-    public function file(string $name): ?string {
+    public function file(string $name): ?File {
         return $this->files[$name] ?? null;
     }
 

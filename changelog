@@ -30,6 +30,7 @@
 - Bee::buildProjectPath() for building dynamic and true sanitized paths inside a site project.
 - ProjectFolderType enum for specifying project folder types.
 - JS Lib.uploadFile() for handling file AJAX requests.
+- File component for handling file uploads.
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).
