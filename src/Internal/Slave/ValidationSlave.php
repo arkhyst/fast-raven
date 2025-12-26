@@ -146,7 +146,7 @@ final class ValidationSlave {
      * 
      * This function will validate a phone number based on the following criteria:
      * 
-     * - The phone number must be at least 10 characters long.
+     * - The phone number must be at least 7 characters long.
      * - The phone number must be at most 15 characters long.
      * - The country code must be at least 1 and at most 999.
      * 
@@ -158,7 +158,7 @@ final class ValidationSlave {
     public function validatePhone(int $countryCode, string $phone): bool {
         $length = strlen($phone);
 
-        return $length >= 10 && $length <= 15 && $countryCode >= 1 && $countryCode <= 999;
+        return $length >= 7 && $length <= 15 && $countryCode >= 1 && $countryCode <= 999;
     }
 
     #/ METHODS
