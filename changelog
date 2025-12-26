@@ -31,6 +31,7 @@
 - ProjectFolderType enum for specifying project folder types.
 - JS Lib.uploadFile() for handling file AJAX requests.
 - File component for handling file uploads.
+- Skeleton: standardization of custom shared classes.
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).
