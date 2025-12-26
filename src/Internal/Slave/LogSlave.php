@@ -2,9 +2,15 @@
 
 namespace FastRaven\Internal\Slave;
 
-use FastRaven\Components\Http\Request;
 use FastRaven\Workers\LogWorker;
+
 use FastRaven\Internal\Stash\LogStash;
+
+use FastRaven\Components\Http\Request;
+
+use FastRaven\Types\ProjectFolderType;
+
+use FastRaven\Workers\Bee;
 
 final class LogSlave {
     #----------------------------------------------------------------------
@@ -61,10 +67,7 @@ final class LogSlave {
      * @param string $text The text to write to the log file.
      */
     private function writeIntoFile(string $text): void {
-        $dir = SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "logs" . DIRECTORY_SEPARATOR;
-        if(!is_dir($dir)) mkdir($dir, 0755, true);
-
-        file_put_contents($dir . date("Y-m-d") . ".log", $text, FILE_APPEND | LOCK_EX);
+        file_put_contents(Bee::buildProjectPath(ProjectFolderType::STORAGE_LOGS, date("Y-m-d").".log"), $text, FILE_APPEND | LOCK_EX);
     }
 
     #/ PRIVATE FUNCTIONS

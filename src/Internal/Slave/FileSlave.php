@@ -4,6 +4,8 @@ namespace FastRaven\Internal\Slave;
 
 use FastRaven\Workers\FileWorker;
 
+use FastRaven\Types\ProjectFolderType;
+
 use FastRaven\Workers\Bee;
 
 final class FileSlave {
@@ -66,7 +68,7 @@ final class FileSlave {
      * @return string The path to the uploaded file.
      */
     public function getUploadFilePath(string $file): string {
-        return SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "uploads" . DIRECTORY_SEPARATOR . Bee::normalizePath($file);
+        return Bee::buildProjectPath(ProjectFolderType::STORAGE_UPLOADS, $file);
     }
 
     public function exists(string $path): bool {

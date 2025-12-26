@@ -17,7 +17,7 @@
     </head>
     <body>
         <?php
-            $fragmentsPath = SITE_PATH . "src" . DIRECTORY_SEPARATOR . "web" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . "fragments" . DIRECTORY_SEPARATOR;
+            $fragmentsPath = \FastRaven\Workers\Bee::buildProjectPath(\FastRaven\Types\ProjectFolderType::SRC_WEB_VIEWS_FRAGMENTS);
             foreach ($template->getBeforeFragments() as $beforeFragment) {
                 include $fragmentsPath . $beforeFragment;
             }

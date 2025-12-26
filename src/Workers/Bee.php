@@ -3,6 +3,7 @@
 namespace FastRaven\Workers;
 
 use FastRaven\Types\DataType;
+use FastRaven\Types\ProjectFolderType;
 
 class Bee {
     #----------------------------------------------------------------------
@@ -57,6 +58,8 @@ class Bee {
      * @return string the normalized path (e.g., "path/to/endpoint")
      */
     public static function normalizePath(string $path): string {
+        if(!$path) return "";
+
         $path = str_replace("\0", "", $path);
         $path = preg_replace("#[\\\\/]+#", "/", $path);
         $segments = array_filter(
@@ -136,6 +139,10 @@ class Bee {
         }
         
         return $mimeType;
+    }
+
+    public static function buildProjectPath(ProjectFolderType $folderType, string $file = ""): string {
+        return SITE_PATH . $folderType->value . Bee::normalizePath($file);
     }
 
     #/ METHODS

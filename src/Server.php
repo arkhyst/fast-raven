@@ -2,6 +2,7 @@
 
 namespace FastRaven;
 
+use FastRaven\Exceptions\BadProjectSkeletonException;
 use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
 use FastRaven\Exceptions\AlreadyAuthorizedException;
@@ -20,6 +21,9 @@ use FastRaven\Workers\LogWorker;
 use FastRaven\Workers\HeaderWorker;
 
 use FastRaven\Workers\Bee;
+
+use FastRaven\Types\ProjectFolderType;
+
 use Dotenv\Dotenv;
 
 final class Server {
@@ -37,37 +41,40 @@ final class Server {
     #\ INIT
 
     public static function getConfiguration(): Config {
-        return require_once SITE_PATH . "config" . DIRECTORY_SEPARATOR . "config.php";
+        return require_once Bee::buildProjectPath(ProjectFolderType::CONFIG, "config.php");
     }
 
     public static function getTemplate(): Template {
-        return require_once SITE_PATH . "config" . DIRECTORY_SEPARATOR . "template.php";
+        return require_once Bee::buildProjectPath(ProjectFolderType::CONFIG, "template.php");
     }
 
     public static function getViewRouter(): Router {
-        return require_once SITE_PATH . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . "views.php";
+        return require_once Bee::buildProjectPath(ProjectFolderType::CONFIG_ROUTER, "views.php");
     }
 
     public static function getApiRouter(): Router {
-        return require_once SITE_PATH . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . "api.php";
+        return require_once Bee::buildProjectPath(ProjectFolderType::CONFIG_ROUTER, "api.php");
     }
 
     public static function getCdnRouter(): Router {
-        return require_once SITE_PATH . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . "cdn.php";
+        return require_once Bee::buildProjectPath(ProjectFolderType::CONFIG_ROUTER, "cdn.php");
     }
 
     /**
      * Initializes the server.
      *
      * @param string $sitePath The local path of the site. Use __DIR__ unless you know what you are doing.
+     * 
      * @return Server
      */
     public static function initialize(string $sitePath): Server {
         define("SITE_PATH", DIRECTORY_SEPARATOR . Bee::normalizePath($sitePath) . DIRECTORY_SEPARATOR);
 
-        $envPath = SITE_PATH . "config" . DIRECTORY_SEPARATOR . "env" . DIRECTORY_SEPARATOR;
-        Dotenv::createImmutable($envPath, ".env")->safeLoad();
-        Dotenv::createImmutable($envPath, Bee::isDev() ? ".env.dev" : ".env.prod")->safeLoad();
+        foreach(ProjectFolderType::cases() as $folder)
+            if(!is_dir(Bee::buildProjectPath($folder))) throw new BadProjectSkeletonException($folder);
+
+        Dotenv::createImmutable(ProjectFolderType::CONFIG_ENV->value, ".env")->safeLoad();
+        Dotenv::createImmutable(ProjectFolderType::CONFIG_ENV->value, Bee::isDev() ? ".env.dev" : ".env.prod")->safeLoad();
 
         return new Server();
     }
@@ -85,9 +92,10 @@ final class Server {
      * @param Router $apiRouter The API Router to use.
      * @param Router $cdnRouter The CDN Router to use.
      */
-    public function configure(Config $config, Template $template, Router $viewRouter, Router $apiRouter, Router $cdnRouter): void {
+    public function configure(Config $config, Template $template, Router $viewRouter, Router $apiRouter, Router $cdnRouter): Server {
         $this->kernel = new Kernel($config, $template, $viewRouter, $apiRouter, $cdnRouter);
         $this->ready = true;
+        return $this;
     }
 
     /**
@@ -96,8 +104,9 @@ final class Server {
      * @param callable $filter func(Request $request): bool - return true to continue processing, false to deny access.
      * Supports FilterDeniedException to handle custom responses.
      */
-    public function addFilter(callable $filter): void {
+    public function addFilter(callable $filter): Server {
         $this->filters[] = $filter;
+        return $this;
     }
 
     #/ INIT

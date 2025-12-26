@@ -121,15 +121,6 @@ final class Template {
         return $this;
     }
 
-    public function sanitize(): Template {
-        $this->favicon = Bee::normalizePath($this->favicon);
-        $this->styles = array_map(fn($style) => Bee::normalizePath($style), $this->styles);
-        $this->scripts = array_map(fn($script) => Bee::normalizePath($script), $this->scripts);
-        $this->beforeFragments = array_map(fn($fragment) => Bee::normalizePath($fragment), $this->beforeFragments);
-        $this->afterFragments = array_map(fn($fragment) => Bee::normalizePath($fragment), $this->afterFragments);
-        return $this;
-    }
-
     /**
      * Returns the HTML title element containing the title of the page.
      *
@@ -147,7 +138,7 @@ final class Template {
      * @return string The HTML link element containing the favicon of the page.
      */
     public function getHtmlFavicon(): string {
-        return "<link rel=\"icon\" href=\"/public/assets/img/{$this->favicon}\" type=\"image/png\">";
+        return "<link rel=\"icon\" href=\"/public/assets/img/" . Bee::normalizePath($this->favicon) . "\" type=\"image/png\">";
     }
 
     /**
@@ -160,7 +151,7 @@ final class Template {
     public function getHtmlStyles(): string { 
         $html = "";
         foreach ($this->styles as $style) {
-            $html .= "<link rel=\"stylesheet\" href=\"/public/assets/css/$style?v=".$this->getVersion()."\">";
+            $html .= "<link rel=\"stylesheet\" href=\"/public/assets/css/" . Bee::normalizePath($style) . "?v=".$this->getVersion()."\">";
         }
 
         return $html;
@@ -176,7 +167,7 @@ final class Template {
     public function getHtmlScripts(): string { 
         $html = "";
         foreach ($this->scripts as $script) {
-            $html .= "<script src=\"/public/assets/js/$script?v=".$this->getVersion()."\" type=\"text/javascript\"></script>";
+            $html .= "<script src=\"/public/assets/js/" . Bee::normalizePath($script) . "?v=".$this->getVersion()."\" type=\"text/javascript\"></script>";
         }
 
         return $html;

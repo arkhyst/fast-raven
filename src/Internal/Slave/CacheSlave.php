@@ -6,6 +6,7 @@ use FastRaven\Workers\CacheWorker;
 use FastRaven\Workers\Bee;
 
 use FastRaven\Types\CacheType;
+use FastRaven\Types\ProjectFolderType;
 
 final class CacheSlave {
     #----------------------------------------------------------------------
@@ -176,7 +177,7 @@ final class CacheSlave {
      * @return mixed File handle or false on failure.
      */
     private function shmopLock(string $key): mixed {
-        $lockFile = SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . md5($key) . ".lock";
+        $lockFile = Bee::buildProjectPath(ProjectFolderType::STORAGE_CACHE, md5($key) . ".lock");
         $fp = @fopen($lockFile, "c");
         
         if($fp) {
@@ -393,7 +394,7 @@ final class CacheSlave {
      * @return string The file path.
      */
     private function getFilePath(string $key): string {
-        return SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . Bee::normalizePath($key) . ".cache";
+        return Bee::buildProjectPath(ProjectFolderType::STORAGE_CACHE, $key.".cache");
     }
 
     /**
@@ -490,7 +491,7 @@ final class CacheSlave {
      * @return bool True if all files were successfully removed, false otherwise.
      */
     public function fileEmpty(): bool {
-        $files = glob(SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "*.cache", GLOB_NOSORT);
+        $files = glob(Bee::buildProjectPath(ProjectFolderType::STORAGE_CACHE) . "*.cache", GLOB_NOSORT);
         if ($files !== false && !empty($files)) {
             foreach ($files as $file) {
                 if (!@unlink($file)) return false;
@@ -509,7 +510,7 @@ final class CacheSlave {
     public function runGarbageCollector(int $power): void {
         if ($this->type !== CacheType::FILE || $power <= 0) return;
         
-        $files = glob(SITE_PATH . "storage" . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "*.cache", GLOB_NOSORT);
+        $files = glob(Bee::buildProjectPath(ProjectFolderType::STORAGE_CACHE) . "*.cache", GLOB_NOSORT);
         if ($files !== false && !empty($files)) {
             $total = count($files);
 

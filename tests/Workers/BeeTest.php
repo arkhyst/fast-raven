@@ -402,4 +402,59 @@ class BeeTest extends TestCase
         $this->assertTrue(in_array($result, ['text/x-php', 'text/plain']), "Expected text/x-php or text/plain, got: $result");
         unlink($tmpFile);
     }
+
+    // =====================================================================
+    // buildProjectPath() tests
+    // =====================================================================
+
+    protected function setUpSitePath(): void
+    {
+        if (!defined('SITE_PATH')) {
+            define('SITE_PATH', DIRECTORY_SEPARATOR . 'test' . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR);
+        }
+    }
+
+    public function testBuildProjectPathReturnsCorrectPath(): void
+    {
+        $this->setUpSitePath();
+
+        $result = Bee::buildProjectPath(\FastRaven\Types\ProjectFolderType::CONFIG, 'config.php');
+
+        $this->assertStringContainsString('config', $result);
+        $this->assertStringEndsWith('config.php', $result);
+    }
+
+    public function testBuildProjectPathWithEmptyFile(): void
+    {
+        $this->setUpSitePath();
+
+        $result = Bee::buildProjectPath(\FastRaven\Types\ProjectFolderType::STORAGE_CACHE);
+
+        $this->assertStringContainsString('storage', $result);
+        $this->assertStringContainsString('cache', $result);
+    }
+
+    public function testBuildProjectPathNormalizesFilePath(): void
+    {
+        $this->setUpSitePath();
+
+        $result = Bee::buildProjectPath(\FastRaven\Types\ProjectFolderType::SRC_API, '../../../etc/passwd');
+
+        // Path traversal (..) should be stripped, but the remaining path stays
+        // Result: /test/site/src/api/etc/passwd (not /etc/passwd)
+        $this->assertStringNotContainsString('..', $result);
+        $this->assertStringContainsString('src', $result);  // Still within project
+        $this->assertStringStartsWith(SITE_PATH, $result);  // Confined to SITE_PATH
+    }
+
+    public function testBuildProjectPathHandlesNullBytes(): void
+    {
+        $this->setUpSitePath();
+
+        $result = Bee::buildProjectPath(\FastRaven\Types\ProjectFolderType::SRC_API, "test\0.php");
+
+        // Null bytes should be stripped
+        $this->assertStringNotContainsString("\0", $result);
+    }
 }
+

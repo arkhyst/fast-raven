@@ -27,6 +27,8 @@
 - Auto-trailing slashes for request and endpoint paths.
 - Request::getType() for getting request type.
 - Router::add(...) for adding endpoints and subrouters.
+- Bee::buildProjectPath() for building dynamic and true sanitized paths inside a site project.
+- ProjectFolderType enum for specifying project folder types.
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).
@@ -42,6 +44,7 @@
 - Collection now stores values internally with key-based O(1) lookup.
 - AuthSlave now calls session_start() only when needed, improving performance.
 - DataSlave now supports persistent PDO connections for better performance.
+- Types now live inside a new namespace. \FastRaven\Types
 
 #### Fixed
 - Logs are not being stored inside storage directory.

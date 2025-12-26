@@ -33,6 +33,7 @@ use FastRaven\Exceptions\RateLimitExceededException;
 use FastRaven\Exceptions\UploadedFileNotFoundException;
 
 use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\ProjectFolderType;
 
 final class Kernel {
     #----------------------------------------------------------------------
@@ -91,8 +92,7 @@ final class Kernel {
     private function handleRouting(Router $router): ?Endpoint {
         foreach($router->getSubrouterList() as $ep) {
             if(str_starts_with($this->request->getPath(), $ep->getPath())) {
-                $nestedRouter = require SITE_PATH . "config" . DIRECTORY_SEPARATOR . "router" . DIRECTORY_SEPARATOR . $ep->getFile();
-                
+                $nestedRouter = require Bee::buildProjectPath(ProjectFolderType::CONFIG_ROUTER, $ep->getFile());
                 if($nestedRouter instanceof Router) return $this->handleRouting($nestedRouter);
             }
         }
@@ -210,10 +210,10 @@ final class Kernel {
      * @throws BadImplementationException If the API function does not return a Response object.
      */
     public function process(): Response {
-        [$router, $mid] = match ($this->request->getType()) {
-            MiddlewareType::API => [$this->apiRouter, 'api'],
-            MiddlewareType::CDN => [$this->cdnRouter, 'cdn'],
-            default => [$this->viewRouter, 'web/views/pages'],
+        [$router, $folder] = match ($this->request->getType()) {
+            MiddlewareType::API => [$this->apiRouter, ProjectFolderType::SRC_API],
+            MiddlewareType::CDN => [$this->cdnRouter, ProjectFolderType::SRC_CDN],
+            default => [$this->viewRouter, ProjectFolderType::SRC_WEB_VIEWS_PAGES],
         };
 
         $endpoint = $this->handleRouting($router);
@@ -232,13 +232,13 @@ final class Kernel {
         if($endpoint->getUnauthorizedExclusive())
             if(AuthWorker::isAuthorized($this->request)) throw new AlreadyAuthorizedException();
 
-        $filePath = SITE_PATH . "src" . DIRECTORY_SEPARATOR . $mid . DIRECTORY_SEPARATOR . $endpoint->getFile();
+        $filePath = Bee::buildProjectPath($folder, $endpoint->getFile());
         if(!file_exists($filePath)) throw new EndpointFileNotFoundException($filePath);
         
         if($this->request->getType() === MiddlewareType::VIEW) {
             $response = Response::new(true, 200, "", [
                 "path" => __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php",
-                "template"=> $this->template->merge($endpoint->getTemplate())->setFile($filePath)->sanitize()
+                "template"=> $this->template->merge($endpoint->getTemplate())->setFile($filePath)
             ]);
         } else {
             $fn = require_once $filePath;

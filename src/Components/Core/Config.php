@@ -51,7 +51,6 @@ final class Config {
             };
         }
 
-
     private int $lengthLimitInput = -1;
         public function getLengthLimitInput(): int { return $this->lengthLimitInput; }
     private int $lengthLimitFileUpload = -1;
@@ -107,10 +106,11 @@ final class Config {
      * @param bool $globalAuth      Whether the authorization should be valid across the parent domain and all subdomains.
      *                              (e.g. "example.com" becomes ".example.com", "lin.sub.example.com" becomes ".sub.example.com")
      */
-    public function configureAuthorization(string $sessionName, int $expiryDays, bool $globalAuth = false): void {
+    public function configureAuthorization(string $sessionName, int $expiryDays, bool $globalAuth = false): Config {
         $this->authSessionName = $sessionName;
         $this->authExpiryDays = $expiryDays;
         $this->authGlobal = $globalAuth;
+        return $this;
     }
 
     /**
@@ -120,10 +120,11 @@ final class Config {
      * @param string $unauthorizedPath  The path to redirect unauthorized requests to.
      * @param string $unauthorizedSubdomain The subdomain to redirect unauthorized requests to. Leave empty to use the main domain.
      */
-    public function configureRedirects(string $notFoundPath, string $unauthorizedPath, string $unauthorizedSubdomain = ""): void {
+    public function configureRedirects(string $notFoundPath, string $unauthorizedPath, string $unauthorizedSubdomain = ""): Config {
         $this->defaultNotFoundPathRedirect = $notFoundPath;
         $this->defaultUnauthorizedPathRedirect = $unauthorizedPath;
         $this->defaultUnauthorizedSubdomainRedirect = $unauthorizedSubdomain;
+        return $this;
     }
 
     /**
@@ -132,9 +133,10 @@ final class Config {
      * @param bool $registerLogs   Define whether to register logs or not.
      * @param bool $registerOrigin Define whether to register origin data or not.
      */
-    public function configurePrivacy(bool $registerLogs = true, bool $registerOrigin = true): void {
+    public function configurePrivacy(bool $registerLogs = true, bool $registerOrigin = true): Config {
         $this->privacyRegisterLogs = $registerLogs;
         $this->privacyRegisterOrigin = $registerOrigin;
+        return $this;
     }
 
     /**
@@ -144,10 +146,11 @@ final class Config {
      * @param int $api The maximum number of API requests allowed per minute. Set to -1 to disable rate limiting.
      * @param int $cdn The maximum number of CDN requests allowed per minute. Set to -1 to disable rate limiting.
      */
-    public function configureRateLimits(int $views = -1, int $api = -1, int $cdn = -1): void {
+    public function configureRateLimits(int $views = -1, int $api = -1, int $cdn = -1): Config {
         $this->rateLimitView = $views;
         $this->rateLimitAPI = $api;
         $this->rateLimitCDN = $cdn;
+        return $this;
     }
 
     /**
@@ -156,9 +159,10 @@ final class Config {
      * @param int $inputLengthLimit The maximum length of input data allowed in kilobytes. Set to -1 to disable input length limiting.
      * @param int $fileUploadSizeLimit The maximum size of file uploads allowed in kilobytes. Set to -1 to disable file upload size limiting.
      */
-    public function configureLengthLimits(int $input = -1, int $fileUpload = -1): void {
+    public function configureLengthLimits(int $input = -1, int $fileUpload = -1): Config {
         $this->lengthLimitInput = $input * 1024;
         $this->lengthLimitFileUpload = $fileUpload * 1024;
+        return $this;
     }
 
     /**
@@ -167,9 +171,10 @@ final class Config {
      * @param int $gcProbability The probability of cache garbage collection in percentage. Set to 0 to disable cache garbage collection.
      * @param int $gcPower The power of cache garbage collection (amount of files to check). Set to 50 by default.
      */
-    public function configureCache(int $gcProbability = 0, int $gcPower = 50): void {
+    public function configureCache(int $gcProbability = 0, int $gcPower = 50): Config {
         $this->cacheFileGCProbability = $gcProbability;
         $this->cacheFileGCPower = $gcPower;
+        return $this;
     }
 
     #/ METHODS
