@@ -4,7 +4,7 @@ namespace FastRaven\Workers;
 
 use FastRaven\Internal\Slave\FileSlave;
 
-class FileWorker {
+final class FileWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 

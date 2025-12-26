@@ -8,7 +8,7 @@ use FastRaven\Components\Core\Template;
 
 use FastRaven\Types\MiddlewareType;
 
-class Endpoint {
+final class Endpoint {
     #----------------------------------------------------------------------
     #\ VARIABLES
 

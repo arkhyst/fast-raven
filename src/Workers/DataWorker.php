@@ -6,7 +6,7 @@ use FastRaven\Internal\Slave\DataSlave;
 
 use FastRaven\Components\Data\Collection;
 
-class DataWorker {
+final class DataWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 

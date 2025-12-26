@@ -5,7 +5,7 @@ namespace FastRaven\Workers;
 use FastRaven\Internal\Slave\CacheSlave;
 use FastRaven\Types\CacheType;
 
-class CacheWorker {
+final class CacheWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 

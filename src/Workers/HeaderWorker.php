@@ -4,7 +4,7 @@ namespace FastRaven\Workers;
 
 use FastRaven\Internal\Slave\HeaderSlave;
 
-class HeaderWorker {
+final class HeaderWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 

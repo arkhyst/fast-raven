@@ -5,7 +5,7 @@ namespace FastRaven\Workers;
 use FastRaven\Internal\Slave\AuthSlave;
 use FastRaven\Components\Http\Request;
 
-class AuthWorker {
+final class AuthWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 

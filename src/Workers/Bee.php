@@ -5,7 +5,7 @@ namespace FastRaven\Workers;
 use FastRaven\Types\DataType;
 use FastRaven\Types\ProjectFolderType;
 
-class Bee {
+final class Bee {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
