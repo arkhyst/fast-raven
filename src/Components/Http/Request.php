@@ -47,7 +47,7 @@ final class Request {
         $this->remoteAddress = $remoteAddress;
        
         parse_str(parse_url($uri, PHP_URL_QUERY) ?? "", $this->query);
-        $this->data = json_decode($dataStream, true) ?? [];
+        $this->data = json_decode($dataStream, true) ?? $_POST ?? [];
         $this->files = empty($fileStream) ? [] : array_combine(array_keys($fileStream), array_column($fileStream, "tmp_name"));
         
         $this->method = strtoupper($method);

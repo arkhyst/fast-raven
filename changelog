@@ -29,6 +29,7 @@
 - Router::add(...) for adding endpoints and subrouters.
 - Bee::buildProjectPath() for building dynamic and true sanitized paths inside a site project.
 - ProjectFolderType enum for specifying project folder types.
+- JS Lib.uploadFile() for handling file AJAX requests.
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).
@@ -46,6 +47,7 @@
 - DataSlave now supports persistent PDO connections for better performance.
 - Types now live inside a new namespace. \FastRaven\Types
 - Template:flex now supports fragments.
+- Request now supports file upload via JS Lib.uploadFile().
 
 #### Fixed
 - Logs are not being stored inside storage directory.
