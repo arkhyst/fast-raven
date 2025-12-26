@@ -72,11 +72,11 @@ final class Template {
      *
      * @return Template
      */
-    public static function flex(string $title = "", string $version = "", string $lang = "", string $favicon = "", array $styles = [], array $scripts = [], ?Collection $autofill = null): Template {
-        return new Template($title, $version, $lang, $favicon, $styles, $scripts, $autofill);
+    public static function flex(string $title = "", string $version = "", string $lang = "", string $favicon = "", array $styles = [], array $scripts = [], array $beforeFragments = [], array $afterFragments = [], ?Collection $autofill = null): Template {
+        return new Template($title, $version, $lang, $favicon, $styles, $scripts, $beforeFragments, $afterFragments, $autofill);
     }
 
-    private function  __construct(string $title, string $version, string $lang, string $favicon, array $styles = [], array $scripts = [], ?Collection $autofill = null) {
+    private function  __construct(string $title, string $version, string $lang, string $favicon, array $styles = [], array $scripts = [], array $beforeFragments = [], array $afterFragments = [], ?Collection $autofill = null) {
         $this->title = $title;
         $this->version = $version;
         $this->lang = $lang;

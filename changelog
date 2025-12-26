@@ -45,6 +45,7 @@
 - AuthSlave now calls session_start() only when needed, improving performance.
 - DataSlave now supports persistent PDO connections for better performance.
 - Types now live inside a new namespace. \FastRaven\Types
+- Template:flex now supports fragments.
 
 #### Fixed
 - Logs are not being stored inside storage directory.
