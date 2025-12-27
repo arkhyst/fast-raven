@@ -50,6 +50,7 @@
 - Types now live inside a new namespace. \FastRaven\Types
 - Template:flex now supports fragments.
 - Request now supports file upload via JS Lib.uploadFile().
+- Logs now include status code of the request.
 
 #### Fixed
 - Logs are not being stored inside storage directory.

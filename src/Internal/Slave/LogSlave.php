@@ -92,7 +92,7 @@ final class LogSlave {
      * @param Request $request The request object for which the open log entry should be written.
      */
     public function writeOpenLogs(Request $request): void {
-        LogWorker::log("{$request->getType()->value}[{$request->getMethod()}] > {$request->getPath()} <-> {$request->getRemoteAddress()} < ELAPSED_TIMEms");
+        LogWorker::log("{$request->getType()->value}[{$request->getMethod()}] > {$request->getPath()} < STATUS_CODE > {$request->getRemoteAddress()} < ELAPSED_TIMEms");
     }
 
     /**
@@ -101,9 +101,11 @@ final class LogSlave {
      * The request time will be logged in milliseconds.
      *
      * @param float $elapsedTime The time it took to process the request in milliseconds.
+     * @param int $statusCode The status code of the response.
      */
-    public function writeCloseLogs(float $elapsedTime): void {
+    public function writeCloseLogs(float $elapsedTime, int $statusCode): void {
         $this->stash->replaceLog(0, "ELAPSED_TIME", strval($elapsedTime));
+        $this->stash->replaceLog(0, "STATUS_CODE", strval($statusCode));
     }
 
     /**

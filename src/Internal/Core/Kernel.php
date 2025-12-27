@@ -301,7 +301,7 @@ final class Kernel {
         $elapsedTime = round(($diff - floor($diff)) * 1000);
 
         if($this->logSlave) {
-            $this->logSlave->writeCloseLogs($elapsedTime);
+            $this->logSlave->writeCloseLogs($elapsedTime, $response->getCode());
             $this->logSlave->dumpLogStashIntoFile();
         }
         
