@@ -1,4 +1,4 @@
-### [v0.4] - 2025-12-XX
+### [v0.4] - 2026-01-03
 #### Added
 - Kernel::handleRateLimit() for handling global rate limit configuration and endpoint specific rate limit.
 - HeaderSlave::writeRateLimitHeaders() for writing rate limit headers.
@@ -32,6 +32,9 @@
 - JS Lib.uploadFile() for handling file AJAX requests.
 - File component for handling file uploads.
 - Skeleton: standardization of custom shared classes.
+- Server::addStarter() for adding custom starters filters.
+- Server::addFinisher() for adding custom finishers filters.
+- Skeleton: filters.php to be used as a template for custom filters.
 
 #### Changed
 - DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).
@@ -39,7 +42,6 @@
 - MailSlave::getMailTemplate() now uses realpath() to prevent directory traversal attacks.
 - MailSlave::setMailerAttachments() now uses realpath() to prevent directory traversal attacks.
 - Type enums have been relocated to a new namespace.
-- Skeleton has been updated to account for recent changes.
 - Template component now allows for nested setters.
 - DataType enum now supports 55 data types.
 - Router factory now only specifies middleware type. 
@@ -50,6 +52,8 @@
 - Types now live inside a new namespace. \FastRaven\Types
 - Template:flex now supports fragments.
 - Request now supports file upload via JS Lib.uploadFile().
+- Skeleton has been updated to account for recent changes.
+- Logs now show request status code.
 
 #### Fixed
 - Logs are not being stored inside storage directory.

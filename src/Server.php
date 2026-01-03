@@ -2,7 +2,9 @@
 
 namespace FastRaven;
 
+use FastRaven\Exceptions\BadFilterException;
 use FastRaven\Exceptions\BadProjectSkeletonException;
+use FastRaven\Exceptions\BadImplementationException;
 use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
 use FastRaven\Exceptions\AlreadyAuthorizedException;
@@ -15,6 +17,7 @@ use FastRaven\Internal\Core\Kernel;
 use FastRaven\Components\Core\Config;
 use FastRaven\Components\Core\Template;
 use FastRaven\Components\Routing\Router;
+use FastRaven\Components\Http\Request;
 use FastRaven\Components\Http\Response;
 
 use FastRaven\Workers\LogWorker;
@@ -32,7 +35,8 @@ final class Server {
 
     private Kernel $kernel;
     private bool $ready = false;
-    private array $filters = [];
+    private array $starters = [];
+    private array $finishers = [];
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -99,13 +103,24 @@ final class Server {
     }
 
     /**
-     * Adds a filter callback to be executed before the request is processed.
+     * Adds a starter filter to be executed before the request processing.
      *
-     * @param callable $filter func(Request $request): bool - return true to continue processing, false to deny access.
+     * @param callable $starter func(Request $request): bool - return false to deny request processing.
      * Supports FilterDeniedException to handle custom responses.
      */
-    public function addFilter(callable $filter): Server {
-        $this->filters[] = $filter;
+    public function addStarter(callable $starter): Server {
+        $this->starters[] = $starter;
+        return $this;
+    }
+
+    /**
+     * Adds a finisher filter to be executed after the request processing and before the response is sent.
+     *
+     * @param callable $finisher func(Request $request, Response $response): bool - return false to deny response return.
+     * Supports FilterDeniedException to handle custom responses.
+     */
+    public function addFinisher(callable $finisher): Server {
+        $this->finishers[] = $finisher;
         return $this;
     }
 
@@ -141,13 +156,43 @@ final class Server {
     }
 
     /**
-     * Processes the filters.
+     * Validates the filter callable signature.
      *
-     * @throws FilterDeniedException If a filter denies access to a resource.
+     * @throws BadImplementationException If the callable has invalid parameters.
      */
-    private function processFilters(): void {
-        foreach($this->filters as $filter) {
-            if ($filter($this->kernel->getRequest()) !== true) throw new FilterDeniedException();
+    private function validateFilter(callable $filter, array $params = []): void {
+        $reflection = new \ReflectionFunction($filter instanceof \Closure ? $filter : $filter(...));
+        $callbackParams = array_map(fn($p) => $p->getType(), $reflection->getParameters());
+
+        for($i = 0; $i < count($callbackParams); $i++) {
+            $type = $callbackParams[$i];
+            $expected = $params[$i] ?? "none";
+            
+            if ($type !== null && $type->getName() !== $expected) throw new BadFilterException("{$i}: Should be {$expected}");
+        }
+    }
+
+    /**
+     * Processes the starters.
+     *
+     * @throws FilterDeniedException If a starter filter denies access to a resource.
+     */
+    private function processStarters(): void {
+        foreach($this->starters as $starter) {
+            $this->validateFilter($starter, [Request::class]);
+            if ($starter($this->kernel->getRequest()) === false) throw new FilterDeniedException();
+        }
+    }
+
+    /**
+     * Processes the finishers.
+     *
+     * @throws FilterDeniedException If a finisher filter denies access to a resource.
+     */
+    private function processFinishers(Response $response): void {
+        foreach($this->finishers as $finisher) {
+            $this->validateFilter($finisher, [Request::class, Response::class]);
+            if ($finisher($this->kernel->getRequest(), $response) === false) throw new FilterDeniedException();
         }
     }
 
@@ -169,17 +214,17 @@ final class Server {
         if ($this->ready) {
             $response = null;
             try {
-                $this->kernel->open();
-                $this->processFilters();
-                $response = $this->kernel->process();
+                $this->kernel->open(); // Workers/Slaves initialization
+                $this->processStarters(); // Starter callbacks execution
+                $response = $this->kernel->process(); // Request processing
+                $this->processFinishers($response); // Finisher callbacks execution
             } catch(SmartException $e) {
-                $response = $this->handleException($e);
+                $response = $this->handleException($e); // Exception handling
             }
-            $this->kernel->close($response);
+            $this->kernel->close($response); // Response processing and sending
         } else {
             http_response_code(500);
         }
-        
         exit(0);
     }
 
