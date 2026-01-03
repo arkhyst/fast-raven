@@ -5,7 +5,7 @@ namespace FastRaven\Workers;
 use FastRaven\Components\Core\Mail;
 use FastRaven\Internal\Slave\MailSlave;
 
-class MailWorker {
+final class MailWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 

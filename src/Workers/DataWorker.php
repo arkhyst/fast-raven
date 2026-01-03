@@ -6,7 +6,7 @@ use FastRaven\Internal\Slave\DataSlave;
 
 use FastRaven\Components\Data\Collection;
 
-class DataWorker {
+final class DataWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
@@ -44,7 +44,7 @@ class DataWorker {
      * Retrieves one row from the database that matches the given id.
      *
      * @param string $table The table to retrieve data from.
-     * @param array $cols The columns to retrieve data from.
+     * @param string[] $cols The columns to retrieve data from.
      * @param int $id The id of the row to retrieve.
      *
      * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
@@ -63,7 +63,7 @@ class DataWorker {
      * Retrieves one row from the database that matches the given conditions.
      *
      * @param string $table The table to retrieve data from.
-     * @param array $cols The columns to retrieve data from.
+     * @param string[] $cols The columns to retrieve data from.
      * @param Collection $conditionCollection The conditions to filter the data with.
      *
      * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
@@ -82,7 +82,7 @@ class DataWorker {
      * Retrieves all rows from the database that match the given conditions.
      *
      * @param string $table The table to retrieve data from.
-     * @param array $cols The columns to retrieve data from.
+     * @param string[] $cols The columns to retrieve data from.
      * @param Collection $conditionCollection The conditions to filter the data with.
      * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
      * @param int $limit [optional] The maximum number of rows to retrieve.
@@ -104,7 +104,7 @@ class DataWorker {
      * Retrieves all rows from the database without any conditions.
      *
      * @param string $table The table to retrieve data from.
-     * @param array $cols The columns to retrieve data from.
+     * @param string[] $cols The columns to retrieve data from.
      * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
      * @param int $limit [optional] The maximum number of rows to retrieve.
      * @param int $offset [optional] The number of rows to skip.
@@ -144,7 +144,7 @@ class DataWorker {
      * Inserts multiple rows into the database in a single transaction.
      *
      * @param string $table The table to insert into.
-     * @param array $columnCollectionList List of Collections to insert data into and their values.
+     * @param Collection[] $columnCollectionList List of Collections to insert data into and their values.
      *
      * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 

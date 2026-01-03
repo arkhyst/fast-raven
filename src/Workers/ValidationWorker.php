@@ -5,7 +5,7 @@ namespace FastRaven\Workers;
 use FastRaven\Components\Data\ValidationFlags;
 use FastRaven\Internal\Slave\ValidationSlave;
 
-class ValidationWorker {
+final class ValidationWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 

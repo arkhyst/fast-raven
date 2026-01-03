@@ -105,12 +105,8 @@ final class ValidationFlags extends Collection {
      * @return Item The Item with the given key, or a new Item with the given key and value 0 if not found.
      */
     public function get(string $key): Item {
-        foreach($this->data as $item) {
-            if($item->getKey() === $key) {
-                return $item;
-            }
-        }
-        return Item::new($key, 0);
+        $item = parent::get($key);
+        return $item ?? Item::new($key, 0);
     }
 
     #/ METHODS

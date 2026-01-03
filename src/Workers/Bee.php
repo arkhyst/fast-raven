@@ -2,7 +2,10 @@
 
 namespace FastRaven\Workers;
 
-class Bee {
+use FastRaven\Types\DataType;
+use FastRaven\Types\ProjectFolderType;
+
+final class Bee {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
@@ -54,22 +57,16 @@ class Bee {
      * @param string $path the path to normalize
      * @return string the normalized path (e.g., "path/to/endpoint")
      */
-    public static function normalizePath(string $path): string
-    {
-        $newPath = str_replace("\0", "", $path);
-        $newPath = ltrim($newPath, "/\\");
-        $newPath = str_replace("\\", "/", $newPath);
-        $newPath = preg_replace("#[\\\\/]+#", "/", $newPath);
-        $newPath = rtrim($newPath, "/\\");
-        $segments = explode("/", $newPath);
-        $normalized = [];
+    public static function normalizePath(string $path): string {
+        if(!$path) return "";
 
-        foreach ($segments as $segment) {
-            if ($segment === "" || $segment === "." || $segment === "..") continue;
-            $normalized[] = $segment;
-        }
-
-        return implode("/", $normalized);
+        $path = str_replace("\0", "", $path);
+        $path = preg_replace("#[\\\\/]+#", "/", $path);
+        $segments = array_filter(
+            explode("/", $path),
+            fn($s) => $s !== "" && $s !== "." && $s !== ".."
+        );
+        return implode("/", $segments);
     }
 
     /**
@@ -82,14 +79,13 @@ class Bee {
     public static function getBaseDomain(): string {
         $host = Bee::env("SITE_ADDRESS", "localhost");
         $parts = explode(".", $host);
-        $count = count($parts);
 
-        if ($count >= 3) {
+        if (count($parts) >= 3) {
             $domain = array_slice($parts, -2); # UK... Why, common wealth, WHY???
             return implode(".", $domain);
+        } else {
+            return $host;
         }
-
-        return $host;
     }
 
     /**
@@ -116,6 +112,36 @@ class Bee {
      */
     public static function hashPassword(string $password): string {
         return password_hash($password, PASSWORD_ARGON2ID, ['memory_cost' => 1 << 16, 'time_cost' => 4, 'threads' => 2]);
+    }
+    
+    /**
+     * Returns the MIME type of a file.
+     * 
+     * @param string $file the path to the file
+     * @param bool $returnType whether to return the MIME type as a DataType enum value
+     * 
+     * @return string|DataType the MIME type of the file. If the file does not exist or cannot be read, returns "application/octet-stream".
+     */
+    public static function getFileMimeType(string $file, bool $returnType = false): string|DataType {
+        if (!is_file($file)) {
+            return "application/octet-stream";
+        }
+
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($file);
+
+        if($mimeType === false) return $returnType ? DataType::BINARY : "application/octet-stream";
+
+        if ($returnType) {
+            try { return DataType::from($mimeType); }
+            catch (\ValueError $e) { return DataType::BINARY; }
+        }
+        
+        return $mimeType;
+    }
+
+    public static function buildProjectPath(ProjectFolderType $folderType, string $file = ""): string {
+        return SITE_PATH . $folderType->value . Bee::normalizePath($file);
     }
 
     #/ METHODS

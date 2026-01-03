@@ -93,7 +93,6 @@ final class AuthSlave {
         }
 
         session_set_cookie_params($options);
-        session_start();
     }
 
     /**
@@ -153,7 +152,20 @@ final class AuthSlave {
     }
 
     /**
-     * Attempts to login a user via their username and password.
+     * Regenerates the CSRF token for the authorized user.
+     *
+     * This function will regenerate the CSRF token for the authorized user if an authorized session exists.
+     *
+     * @return string The new CSRF token.
+     */
+    public function regenerateCSRF(): string {
+        $csrf = bin2hex(random_bytes(32));
+        $_SESSION["sgas_csrf"] = $csrf;
+        return $csrf;
+    }
+
+    /**
+     * Checks if a user's credentials are valid.
      *
      * This function will query the given database table for a user with the given username.
      * If a user is found, it will then verify the given password against the password stored in the database.
@@ -166,14 +178,17 @@ final class AuthSlave {
      * @param string $dbNameCol The name of the column in the database table that contains the user's name.
      * @param string $dbPassCol The name of the column in the database table that contains the user's password.
      *
-     * @return ?int The user's ID if the login is successful, null otherwise.
+     * @return ?int The user's ID if the credentials are valid, null otherwise.
      */
-    public function loginAttempt(string $user, string $pass, string $dbTable, string $dbIdCol, string $dbNameCol, string $dbPassCol): ?int {
+    public function checkCredentials(string $user, string $pass, string $dbTable, string $dbIdCol, string $dbNameCol, string $dbPassCol): ?int {
         $data = DataWorker::getOneWhere($dbTable, [$dbIdCol, $dbNameCol, $dbPassCol], Collection::new([
             Item::new($dbNameCol, $user)
         ]));
 
-        if($data && password_verify($pass, $data[$dbPassCol])) {
+        $hash = $data[$dbPassCol] ?? '$argon2id$v=19$m=65536,t=4,p=2$ZmliL05XbHdMclJtSVgydw$blAJZoufwbnQMbZeiG7LVX7TuIRv3myA9cpQqq1P+a0';
+        $valid = password_verify($pass, $hash);
+
+        if ($data && $valid) {
             return (int)$data[$dbIdCol];
         }
 

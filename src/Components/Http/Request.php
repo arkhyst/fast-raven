@@ -2,22 +2,32 @@
 
 namespace FastRaven\Components\Http;
 
+use FastRaven\Components\Core\File;
+
+use FastRaven\Workers\Bee;
+
+use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\SanitizeType;
+
 final class Request {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
+    private MiddlewareType $type;
+        public function getType(): MiddlewareType { return $this->type; }
     private string $internalID;
         public function getInternalID(): string { return $this->internalID; }
-    private array $data;
-        public function getDataItem(string $key): string|int|float|bool|null { return $this->data[$key] ?? null; }
+    private array $query = [];
+    private array $data = [];
+    private array $files = [];
     private string $method;
         public function getMethod(): string { return $this->method; }
     private string $path;
         public function getPath(): string { return $this->path; }
     private string $complexPath;
         public function getComplexPath(): string { return $this->complexPath; }
-    private array $originInfo = [];
-        public function getOriginInfo(): array { return $this->originInfo; }
+    private string $remoteAddress;
+        public function getRemoteAddress(): string { return $this->remoteAddress; }
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -31,18 +41,30 @@ final class Request {
      * @param string $uri              The original URI of the request.
      * @param string $method           The HTTP method of the request (e.g. GET, POST, PUT, DELETE).
      * @param string $dataStream       The data stream of the request.
+     * @param array $fileStream        The file stream of the request.
      * @param string $remoteAddress    The remote address of the request.
      */
-    public function __construct(string $uri, string $method, string $dataStream, string $remoteAddress) {
+    public function __construct(string $uri, string $method, string $dataStream, array $fileStream, string $remoteAddress) {
         $this->internalID = bin2hex(random_bytes(4));
-        $this->data = json_decode($dataStream, true) ?? [];
-        $this->data = $this->sanitizeData($this->data);
+        $this->remoteAddress = $remoteAddress;
+       
+        parse_str(parse_url($uri, PHP_URL_QUERY) ?? "", $this->query);
+        $this->data = json_decode($dataStream, true) ?? $_POST ?? [];
+        $this->files = [];
+        foreach ($fileStream as $name => $data) {
+            if (isset($data["tmp_name"]) && $data["tmp_name"]) {
+                $this->files[$name] = File::new($data["name"], $data["tmp_name"]);
+            }
+        }
         
         $this->method = strtoupper($method);
+        $this->path = "/".Bee::normalizePath(parse_url($uri, PHP_URL_PATH) ?? "");
+        if($this->path !== "/") $this->path .= "/";
+        $this->complexPath = $this->path."#".$this->method;
 
-        $this->path = parse_url($uri ?? "/", PHP_URL_PATH) ?? "/";
-        $this->complexPath = (($this->path !== "/") ? rtrim($this->path, "/"): "/") . "#" . $this->method;
-        $this->originInfo["IP"] = $remoteAddress;
+        $this->type = MiddlewareType::VIEW;
+        if(str_starts_with($this->path, "/api/")) $this->type = MiddlewareType::API;
+        elseif(str_starts_with($this->path, "/cdn/")) $this->type = MiddlewareType::CDN;
     }
 
     #/ INIT
@@ -51,26 +73,34 @@ final class Request {
     #----------------------------------------------------------------------
     #\ PRIVATE FUNCTIONS
 
+    
     /**
-     * Recursively sanitizes an array of data.
-     *
-     * This method cleans string values within the array by trimming whitespace,
-     * stripping HTML tags, and converting special characters to HTML entities.
-     *
-     * @param array $data The data array to sanitize.
-     *
-     * @return array The sanitized data array.
+     * Sanitizes a value from an array based on the specified sanitization level.
+     * 
+     * @param array $array The array to sanitize.
+     * @param string $key The key to sanitize.
+     * @param SanitizeType $sanitizeType The sanitization level to apply (default: RAW).
+     * 
+     * @return mixed The sanitized value, or null if the key does not exist.
      */
-    private function sanitizeData(array $data): array {
-        foreach ($data as $key => $item) {
-            if(is_string($item)) {
-                $data[$key] = trim(strip_tags($item));
-            } elseif(is_array($item)) {
-                $data[$key] = $this->sanitizeData($item);
-            } 
-        }
+    private function sanitizeDataItem(array $array, string $key, SanitizeType $sanitizeType = SanitizeType::RAW): mixed {
+        $value = $array[$key] ?? null;
+        
+        if($value === null) return null;
+        if(!is_string($value)) return $value;
 
-        return $data;
+        if($sanitizeType === SanitizeType::RAW) return $value;
+        
+        $value = preg_replace('/\x00|%00/i', "", $value);
+        $value = preg_replace('/<\?(?:php|=)?[\s\S]*?\?>|<\?(?:php|=)?[\s\S]*/i', "", $value);
+        if($sanitizeType === SanitizeType::SAFE) return $value;
+        
+        if($sanitizeType === SanitizeType::ENCODED) return htmlspecialchars($value, ENT_QUOTES, "UTF-8");
+        
+        $value = trim(strip_tags($value));
+        if($sanitizeType === SanitizeType::SANITIZED) return $value;
+        
+        return preg_replace('/[^a-zA-Z0-9\s]/', "", $value);
     }
 
     #/ PRIVATE FUNCTIONS
@@ -80,18 +110,48 @@ final class Request {
     #\ METHODS
 
     /**
-     * Checks if the request is an API request.
+     * Retrieves a value from the URI query string with optional sanitization.
+     * 
+     * Sanitization is cumulative. Each level includes all transformations from previous levels:
+     * 
+     * Note: ENCODED and SANITIZED both extend SAFE but are mutually exclusive branches.
      *
-     * This method checks if the request's complex path starts with "/api/".
-     *
-     * @return bool True if the request is an API request, false otherwise.
+     * @param string $key The key to retrieve from the URI query string.
+     * @param SanitizeType $sanitizeType The sanitization level to apply (default: RAW).
+     * 
+     * @return mixed The sanitized value, or null if the key does not exist.
      */
-    public function isApi(): bool {
-        return str_starts_with($this->complexPath,"/api/");
+    public function get(string $key, SanitizeType $sanitizeType = SanitizeType::RAW): mixed {
+        return $this->sanitizeDataItem($this->query, $key, $sanitizeType);
+    }
+
+    /**
+     * Retrieves a value from the request data with optional sanitization.
+     * 
+     * Sanitization is cumulative. Each level includes all transformations from previous levels:
+     * 
+     * Note: ENCODED and SANITIZED both extend SAFE but are mutually exclusive branches.
+     *
+     * @param string $key The key to retrieve from request data.
+     * @param SanitizeType $sanitizeType The sanitization level to apply (default: RAW).
+     * 
+     * @return mixed The sanitized value, or null if the key does not exist.
+     */
+    public function post(string $key, SanitizeType $sanitizeType = SanitizeType::RAW): mixed {
+        return $this->sanitizeDataItem($this->data, $key, $sanitizeType);
+    }
+
+    /**
+     * Retrieves an uploaded file's temporary path by field name.
+     *
+     * @param string $name The field name from the form/FormData.
+     * 
+     * @return ?File The temporary file path, or null if not found.
+     */
+    public function file(string $name): ?File {
+        return $this->files[$name] ?? null;
     }
 
     #/ METHODS
     #----------------------------------------------------------------------  
 }
-
-?>

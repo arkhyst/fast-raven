@@ -2,18 +2,19 @@
 
 namespace FastRaven\Components\Routing;
 
-use FastRaven\Components\Data\Collection;
+use FastRaven\Types\MiddlewareType;
 
 final class Router {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private bool $endpointsLoaded = false;
-        public function isEndpointsLoaded(): bool { return $this->endpointsLoaded; }
+    private MiddlewareType $type;
+        public function getType(): MiddlewareType { return $this->type; }
+    
+    private array $subrouterList = [];
+        public function getSubrouterList(): array { return $this->subrouterList; }
     private array $endpointList = [];
         public function getEndpointList(): array { return $this->endpointList; }
-    private Collection $fileCollection;
-        public function getFileCollection(): Collection { return $this->fileCollection; }
     
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -22,40 +23,16 @@ final class Router {
     #\ INIT
 
     /**
-     * Returns a new Router instance with the given Collection of endpoints files.
+     * Returns a new Router instance.
      *
-     * The Collection should have the following format:
-     *
-     * Collection::new([
-     *     Item::new("/v1", "v1/main.php"),
-     *     ...
-     * ])
-     *
-     * @param Collection $fileCollection The Collection of file endpoints files relative to /config/router/ directory.
-     * 
-     * @return Router The new Router instance.
+     * @return Router The Router instance.
      */
-    public static function files(Collection $fileCollection): Router {
-        return new Router([], $fileCollection);
+    public static function new(MiddlewareType $type): Router {
+        return new Router($type);
     }
 
-    /**
-     * Returns a new Router instance with the given list of endpoints.
-     *
-     * The list of endpoints should contain Endpoint instances.
-     *
-     * @param array $endpointList The list of Endpoint instances.
-     * 
-     * @return Router The new Router instance.
-     */
-    public static function endpoints(array $endpointList): Router {
-        return new Router($endpointList);
-    }
-
-    private function __construct(array $endpointList = [], ?Collection $fileCollection = null) {
-        $this->endpointsLoaded = !empty($endpointList);
-        $this->endpointList = $endpointList;
-        $this->fileCollection = $fileCollection ?? Collection::new();
+    public function __construct(MiddlewareType $type) {
+        $this->type = $type;
     }
 
     #/ INIT
@@ -72,7 +49,12 @@ final class Router {
     #----------------------------------------------------------------------
     #\ METHODS
 
+    public function add(Endpoint $endpoint): Router {
+        if($endpoint->getType() !== MiddlewareType::ROUTER) $this->endpointList[$endpoint->getComplexPath()] = $endpoint;
+        else $this->subrouterList[] = $endpoint;
 
+        return $this;
+    }
 
     #/ METHODS
     #----------------------------------------------------------------------

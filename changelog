@@ -1,3 +1,83 @@
+### [v0.4] - 2026-01-03
+#### Added
+- Kernel::handleRateLimit() for handling global rate limit configuration and endpoint specific rate limit.
+- HeaderSlave::writeRateLimitHeaders() for writing rate limit headers.
+- Request::get() for getting sanitized or raw query data.
+- Request::post() for getting sanitized or raw request data.
+- SanitizeType enum for defining data sanitization levels.
+- Request::getRemoteAddress() for getting remote address (unless is defined as hidden).
+- AuthWorker::regenerateCSRF() for regenerating CSRF token.
+- DataSlave optional SSL/TLS support via DB_SSL and DB_SSL_CA environment variables.
+- FileWorker and FileSlave for managing file uploads.
+- CacheWorker and CacheSlave for managing cache.
+- Support for APCU, SHMOP and File cache.
+- Config::configureCache(...) for defining file cache configuration.
+- Cache garbage collector via CacheSlave::runGarbageCollector().
+- Request::file() for getting uploaded files tmp path.
+- Bee::getFileMimeType() for getting accurate file mime type.
+- CDN Router for handling CDN routes.
+- MiddlewareType enum for defining middleware types. (VIEWS, API, CDN or ROUTER)
+- Response::file(...) for handling CDN endpoint responses.
+- Config::configureRedirects(...) for defining path redirects.
+- Config::configureRateLimit(...) for defining global rate limit configuration.
+- Config::configureLengthLimit(...) for defining maximum input length and file upload size allowed.
+- Config::getRateLimit() for getting global rate limit configuration depending of middleware.
+- Endpoint::cdn() for handling CDN endpoints.
+- Endpoint::router() for nesting router files inside the main router.
+- Auto-trailing slashes for request and endpoint paths.
+- Request::getType() for getting request type.
+- Router::add(...) for adding endpoints and subrouters.
+- Bee::buildProjectPath() for building dynamic and true sanitized paths inside a site project.
+- ProjectFolderType enum for specifying project folder types.
+- JS Lib.uploadFile() for handling file AJAX requests.
+- File component for handling file uploads.
+- Skeleton: standardization of custom shared classes.
+- Server::addStarter() for adding custom starters filters.
+- Server::addFinisher() for adding custom finishers filters.
+- Skeleton: filters.php to be used as a template for custom filters.
+
+#### Changed
+- DataSlave now uses regex filtering for injected strings (table, cols, conditions and orderBy).
+- Request now sanitizes data in different levels of severity.
+- MailSlave::getMailTemplate() now uses realpath() to prevent directory traversal attacks.
+- MailSlave::setMailerAttachments() now uses realpath() to prevent directory traversal attacks.
+- Type enums have been relocated to a new namespace.
+- Template component now allows for nested setters.
+- DataType enum now supports 55 data types.
+- Router factory now only specifies middleware type. 
+- Router now uses O(1) hash map lookup for endpoint matching.
+- Collection now stores values internally with key-based O(1) lookup.
+- AuthSlave now calls session_start() only when needed, improving performance.
+- DataSlave now supports persistent PDO connections for better performance.
+- Types now live inside a new namespace. \FastRaven\Types
+- Template:flex now supports fragments.
+- Request now supports file upload via JS Lib.uploadFile().
+- Skeleton has been updated to account for recent changes.
+- Logs now show request status code.
+
+#### Fixed
+- Logs are not being stored inside storage directory.
+- AuthWorker::autologin() produces a timing attack vulnerability.
+- ValidationWorker::phone() returns false for a valid 9-digit phone number.
+- Mail component has not initialized variables.
+- CDN exceptions are not being handled correctly.
+- Headers are not being sent on unauthorized site access.
+- Shared Memory .lock files are not being deleted.
+- CSRF_TOKEN is not being injected into the main.php template.
+- CSRF_TOKEN is not being sent through FormData requests.
+
+#### Removed
+- sitePath parameter from Server::getConfiguration(), Server::getTemplate(), Server::getViewRouter(), Server::getApiRouter() 
+- getDataItem() method from Request component is getting deprecated.
+- getOriginInfo() method from Request component.
+- Permissions-Policy meta tag from main.php template.
+- initializeServer() method from Server class.
+- preload(...) method from Server class.
+- isApi() method from Request component.
+- configureSecurity(...) method from Config class.
+
+---
+
 ### [v0.3] - 2025-12-17
 #### Added
 - Config::configurePrivacy(...) for defining whether to register logs or restrict what data to register.

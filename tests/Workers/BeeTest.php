@@ -253,4 +253,208 @@ class BeeTest extends TestCase
         $this->assertNotEmpty($hash);
         $this->assertTrue(password_verify($password, $hash));
     }
+
+    // =====================================================================
+    // getFileMimeType() tests
+    // =====================================================================
+
+    public function testGetFileMimeTypeReturnsOctetStreamForNonExistentFile(): void
+    {
+        $result = Bee::getFileMimeType('/nonexistent/file.txt');
+
+        $this->assertEquals('application/octet-stream', $result);
+    }
+
+    public function testGetFileMimeTypeReturnsCorrectMimeForTextFile(): void
+    {
+        $tmpFile = sys_get_temp_dir() . '/test_' . uniqid() . '.txt';
+        file_put_contents($tmpFile, 'Hello, World!');
+
+        $result = Bee::getFileMimeType($tmpFile);
+
+        $this->assertEquals('text/plain', $result);
+        unlink($tmpFile);
+    }
+
+    public function testGetFileMimeTypeReturnsCorrectMimeForJsonFile(): void
+    {
+        $tmpFile = sys_get_temp_dir() . '/test_' . uniqid() . '.json';
+        file_put_contents($tmpFile, '{"key": "value"}');
+
+        $result = Bee::getFileMimeType($tmpFile);
+
+        // JSON is detected as text/plain or application/json depending on finfo version
+        $this->assertTrue(in_array($result, ['text/plain', 'application/json']), "Expected text/plain or application/json, got: $result");
+        unlink($tmpFile);
+    }
+
+    public function testGetFileMimeTypeReturnsCorrectMimeForPngFile(): void
+    {
+        $tmpFile = sys_get_temp_dir() . '/test_' . uniqid() . '.png';
+        // Minimal valid PNG: signature + IHDR chunk + IEND chunk
+        $png = hex2bin('89504E470D0A1A0A')  // PNG signature
+             . hex2bin('0000000D')           // IHDR length
+             . 'IHDR'
+             . hex2bin('00000001')           // width: 1
+             . hex2bin('00000001')           // height: 1
+             . hex2bin('08')                 // bit depth: 8
+             . hex2bin('02')                 // color type: RGB
+             . hex2bin('000000')             // compression, filter, interlace
+             . hex2bin('907753DE')           // CRC
+             . hex2bin('00000000')           // IEND length
+             . 'IEND'
+             . hex2bin('AE426082');          // IEND CRC
+        file_put_contents($tmpFile, $png);
+
+        $result = Bee::getFileMimeType($tmpFile);
+
+        $this->assertEquals('image/png', $result);
+        unlink($tmpFile);
+    }
+
+    public function testGetFileMimeTypeReturnsCorrectMimeForJpegFile(): void
+    {
+        $tmpFile = sys_get_temp_dir() . '/test_' . uniqid() . '.jpg';
+        // JPEG magic bytes: FF D8 FF
+        file_put_contents($tmpFile, hex2bin('FFD8FFE0') . str_repeat("\0", 100));
+
+        $result = Bee::getFileMimeType($tmpFile);
+
+        $this->assertEquals('image/jpeg', $result);
+        unlink($tmpFile);
+    }
+
+    public function testGetFileMimeTypeReturnsCorrectMimeForPdfFile(): void
+    {
+        $tmpFile = sys_get_temp_dir() . '/test_' . uniqid() . '.pdf';
+        // PDF magic bytes: %PDF
+        file_put_contents($tmpFile, '%PDF-1.4' . str_repeat("\0", 100));
+
+        $result = Bee::getFileMimeType($tmpFile);
+
+        $this->assertEquals('application/pdf', $result);
+        unlink($tmpFile);
+    }
+
+    public function testGetFileMimeTypeDetectsByContentNotExtension(): void
+    {
+        // Create a file with .txt extension but PDF content
+        $tmpFile = sys_get_temp_dir() . '/test_' . uniqid() . '.txt';
+        file_put_contents($tmpFile, '%PDF-1.4' . str_repeat("\0", 100));
+
+        $result = Bee::getFileMimeType($tmpFile);
+
+        // Should detect as PDF by magic bytes, not text by extension
+        $this->assertEquals('application/pdf', $result);
+        unlink($tmpFile);
+    }
+
+    public function testGetFileMimeTypeReturnsCorrectMimeForPhpFile(): void
+    {
+        $tmpFile = sys_get_temp_dir() . '/test_' . uniqid() . '.php';
+        file_put_contents($tmpFile, '<?php echo "Hello"; ?>');
+
+        $result = Bee::getFileMimeType($tmpFile);
+
+        // PHP files are detected as text/x-php or text/plain
+        $this->assertTrue(in_array($result, ['text/x-php', 'text/plain']), "Expected text/x-php or text/plain, got: $result");
+        unlink($tmpFile);
+    }
+
+    public function testGetFileMimeTypeReturnsCorrectMimeForExeFile(): void
+    {
+        $tmpFile = sys_get_temp_dir() . '/test_' . uniqid() . '.exe';
+        // Windows EXE magic bytes: MZ (4D 5A)
+        file_put_contents($tmpFile, hex2bin('4D5A') . str_repeat("\0", 100));
+
+        $result = Bee::getFileMimeType($tmpFile);
+
+        // EXE files are detected as application/x-dosexec or application/x-executable or application/octet-stream
+        $allowed = ['application/x-dosexec', 'application/x-executable', 'application/octet-stream', 'application/x-ms-dos-executable'];
+        $this->assertTrue(in_array($result, $allowed), "Expected EXE MIME type, got: $result");
+        unlink($tmpFile);
+    }
+
+    public function testGetFileMimeTypeReturnsCorrectMimeForElfFile(): void
+    {
+        $tmpFile = sys_get_temp_dir() . '/test_' . uniqid() . '.bin';
+        // ELF (Linux executable) magic bytes: 7F 45 4C 46 (.ELF)
+        file_put_contents($tmpFile, hex2bin('7F454C46') . str_repeat("\0", 100));
+
+        $result = Bee::getFileMimeType($tmpFile);
+
+        // ELF files are detected as application/x-executable or application/x-sharedlib or application/octet-stream
+        // Note: Minimal ELF magic bytes may be detected as text/plain on some systems
+        $allowed = ['application/x-executable', 'application/x-sharedlib', 'application/x-elf', 'application/octet-stream', 'text/plain'];
+        $this->assertTrue(in_array($result, $allowed), "Expected ELF MIME type, got: $result");
+        unlink($tmpFile);
+    }
+
+    public function testGetFileMimeTypeDetectsPhpInDisguise(): void
+    {
+        // Security test: PHP code hidden in a .jpg file
+        $tmpFile = sys_get_temp_dir() . '/test_' . uniqid() . '.jpg';
+        file_put_contents($tmpFile, '<?php phpinfo(); ?>');
+
+        $result = Bee::getFileMimeType($tmpFile);
+
+        // Despite .jpg extension, finfo should detect it as text/x-php or text/plain
+        $this->assertTrue(in_array($result, ['text/x-php', 'text/plain']), "Expected text/x-php or text/plain, got: $result");
+        unlink($tmpFile);
+    }
+
+    // =====================================================================
+    // buildProjectPath() tests
+    // =====================================================================
+
+    protected function setUpSitePath(): void
+    {
+        if (!defined('SITE_PATH')) {
+            define('SITE_PATH', DIRECTORY_SEPARATOR . 'test' . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR);
+        }
+    }
+
+    public function testBuildProjectPathReturnsCorrectPath(): void
+    {
+        $this->setUpSitePath();
+
+        $result = Bee::buildProjectPath(\FastRaven\Types\ProjectFolderType::CONFIG, 'config.php');
+
+        $this->assertStringContainsString('config', $result);
+        $this->assertStringEndsWith('config.php', $result);
+    }
+
+    public function testBuildProjectPathWithEmptyFile(): void
+    {
+        $this->setUpSitePath();
+
+        $result = Bee::buildProjectPath(\FastRaven\Types\ProjectFolderType::STORAGE_CACHE);
+
+        $this->assertStringContainsString('storage', $result);
+        $this->assertStringContainsString('cache', $result);
+    }
+
+    public function testBuildProjectPathNormalizesFilePath(): void
+    {
+        $this->setUpSitePath();
+
+        $result = Bee::buildProjectPath(\FastRaven\Types\ProjectFolderType::SRC_API, '../../../etc/passwd');
+
+        // Path traversal (..) should be stripped, but the remaining path stays
+        // Result: /test/site/src/api/etc/passwd (not /etc/passwd)
+        $this->assertStringNotContainsString('..', $result);
+        $this->assertStringContainsString('src', $result);  // Still within project
+        $this->assertStringStartsWith(SITE_PATH, $result);  // Confined to SITE_PATH
+    }
+
+    public function testBuildProjectPathHandlesNullBytes(): void
+    {
+        $this->setUpSitePath();
+
+        $result = Bee::buildProjectPath(\FastRaven\Types\ProjectFolderType::SRC_API, "test\0.php");
+
+        // Null bytes should be stripped
+        $this->assertStringNotContainsString("\0", $result);
+    }
 }
+

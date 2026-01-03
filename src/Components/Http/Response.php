@@ -2,11 +2,9 @@
 
 namespace FastRaven\Components\Http;
 
-enum DataType: string {
-    case JSON = "application/json";
-    case HTML = "text/html";
-    case TEXT = "text";
-}
+use FastRaven\Workers\Bee;
+
+use FastRaven\Types\DataType;
 
 final class Response {
     #----------------------------------------------------------------------
@@ -18,8 +16,13 @@ final class Response {
         public function getCode(): int { return $this->code; }
     private string $message = "";
         public function getMessage(): string { return $this->message; }
-    private mixed $data = [];
-        public function getData(): mixed { return $this->data; }
+        public function setMessage(string $message): Response { $this->message = $message; return $this; }
+    private string|array $data = [];
+        public function getData(): string|array { return $this->data; }
+        public function setData(string|array $data): Response { $this->data = $data; return $this; }
+    private DataType $dataType = DataType::TEXT;
+        public function getDataType(): DataType { return $this->dataType; }
+        public function setDataType(DataType $dataType): Response { $this->dataType = $dataType; return $this; }
     
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -39,11 +42,22 @@ final class Response {
      */
     public static function new(bool $success, int $code, string $message = "", string|array $data = []): Response
     {
-        $response = new Response($success, $code);
-        $response->setBody($message, $data);
-        return $response;
+        return (new Response($success, $code))->setData($data)->setMessage($message);
     }
 
+    /**
+     * Creates a new Response instance with a file as the data.
+     *
+     * @param bool $success Whether the response is a success or not.
+     * @param string $path The path to the file to be sent relative to storage/uploads.
+     * 
+     * @return Response The new Response instance.
+     */
+    public static function file(bool $success, string $path): Response {
+        return (new Response($success, $success ? 200 : 500))->setData(["path" => $path]);
+    }
+
+    
     private function __construct(bool $success, int $code) {
         $this->success = $success;
         $this->code = $code;
@@ -68,14 +82,15 @@ final class Response {
      *
      * @param string $message [optional] The message to set on the response.
      * @param string|array $data [optional] The data to set on the response.
+     * 
+     * @return Response The response instance.
      */
-    public function setBody(string $message = "", string|array $data = []): void {
+    public function setBody(string $message = "", string|array $data = []): Response {
         $this->message = $message;
         $this->data = $data;
+        return $this;
     }
 
     #/ METHODS
     #----------------------------------------------------------------------
 }
-
-?>

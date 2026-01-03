@@ -2,9 +2,15 @@
 
 namespace FastRaven\Internal\Slave;
 
-use FastRaven\Components\Http\Request;
 use FastRaven\Workers\LogWorker;
+
 use FastRaven\Internal\Stash\LogStash;
+
+use FastRaven\Components\Http\Request;
+
+use FastRaven\Types\ProjectFolderType;
+
+use FastRaven\Workers\Bee;
 
 final class LogSlave {
     #----------------------------------------------------------------------
@@ -61,10 +67,7 @@ final class LogSlave {
      * @param string $text The text to write to the log file.
      */
     private function writeIntoFile(string $text): void {
-        $dir = SITE_PATH . DIRECTORY_SEPARATOR . "logs" . DIRECTORY_SEPARATOR;
-        if(!is_dir($dir)) mkdir($dir, 0755, true);
-
-        file_put_contents($dir . date("dmY") . ".log", $text, FILE_APPEND | LOCK_EX);
+        file_put_contents(Bee::buildProjectPath(ProjectFolderType::STORAGE_LOGS, date("Y-m-d").".log"), $text, FILE_APPEND | LOCK_EX);
     }
 
     #/ PRIVATE FUNCTIONS
@@ -89,8 +92,7 @@ final class LogSlave {
      * @param Request $request The request object for which the open log entry should be written.
      */
     public function writeOpenLogs(Request $request): void {
-        $type = $request->isApi() ? "API" : "VIEW";
-        LogWorker::log("{$type}[{$request->getMethod()}] > {$request->getPath()} <-> {$request->getOriginInfo()["IP"]} < ELAPSED_TIMEms");
+        LogWorker::log("{$request->getType()->value}[{$request->getMethod()}] > {$request->getPath()} < STATUS_CODE > {$request->getRemoteAddress()} < ELAPSED_TIMEms");
     }
 
     /**
@@ -99,9 +101,11 @@ final class LogSlave {
      * The request time will be logged in milliseconds.
      *
      * @param float $elapsedTime The time it took to process the request in milliseconds.
+     * @param int $statusCode The status code of the response.
      */
-    public function writeCloseLogs(float $elapsedTime): void {
+    public function writeCloseLogs(float $elapsedTime, int $statusCode): void {
         $this->stash->replaceLog(0, "ELAPSED_TIME", strval($elapsedTime));
+        $this->stash->replaceLog(0, "STATUS_CODE", strval($statusCode));
     }
 
     /**

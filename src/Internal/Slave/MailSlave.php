@@ -2,14 +2,17 @@
 
 namespace FastRaven\Internal\Slave;
 
-use FastRaven\Components\Core\Mail;
 use FastRaven\Workers\MailWorker;
 use FastRaven\Workers\LogWorker;
 
+use FastRaven\Components\Core\Mail;
 use FastRaven\Components\Data\Collection;
 use FastRaven\Components\Data\Item;
 
+use FastRaven\Types\ProjectFolderType;
+
 use FastRaven\Workers\Bee;
+
 use PHPMailer\PHPMailer\PHPMailer;
 
 final class MailSlave {
@@ -63,12 +66,10 @@ final class MailSlave {
      * @return ?string The template content if the file exists, null otherwise.
      */
     private function getMailTemplate(string $file): ?string {
-        $path = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . "mails" . DIRECTORY_SEPARATOR . Bee::normalizePath($file);
-        if(file_exists($path)) {
-            return file_get_contents($path);
-        }
-
-        return null;
+        $path = realpath(Bee::buildProjectPath(ProjectFolderType::SRC_WEB_VIEWS_MAILS, $file));
+        
+        if($path !== false) return file_get_contents($path);
+        else return null;
     }
 
     /**
@@ -135,7 +136,10 @@ final class MailSlave {
     private function setMailerAttachments(PHPMailer &$mailer, ?Collection $attachments): void {
         if($attachments) {
             foreach($attachments->getRawData() as $attachment) {
-                $mailer->addAttachment(SITE_PATH . DIRECTORY_SEPARATOR . "storage" . DIRECTORY_SEPARATOR . "uploads" . DIRECTORY_SEPARATOR . Bee::normalizePath($attachment->getValue()), $attachment->getKey());
+                $path = realpath(Bee::buildProjectPath(ProjectFolderType::STORAGE_UPLOADS, $attachment->getValue()));
+                
+                if($path !== false) $mailer->addAttachment($path, $attachment->getKey());
+                else LogWorker::error("Attachment not found: " . $attachment->getValue());
             }
         }
     }

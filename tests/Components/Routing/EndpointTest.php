@@ -5,6 +5,7 @@ namespace FastRaven\Tests\Components\Routing;
 use PHPUnit\Framework\TestCase;
 use FastRaven\Components\Routing\Endpoint;
 use FastRaven\Components\Core\Template;
+use FastRaven\Types\MiddlewareType;
 
 class EndpointTest extends TestCase
 {
@@ -12,7 +13,7 @@ class EndpointTest extends TestCase
     {
         $endpoint = Endpoint::api(false, 'GET', 'users', 'users.php');
 
-        $this->assertEquals('/api/users#GET', $endpoint->getComplexPath());
+        $this->assertEquals('/api/users/#GET', $endpoint->getComplexPath());
         $this->assertEquals('users.php', $endpoint->getFile());
         $this->assertFalse($endpoint->getRestricted());
     }
@@ -31,17 +32,17 @@ class EndpointTest extends TestCase
         $putEndpoint = Endpoint::api(false, 'PUT', 'users/1', 'update.php');
         $deleteEndpoint = Endpoint::api(false, 'DELETE', 'users/1', 'delete.php');
 
-        $this->assertEquals('/api/users#GET', $getEndpoint->getComplexPath());
-        $this->assertEquals('/api/users#POST', $postEndpoint->getComplexPath());
-        $this->assertEquals('/api/users/1#PUT', $putEndpoint->getComplexPath());
-        $this->assertEquals('/api/users/1#DELETE', $deleteEndpoint->getComplexPath());
+        $this->assertEquals('/api/users/#GET', $getEndpoint->getComplexPath());
+        $this->assertEquals('/api/users/#POST', $postEndpoint->getComplexPath());
+        $this->assertEquals('/api/users/1/#PUT', $putEndpoint->getComplexPath());
+        $this->assertEquals('/api/users/1/#DELETE', $deleteEndpoint->getComplexPath());
     }
 
     public function testViewCreatesEndpointWithoutApiPrefix(): void
     {
         $endpoint = Endpoint::view(false, '/home', 'home.php');
 
-        $this->assertEquals('/home#GET', $endpoint->getComplexPath());
+        $this->assertEquals('/home/#GET', $endpoint->getComplexPath());
         $this->assertEquals('home.php', $endpoint->getFile());
         $this->assertFalse($endpoint->getRestricted());
     }
@@ -80,8 +81,8 @@ class EndpointTest extends TestCase
     {
         $endpoint = Endpoint::view(false, '/about/', 'about.php');
 
-        // Bee::normalizePath should remove leading and trailing slashes
-        $this->assertEquals('/about#GET', $endpoint->getComplexPath());
+        // Bee::normalizePath normalizes path, then we add trailing slash
+        $this->assertEquals('/about/#GET', $endpoint->getComplexPath());
     }
 
     public function testPathNormalizationHandlesRootPath(): void
@@ -95,16 +96,16 @@ class EndpointTest extends TestCase
     {
         $endpoint = Endpoint::view(false, '//path//to//page//', 'page.php');
 
-        // Should normalize to single slashes
-        $this->assertStringStartsWith('/path/to/page#', $endpoint->getComplexPath());
+        // Should normalize to single slashes with trailing slash
+        $this->assertStringStartsWith('/path/to/page/', $endpoint->getComplexPath());
     }
 
     public function testApiPathNormalization(): void
     {
         $endpoint = Endpoint::api(false, 'GET', '/v1/users/', 'users.php');
 
-        // Should have /api/ prefix and normalized path
-        $this->assertEquals('/api/v1/users#GET', $endpoint->getComplexPath());
+        // Should have /api/ prefix and normalized path with trailing slash
+        $this->assertEquals('/api/v1/users/#GET', $endpoint->getComplexPath());
     }
 
     public function testFilePathNormalization(): void
@@ -133,7 +134,7 @@ class EndpointTest extends TestCase
     {
         $endpoint = Endpoint::api(false, 'GET', 'v1/admin/users/123', 'admin/users/show.php');
 
-        $this->assertEquals('/api/v1/admin/users/123#GET', $endpoint->getComplexPath());
+        $this->assertEquals('/api/v1/admin/users/123/#GET', $endpoint->getComplexPath());
         $this->assertEquals('admin/users/show.php', $endpoint->getFile());
     }
 
@@ -141,7 +142,7 @@ class EndpointTest extends TestCase
     {
         $endpoint = Endpoint::view(false, '/admin/dashboard/stats', 'admin/dashboard/stats.php');
 
-        $this->assertEquals('/admin/dashboard/stats#GET', $endpoint->getComplexPath());
+        $this->assertEquals('/admin/dashboard/stats/#GET', $endpoint->getComplexPath());
         $this->assertEquals('admin/dashboard/stats.php', $endpoint->getFile());
     }
 

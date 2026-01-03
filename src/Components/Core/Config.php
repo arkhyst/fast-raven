@@ -2,6 +2,8 @@
 
 namespace FastRaven\Components\Core;
 
+use FastRaven\Types\MiddlewareType;
+
 
 final class Config {
     #----------------------------------------------------------------------
@@ -11,9 +13,6 @@ final class Config {
         public function getSiteName(): string { return $this->siteName; }
     private bool $restricted;
         public function isRestricted(): bool { return $this->restricted; }
-
-    private array $allowedHosts = ["*"];
-        public function getAllowedHosts(): array { return $this->allowedHosts; }
     
     private string $authSessionName = "PHPSESSID";
         public function getAuthSessionName(): string { return $this->authSessionName; }
@@ -34,11 +33,34 @@ final class Config {
     private bool $privacyRegisterOrigin = true;
         public function isPrivacyRegisterOrigin(): bool { return $this->privacyRegisterOrigin; }
 
-    private int $securityRateLimit = 100;
-        public function getSecurityRateLimit(): int { return $this->securityRateLimit; }
-    private int $securityInputLengthLimit = 256 * 1024;
-        public function getSecurityInputLengthLimit(): int { return $this->securityInputLengthLimit; }
+    private int $rateLimitView = -1;
+    private int $rateLimitAPI = -1;
+    private int $rateLimitCDN = -1;
+        /**
+         * Get the rate limit for a specific middleware type.
+         *
+         * @param MiddlewareType $type The middleware type to get the rate limit for.
+         * @return int The rate limit for the specified middleware type.
+         */
+        public function getRateLimit(MiddlewareType $type): int {
+            return match($type) {
+                MiddlewareType::VIEW => $this->rateLimitView,
+                MiddlewareType::API => $this->rateLimitAPI,
+                MiddlewareType::CDN => $this->rateLimitCDN,
+                default => -1,
+            };
+        }
 
+    private int $lengthLimitInput = -1;
+        public function getLengthLimitInput(): int { return $this->lengthLimitInput; }
+    private int $lengthLimitFileUpload = -1;
+        public function getLengthLimitFileUpload(): int { return $this->lengthLimitFileUpload; }
+
+
+    private int $cacheFileGCProbability = 0;
+        public function getCacheFileGCProbability(): int { return $this->cacheFileGCProbability; }
+    private int $cacheFileGCPower = 50;
+        public function getCacheFileGCPower(): int { return $this->cacheFileGCPower; }
     #/ VARIABLES
     #----------------------------------------------------------------------
 
@@ -84,30 +106,25 @@ final class Config {
      * @param bool $globalAuth      Whether the authorization should be valid across the parent domain and all subdomains.
      *                              (e.g. "example.com" becomes ".example.com", "lin.sub.example.com" becomes ".sub.example.com")
      */
-    public function configureAuthorization(string $sessionName, int $expiryDays, bool $globalAuth = false): void {
+    public function configureAuthorization(string $sessionName, int $expiryDays, bool $globalAuth = false): Config {
         $this->authSessionName = $sessionName;
         $this->authExpiryDays = $expiryDays;
         $this->authGlobal = $globalAuth;
+        return $this;
     }
 
     /**
-     * Configure the default not found redirect settings.
+     * Configure the default redirect settings.
      *
-     * @param string $path      The path to redirect not found requests to.
+     * @param string $notFoundPath      The path to redirect not found requests to.
+     * @param string $unauthorizedPath  The path to redirect unauthorized requests to.
+     * @param string $unauthorizedSubdomain The subdomain to redirect unauthorized requests to. Leave empty to use the main domain.
      */
-    public function configureNotFoundRedirects(string $path): void {
-        $this->defaultNotFoundPathRedirect = $path;
-    }
-
-    /**
-     * Configure the default unauthorized redirect settings.
-     *
-     * @param string $path      The path to redirect unauthorized requests to.
-     * @param string $subdomain The subdomain to redirect unauthorized requests to. Leave empty to use the main domain.
-     */
-    public function configureUnauthorizedRedirects(string $path, string $subdomain = ""): void {
-        $this->defaultUnauthorizedPathRedirect = $path;
-        $this->defaultUnauthorizedSubdomainRedirect = $subdomain;
+    public function configureRedirects(string $notFoundPath, string $unauthorizedPath, string $unauthorizedSubdomain = ""): Config {
+        $this->defaultNotFoundPathRedirect = $notFoundPath;
+        $this->defaultUnauthorizedPathRedirect = $unauthorizedPath;
+        $this->defaultUnauthorizedSubdomainRedirect = $unauthorizedSubdomain;
+        return $this;
     }
 
     /**
@@ -116,20 +133,48 @@ final class Config {
      * @param bool $registerLogs   Define whether to register logs or not.
      * @param bool $registerOrigin Define whether to register origin data or not.
      */
-    public function configurePrivacy(bool $registerLogs = true, bool $registerOrigin = true): void {
+    public function configurePrivacy(bool $registerLogs = true, bool $registerOrigin = true): Config {
         $this->privacyRegisterLogs = $registerLogs;
         $this->privacyRegisterOrigin = $registerOrigin;
+        return $this;
     }
 
     /**
-     * Configure the security settings.
+     * Configure the rate limits.
      *
-     * @param int $rateLimit       The number of requests allowed per minute.
-     * @param int $inputLengthLimit The maximum length of input data allowed in bytes.
+     * @param int $views The maximum number of views allowed per minute. Set to -1 to disable rate limiting.
+     * @param int $api The maximum number of API requests allowed per minute. Set to -1 to disable rate limiting.
+     * @param int $cdn The maximum number of CDN requests allowed per minute. Set to -1 to disable rate limiting.
      */
-    public function configureSecurity(int $rateLimit = 100, int $inputLengthLimit = 256 * 1024): void {
-        $this->securityRateLimit = $rateLimit;
-        $this->securityInputLengthLimit = $inputLengthLimit;
+    public function configureRateLimits(int $views = -1, int $api = -1, int $cdn = -1): Config {
+        $this->rateLimitView = $views;
+        $this->rateLimitAPI = $api;
+        $this->rateLimitCDN = $cdn;
+        return $this;
+    }
+
+    /**
+     * Configure the request data length limits.
+     *
+     * @param int $inputLengthLimit The maximum length of input data allowed in kilobytes. Set to -1 to disable input length limiting.
+     * @param int $fileUploadSizeLimit The maximum size of file uploads allowed in kilobytes. Set to -1 to disable file upload size limiting.
+     */
+    public function configureLengthLimits(int $input = -1, int $fileUpload = -1): Config {
+        $this->lengthLimitInput = $input * 1024;
+        $this->lengthLimitFileUpload = $fileUpload * 1024;
+        return $this;
+    }
+
+    /**
+     * Configure the cache settings.
+     *
+     * @param int $gcProbability The probability of cache garbage collection in percentage. Set to 0 to disable cache garbage collection.
+     * @param int $gcPower The power of cache garbage collection (amount of files to check). Set to 50 by default.
+     */
+    public function configureCache(int $gcProbability = 0, int $gcPower = 50): Config {
+        $this->cacheFileGCProbability = $gcProbability;
+        $this->cacheFileGCPower = $gcPower;
+        return $this;
     }
 
     #/ METHODS

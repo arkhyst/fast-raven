@@ -12,6 +12,6 @@ class BadImplementationException extends SmartException
      * @param string $filePath The path of the endpoint file.
      */
     public function __construct(string $filePath) {
-        parent::__construct("Endpoint does not return Response object. ($filePath)", "This resource is not available at this time.", 500);
+        parent::__construct("Endpoint does not return a valid Response object. ($filePath)", "This resource is not available at this time.", 500);
     }
 }

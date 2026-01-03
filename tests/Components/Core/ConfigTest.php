@@ -103,11 +103,11 @@ class ConfigTest extends TestCase
         $this->assertEquals('/', $config->getDefaultNotFoundPathRedirect());
     }
 
-    public function testConfigureNotFoundRedirectsSetsPath(): void
+    public function testConfigureRedirectsSetsNotFoundPath(): void
     {
         $config = Config::new('test', false);
 
-        $config->configureNotFoundRedirects('/404');
+        $config->configureRedirects('/404', '/login');
 
         $this->assertEquals('/404', $config->getDefaultNotFoundPathRedirect());
     }
@@ -126,30 +126,30 @@ class ConfigTest extends TestCase
         $this->assertEquals('', $config->getDefaultUnauthorizedSubdomainRedirect());
     }
 
-    public function testConfigureUnauthorizedRedirectsSetsPath(): void
+    public function testConfigureRedirectsSetsUnauthorizedPath(): void
     {
         $config = Config::new('test', false);
 
-        $config->configureUnauthorizedRedirects('/auth');
+        $config->configureRedirects('/', '/auth');
 
         $this->assertEquals('/auth', $config->getDefaultUnauthorizedPathRedirect());
     }
 
-    public function testConfigureUnauthorizedRedirectsSetsSubdomain(): void
+    public function testConfigureRedirectsSetsSubdomain(): void
     {
         $config = Config::new('test', false);
 
-        $config->configureUnauthorizedRedirects('/login', 'auth.example.com');
+        $config->configureRedirects('/', '/login', 'auth.example.com');
 
         $this->assertEquals('/login', $config->getDefaultUnauthorizedPathRedirect());
         $this->assertEquals('auth.example.com', $config->getDefaultUnauthorizedSubdomainRedirect());
     }
 
-    public function testConfigureUnauthorizedRedirectsWithEmptySubdomain(): void
+    public function testConfigureRedirectsWithEmptySubdomain(): void
     {
         $config = Config::new('test', false);
 
-        $config->configureUnauthorizedRedirects('/login', '');
+        $config->configureRedirects('/', '/login', '');
 
         $this->assertEquals('', $config->getDefaultUnauthorizedSubdomainRedirect());
     }
@@ -159,8 +159,7 @@ class ConfigTest extends TestCase
         $config = Config::new('test', true);
 
         $config->configureAuthorization('MY_SESSION', 10, true);
-        $config->configureNotFoundRedirects('/not-found');
-        $config->configureUnauthorizedRedirects('/unauthorized', 'auth.mydomain.com');
+        $config->configureRedirects('/not-found', '/unauthorized', 'auth.mydomain.com');
 
         $this->assertEquals('MY_SESSION', $config->getAuthSessionName());
         $this->assertEquals(864000, $config->getAuthLifetime()); // 10 days
@@ -168,5 +167,45 @@ class ConfigTest extends TestCase
         $this->assertEquals('/not-found', $config->getDefaultNotFoundPathRedirect());
         $this->assertEquals('/unauthorized', $config->getDefaultUnauthorizedPathRedirect());
         $this->assertEquals('auth.mydomain.com', $config->getDefaultUnauthorizedSubdomainRedirect());
+    }
+
+    public function testDefaultCacheFileGCProbability(): void
+    {
+        $config = Config::new('test', false);
+
+        $this->assertEquals(0, $config->getCacheFileGCProbability());
+    }
+
+    public function testDefaultCacheFileGCPower(): void
+    {
+        $config = Config::new('test', false);
+
+        $this->assertEquals(50, $config->getCacheFileGCPower());
+    }
+
+    public function testConfigureCacheSetsProbability(): void
+    {
+        $config = Config::new('test', false);
+
+        $config->configureCache(5, 100);
+
+        $this->assertEquals(5, $config->getCacheFileGCProbability());
+    }
+
+    public function testConfigureCacheSetsPower(): void
+    {
+        $config = Config::new('test', false);
+
+        $config->configureCache(5, 100);
+
+        $this->assertEquals(100, $config->getCacheFileGCPower());
+    }
+
+    public function testConfigureCacheDisabledByDefault(): void
+    {
+        $config = Config::new('test', false);
+
+        // Probability 0 means GC is disabled
+        $this->assertEquals(0, $config->getCacheFileGCProbability());
     }
 }

@@ -36,6 +36,8 @@ class TemplateTest extends TestCase
             'icon.png',
             ['style1.css', 'style2.css'],
             ['script1.js', 'script2.js'],
+            [],  // beforeFragments
+            [],  // afterFragments
             Collection::new([
                 Item::new('#name', '/api/name'),
                 Item::new('#email', '/api/email')
@@ -158,8 +160,8 @@ class TemplateTest extends TestCase
 
     public function testMergeCombinesAutofill(): void
     {
-        $template1 = Template::flex('', '', '', '', [], [], Collection::new([Item::new('#field1', '/api/1')]));
-        $template2 = Template::flex('', '', '', '', [], [], Collection::new([Item::new('#field2', '/api/2')]));
+        $template1 = Template::flex('', '', '', '', [], [], [], [], Collection::new([Item::new('#field1', '/api/1')]));
+        $template2 = Template::flex('', '', '', '', [], [], [], [], Collection::new([Item::new('#field2', '/api/2')]));
 
         $template1->merge($template2);
 

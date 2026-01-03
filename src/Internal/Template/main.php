@@ -5,7 +5,6 @@
         <?= $template->getHtmlTitle(); ?>
 
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), interest-cohort=()">
         <meta name="color-scheme" content="light dark">
         <meta name="format-detection" content="telephone=no">
 
@@ -18,7 +17,7 @@
     </head>
     <body>
         <?php
-            $fragmentsPath = SITE_PATH . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "web" . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . "fragments" . DIRECTORY_SEPARATOR;
+            $fragmentsPath = \FastRaven\Workers\Bee::buildProjectPath(\FastRaven\Types\ProjectFolderType::SRC_WEB_VIEWS_FRAGMENTS);
             foreach ($template->getBeforeFragments() as $beforeFragment) {
                 include $fragmentsPath . $beforeFragment;
             }
@@ -35,8 +34,8 @@
             <?php include __DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "jquery.min.js"; ?>
         </script>
         <script>
-            <?php if (isset($_SESSION["sgas_csrf"])) { ?>
-                const CSRF_TOKEN = "<?= $_SESSION["sgas_csrf"]; ?>";
+            <?php if($csrfToken) { ?>
+                window.CSRF_TOKEN = "<?= $csrfToken; ?>";
             <?php } ?>
             <?php 
                 $comp = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "packedlib.js");
