@@ -389,7 +389,7 @@ class ValidationWorkerTest extends TestCase
     public function testPhoneRejectsTooShortNumber(): void
     {
         $countryCode = 1;
-        $phone = '123456789';
+        $phone = '123456';  // 6 digits, min is 7
 
         $result = ValidationWorker::phone($countryCode, $phone);
 

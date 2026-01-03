@@ -462,7 +462,10 @@ class RequestTest extends TestCase
         ];
         $request = new Request('/upload', 'POST', '', $files, '127.0.0.1');
 
-        $this->assertEquals('/tmp/phpABC123', $request->file('avatar'));
+        $file = $request->file('avatar');
+        $this->assertNotNull($file);
+        $this->assertEquals('/tmp/phpABC123', $file->getPath());
+        $this->assertEquals('photo.jpg', $file->getName());
     }
 
     public function testFileReturnsNullForNonExistentFieldName(): void
@@ -483,7 +486,11 @@ class RequestTest extends TestCase
         ];
         $request = new Request('/upload', 'POST', '', $files, '127.0.0.1');
 
-        $this->assertEquals('/tmp/phpABC123', $request->file('avatar'));
-        $this->assertEquals('/tmp/phpDEF456', $request->file('document'));
+        $avatar = $request->file('avatar');
+        $document = $request->file('document');
+        $this->assertNotNull($avatar);
+        $this->assertNotNull($document);
+        $this->assertEquals('/tmp/phpABC123', $avatar->getPath());
+        $this->assertEquals('/tmp/phpDEF456', $document->getPath());
     }
 }
