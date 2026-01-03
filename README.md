@@ -1,5 +1,5 @@
 # FastRaven  
-**State:** use only for small and non-critical projects
+**State:** use only for small and non-critical projects  
 **Version:** v0.4  
 
 FastRaven is a minimalistic and fast PHP framework for **monolithic apps**.  
