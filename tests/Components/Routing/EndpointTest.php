@@ -5,7 +5,7 @@ namespace FastRaven\Tests\Components\Routing;
 use PHPUnit\Framework\TestCase;
 use FastRaven\Components\Routing\Endpoint;
 use FastRaven\Components\Core\Template;
-use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\EndpointType;
 
 class EndpointTest extends TestCase
 {

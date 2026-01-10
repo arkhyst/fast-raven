@@ -3,41 +3,41 @@
 namespace FastRaven\Tests\Components\Types;
 
 use PHPUnit\Framework\TestCase;
-use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\EndpointType;
 
-class MiddlewareTypeTest extends TestCase
+class EndpointTypeTest extends TestCase
 {
     public function testViewCaseExists(): void
     {
-        $this->assertEquals('VIEW', MiddlewareType::VIEW->value);
+        $this->assertEquals('VIEW', EndpointType::VIEW->value);
     }
 
     public function testApiCaseExists(): void
     {
-        $this->assertEquals('API', MiddlewareType::API->value);
+        $this->assertEquals('API', EndpointType::API->value);
     }
 
     public function testCdnCaseExists(): void
     {
-        $this->assertEquals('CDN', MiddlewareType::CDN->value);
+        $this->assertEquals('CDN', EndpointType::CDN->value);
     }
 
     public function testRouterCaseExists(): void
     {
-        $this->assertEquals('ROUTER', MiddlewareType::ROUTER->value);
+        $this->assertEquals('ROUTER', EndpointType::ROUTER->value);
     }
 
     public function testEnumIsStringBacked(): void
     {
-        $this->assertIsString(MiddlewareType::VIEW->value);
-        $this->assertIsString(MiddlewareType::API->value);
-        $this->assertIsString(MiddlewareType::CDN->value);
-        $this->assertIsString(MiddlewareType::ROUTER->value);
+        $this->assertIsString(EndpointType::VIEW->value);
+        $this->assertIsString(EndpointType::API->value);
+        $this->assertIsString(EndpointType::CDN->value);
+        $this->assertIsString(EndpointType::ROUTER->value);
     }
 
     public function testAllCasesCount(): void
     {
-        $cases = MiddlewareType::cases();
+        $cases = EndpointType::cases();
         $this->assertCount(4, $cases);
     }
 }

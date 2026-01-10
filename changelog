@@ -1,3 +1,16 @@
+### [v0.5] - 2026-01-XX
+#### Added
+- 
+
+#### Changed
+- MiddlewareType enum renamed to EndpointType.
+
+#### Fixed
+- 
+
+#### Removed
+- 
+
 ### [v0.4] - 2026-01-03
 #### Added
 - Kernel::handleRateLimit() for handling global rate limit configuration and endpoint specific rate limit.

@@ -32,7 +32,7 @@ use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\RateLimitExceededException;
 use FastRaven\Exceptions\UploadedFileNotFoundException;
 
-use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\EndpointType;
 use FastRaven\Types\ProjectFolderType;
 
 final class Kernel {
@@ -135,9 +135,9 @@ final class Kernel {
     #----------------------------------------------------------------------
     #\ METHODS
     
-    public function isViewRequest(): bool { return $this->request->getType() === MiddlewareType::VIEW; }
-    public function isApiRequest(): bool { return $this->request->getType() === MiddlewareType::API; }
-    public function isCdnRequest(): bool { return $this->request->getType() === MiddlewareType::CDN; }
+    public function isViewRequest(): bool { return $this->request->getType() === EndpointType::VIEW; }
+    public function isApiRequest(): bool { return $this->request->getType() === EndpointType::API; }
+    public function isCdnRequest(): bool { return $this->request->getType() === EndpointType::CDN; }
 
     /**
      * This function initializes the kernel and prepares it for processing the request.
@@ -177,7 +177,7 @@ final class Kernel {
         
         $this->headerSlave = HeaderSlave::zap();
         $this->headerSlave->writeSecurityHeaders($_SERVER["HTTPS"]);
-        $this->headerSlave->writeUtilityHeaders($this->request->getType() === MiddlewareType::API);
+        $this->headerSlave->writeUtilityHeaders($this->request->getType() === EndpointType::API);
         $this->headerSlave->writeRateLimitHeaders($this->config->getRateLimit($this->request->getType()), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
 
         if($this->config->isRestricted()) {
@@ -212,8 +212,8 @@ final class Kernel {
      */
     public function process(): Response {
         [$router, $folder] = match ($this->request->getType()) {
-            MiddlewareType::API => [$this->apiRouter, ProjectFolderType::SRC_API],
-            MiddlewareType::CDN => [$this->cdnRouter, ProjectFolderType::SRC_CDN],
+            EndpointType::API => [$this->apiRouter, ProjectFolderType::SRC_API],
+            EndpointType::CDN => [$this->cdnRouter, ProjectFolderType::SRC_CDN],
             default => [$this->viewRouter, ProjectFolderType::SRC_WEB_VIEWS_PAGES],
         };
 
@@ -236,7 +236,7 @@ final class Kernel {
         $filePath = Bee::buildProjectPath($folder, $endpoint->getFile());
         if(!file_exists($filePath)) throw new EndpointFileNotFoundException($filePath);
         
-        if($this->request->getType() === MiddlewareType::VIEW) {
+        if($this->request->getType() === EndpointType::VIEW) {
             $response = Response::new(true, 200, "", [
                 "path" => __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php",
                 "template"=> $this->template->merge($endpoint->getTemplate())->setFile($filePath)
@@ -271,21 +271,21 @@ final class Kernel {
      * @param Response $response The response to output or process
      */
     public function close(Response $response): void {
-        if($this->request->getType() == MiddlewareType::VIEW) {
+        if($this->request->getType() == EndpointType::VIEW) {
             if($response->getSuccess() && isset($response->getData()["path"])) {
                 HeaderWorker::addHeader("Content-Type", "text/html; charset=utf-8");
                 $template = $response->getData()["template"];
                 $csrfToken = AuthWorker::isAuthorized() ? $_SESSION["sgas_csrf"] : null;
                 require_once $response->getData()["path"];
             }
-        } else if ($this->request->getType() == MiddlewareType::API) {
+        } else if ($this->request->getType() == EndpointType::API) {
             HeaderWorker::addHeader("Content-Type", "application/json; charset=utf-8");
             echo json_encode([
                 "success" => $response->getSuccess(),
                 "msg" => $response->getMessage(),
                 "data" => $response->getData()
             ]);
-        } elseif($this->request->getType() == MiddlewareType::CDN) {
+        } elseif($this->request->getType() == EndpointType::CDN) {
             if($response->getSuccess() && isset($response->getData()["path"])) {
                 HeaderWorker::addHeader("Content-Type", $response->getDataType()->value);
                 readfile($response->getData()["path"]);

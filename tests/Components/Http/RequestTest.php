@@ -5,7 +5,7 @@ namespace FastRaven\Tests\Components\Http;
 use PHPUnit\Framework\TestCase;
 use FastRaven\Components\Http\Request;
 use FastRaven\Types\SanitizeType;
-use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\EndpointType;
 
 class RequestTest extends TestCase
 {
@@ -72,28 +72,28 @@ class RequestTest extends TestCase
     {
         $request = new Request('/api/users', 'GET', '', [], '127.0.0.1');
 
-        $this->assertEquals(MiddlewareType::API, $request->getType());
+        $this->assertEquals(EndpointType::API, $request->getType());
     }
 
     public function testGetTypeReturnsViewForNonApiPaths(): void
     {
         $request = new Request('/home', 'GET', '', [], '127.0.0.1');
 
-        $this->assertEquals(MiddlewareType::VIEW, $request->getType());
+        $this->assertEquals(EndpointType::VIEW, $request->getType());
     }
 
     public function testGetTypeReturnsApiForNestedApiPaths(): void
     {
         $request = new Request('/api/v1/users/123', 'GET', '', [], '127.0.0.1');
 
-        $this->assertEquals(MiddlewareType::API, $request->getType());
+        $this->assertEquals(EndpointType::API, $request->getType());
     }
 
     public function testGetTypeReturnsCdnForCdnPaths(): void
     {
         $request = new Request('/cdn/images/logo.png', 'GET', '', [], '127.0.0.1');
 
-        $this->assertEquals(MiddlewareType::CDN, $request->getType());
+        $this->assertEquals(EndpointType::CDN, $request->getType());
     }
 
     // =====================================================================

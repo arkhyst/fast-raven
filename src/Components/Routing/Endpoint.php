@@ -6,15 +6,15 @@ use FastRaven\Workers\Bee;
 
 use FastRaven\Components\Core\Template;
 
-use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\EndpointType;
 
 final class Endpoint {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
 
-    private MiddlewareType $type;
-        public function getType(): MiddlewareType { return $this->type; }
+    private EndpointType $type;
+        public function getType(): EndpointType { return $this->type; }
     private bool $restricted;
         public function getRestricted(): bool { return $this->restricted; }
     private bool $unauthorizedExclusive = false;
@@ -49,7 +49,7 @@ final class Endpoint {
      * @return Endpoint The created Endpoint instance.
      */
     public static function view(bool $restricted, string $path, string $fileName, ?Template $template = null, bool $unauthorizedExclusive = false, int $limitPerMinute = -1): Endpoint {
-        return new Endpoint(MiddlewareType::VIEW, $restricted, "GET", $path, $fileName, $unauthorizedExclusive, $template, $limitPerMinute);
+        return new Endpoint(EndpointType::VIEW, $restricted, "GET", $path, $fileName, $unauthorizedExclusive, $template, $limitPerMinute);
     }
 
     /**
@@ -65,7 +65,7 @@ final class Endpoint {
      * @return Endpoint The created Endpoint instance.
      */
     public static function api(bool $restricted, string $method, string $path, string $fileName, bool $unauthorizedExclusive = false, int $limitPerMinute = -1): Endpoint {
-        return new Endpoint(MiddlewareType::API, $restricted, $method, "/api/".$path, $fileName, $unauthorizedExclusive, null, $limitPerMinute);
+        return new Endpoint(EndpointType::API, $restricted, $method, "/api/".$path, $fileName, $unauthorizedExclusive, null, $limitPerMinute);
     }
 
     /**
@@ -80,13 +80,13 @@ final class Endpoint {
      * @return Endpoint The created Endpoint instance.
      */
     public static function cdn(bool $restricted, string $method, string $path, string $fileName, int $limitPerMinute = -1): Endpoint {
-        return new Endpoint(MiddlewareType::CDN, $restricted, $method, "/cdn/".$path, $fileName, false, null, $limitPerMinute);
+        return new Endpoint(EndpointType::CDN, $restricted, $method, "/cdn/".$path, $fileName, false, null, $limitPerMinute);
     }
 
     /**
      * Creates a new special Endpoint instance for a router endpoint.
      *
-     * @param MiddlewareType $type The type of the router. (prefixes $path with /api/ or /cdn/ if needed)
+     * @param EndpointType $type The type of the router. (prefixes $path with /api/ or /cdn/ if needed)
      * @param bool $restricted Whether the router is restricted to authorized users.
      * @param string $path The path of the router, relative to the website root.
      * @param string $routerFilePath The filename of the router file, relative to the /config/router/ directory.
@@ -94,13 +94,13 @@ final class Endpoint {
      *
      * @return Endpoint The created Endpoint instance.
      */
-    public static function router(MiddlewareType $type, bool $restricted, string $path, string $routerFilePath, int $limitPerMinute = -1): Endpoint {
-        if($type == MiddlewareType::API) $path = "/api/".$path;
-        else if($type == MiddlewareType::CDN) $path = "/cdn/".$path;
-        return new Endpoint(MiddlewareType::ROUTER, $restricted, "GET", $path, $routerFilePath, false, null, $limitPerMinute);
+    public static function router(EndpointType $type, bool $restricted, string $path, string $routerFilePath, int $limitPerMinute = -1): Endpoint {
+        if($type == EndpointType::API) $path = "/api/".$path;
+        else if($type == EndpointType::CDN) $path = "/cdn/".$path;
+        return new Endpoint(EndpointType::ROUTER, $restricted, "GET", $path, $routerFilePath, false, null, $limitPerMinute);
     }
 
-    private function __construct(MiddlewareType $type, bool $restricted, string $method, string $path, string $fileName, bool $unauthorizedExclusive = false, ?Template $template = null, int $limitPerMinute = -1) {
+    private function __construct(EndpointType $type, bool $restricted, string $method, string $path, string $fileName, bool $unauthorizedExclusive = false, ?Template $template = null, int $limitPerMinute = -1) {
         $this->type = $type;
         $this->restricted = $restricted;
         $this->path = "/".Bee::normalizePath($path);
