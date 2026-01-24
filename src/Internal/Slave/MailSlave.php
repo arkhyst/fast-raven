@@ -66,7 +66,7 @@ final class MailSlave {
      * @return ?string The template content if the file exists, null otherwise.
      */
     private function getMailTemplate(string $file): ?string {
-        $path = realpath(Bee::buildProjectPath(ProjectFolderType::SRC_WEB_VIEWS_MAILS, $file));
+        $path = realpath(Bee::buildProjectPath(ProjectFolderType::SRC_WEB_TEMPLATES_MAILS, $file));
         
         if($path !== false) return file_get_contents($path);
         else return null;
