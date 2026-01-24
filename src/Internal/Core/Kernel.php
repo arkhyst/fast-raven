@@ -21,13 +21,17 @@ use FastRaven\Components\Core\Config;
 use FastRaven\Components\Http\Response;
 use FastRaven\Components\Http\Request;
 use FastRaven\Components\Core\Template;
+use FastRaven\Components\Core\File;
 use FastRaven\Components\Routing\Router;
 use FastRaven\Components\Routing\Endpoint;
+use FastRaven\Components\Routing\Middleware;
 
 use FastRaven\Exceptions\BadImplementationException;
 use FastRaven\Exceptions\EndpointFileNotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
 use FastRaven\Exceptions\AlreadyAuthorizedException;
+use FastRaven\Exceptions\BadMiddlewareException;
+use FastRaven\Exceptions\MiddlewareDeniedException;
 use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\RateLimitExceededException;
 use FastRaven\Exceptions\UploadedFileNotFoundException;
@@ -45,6 +49,8 @@ final class Kernel {
         public function getRequest(): Request { return $this->request; }
 
     private Template $template;
+        public function getTemplate(): Template { return $this->template; }
+    private Middleware $middleware;
     private Router $viewRouter;
     private Router $apiRouter;
     private Router $cdnRouter;
@@ -68,9 +74,10 @@ final class Kernel {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public function  __construct(Config $config, Template $template, Router $viewRouter, Router $apiRouter, Router $cdnRouter) {
+    public function  __construct(Config $config, Template $template, Middleware $middleware, Router $viewRouter, Router $apiRouter, Router $cdnRouter) {
         $this->config = $config;
         $this->template = $template;
+        $this->middleware = $middleware;
         $this->viewRouter = $viewRouter;
         $this->apiRouter = $apiRouter;
         $this->cdnRouter = $cdnRouter;
@@ -107,13 +114,12 @@ final class Kernel {
      * Handles rate limiting for the request.
      *
      * @param int $limit The configured rate limit for the request.
-     * @param string|null $endpoint The endpoint for the request. Empty if global rate limit.
      * 
      * @return bool True if host does not exceed its rate limit, false otherwise.
      */
-    private function handleRateLimit(int $limit, ?string $endpoint = null): bool {
+    private function handleRateLimit(int $limit): bool {
         if ($limit > 0) {
-            $rateLimitID = "fastraven:". $this->config->getSiteName().($endpoint ? "/$endpoint" : "").":ratelimit:". md5($_SERVER["REMOTE_ADDR"]);
+            $rateLimitID = "fastraven:". $this->config->getSiteName().":ratelimit:". md5($_SERVER["REMOTE_ADDR"]);
             
             $cacheItem = CacheWorker::readWithMeta($rateLimitID);
             $newValue = ($cacheItem["value"] ?? 0) + 1;
@@ -196,13 +202,12 @@ final class Kernel {
     /**
      * Processes the request and returns a response.
      *
-     * This function will try to match the request with an endpoint in the router.
-     * If the endpoint is restricted and the request is not authorized, it will throw a NotAuthorizedException.
-     * If the endpoint file does not exist, it will throw an EndpointFileNotFoundException exception.
-     * If the request is an API request, it will call the function in the endpoint file and expect a Response object to be returned.
-     * If the request is not an API request, it will render the template in the endpoint file.
+     * This function will try to match the request with an endpoint in the router and process it.
+     * If the request is a View request, it will render the template from the endpoint file and expect a Template object to be returned.
+     * If the request is an API request, it will call the function from the endpoint file and expect a Response object to be returned.
+     * If the request is a CDN request, it will retrieve the file from the endpoint file and expect a File object to be returned.
      *
-     * @return Response The response to return to the client.
+     * @return Template|Response|File The response to output or process.
      * 
      * @throws NotFoundException If no matching route is found for the request.
      * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
@@ -210,89 +215,86 @@ final class Kernel {
      * @throws EndpointFileNotFoundException If the endpoint file does not exist.
      * @throws BadImplementationException If the API function does not return a Response object.
      */
-    public function process(): Response {
+    public function process(): Template|Response|File {
         [$router, $folder] = match ($this->request->getType()) {
+            EndpointType::VIEW => [$this->viewRouter, ProjectFolderType::SRC_VIEWS],
             EndpointType::API => [$this->apiRouter, ProjectFolderType::SRC_API],
             EndpointType::CDN => [$this->cdnRouter, ProjectFolderType::SRC_CDN],
-            default => [$this->viewRouter, ProjectFolderType::SRC_WEB_VIEWS_PAGES],
         };
 
-        $endpoint = $this->handleRouting($router);
-        $response = null;
-
-        if(!$endpoint) throw new NotFoundException();
-
-        if(!$this->handleRateLimit($endpoint->getLimitPerMinute(), $endpoint->getComplexPath())) {
-            $this->headerSlave->writeRateLimitHeaders($endpoint->getLimitPerMinute(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
+        if(!$this->handleRateLimit($router->getLimitPerMinute())) {
+            $this->headerSlave->writeRateLimitHeaders($router->getLimitPerMinute(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
             throw new RateLimitExceededException($this->request->getRemoteAddress(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
         }
 
+        $endpoint = $this->handleRouting($router);
+        if(!$endpoint) throw new NotFoundException();
+        
         if($endpoint->getRestricted())
             if(!AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
 
-        if($endpoint->getUnauthorizedExclusive())
-            if(AuthWorker::isAuthorized($this->request)) throw new AlreadyAuthorizedException();
+        if($endpoint->getMiddlewareId() !== "") {
+            $middleware = $this->middleware->get($endpoint->getMiddlewareId());
+            if(!Bee::validateCallable($middleware, [Request::class])) throw new BadMiddlewareException($endpoint->getFile());
+            if($middleware($this->request) === false) throw new MiddlewareDeniedException();
+        }
 
         $filePath = Bee::buildProjectPath($folder, $endpoint->getFile());
         if(!file_exists($filePath)) throw new EndpointFileNotFoundException($filePath);
-        
+
+        $fn = require_once $filePath;
+        $response = null;
+
         if($this->request->getType() === EndpointType::VIEW) {
-            $response = Response::new(true, 200, "", [
-                "path" => __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php",
-                "template"=> $this->template->merge($endpoint->getTemplate())->setFile($filePath)
-            ]);
+            if(Bee::validateCallable($fn, [Request::class, Template::class])) $response = $fn($this->request, $this->template);
+            if($response === null || !$response instanceof Template) throw new BadImplementationException($endpoint->getFile(), "Template");
+
+            $response = $this->template->merge($response);
         } else {
-            $fn = require_once $filePath;
-            if (is_callable($fn)) $response = $fn($this->request);
-            if ($response === null || !$response instanceof Response) throw new BadImplementationException($endpoint->getFile());
-            
-            $resPath = $response->getData()["path"] ?? null;
-            if($resPath) {
-                if(!FileWorker::exists($resPath)) throw new UploadedFileNotFoundException($resPath);
-                else {
-                    $fullPath = FileWorker::getUploadFilePath($resPath);
-                    $response->setDataType(Bee::getFileMimeType($fullPath, true));
-                    $response->setBody("", ["path" => $fullPath]);
-                }
+            if(Bee::validateCallable($fn, [Request::class])) $response = $fn($this->request);
+            if($response === null || !$response instanceof Response) throw new BadImplementationException($endpoint->getFile(), "Response");
+
+            if($this->request->getType() === EndpointType::CDN) {
+                $cdnFilePath = $response->getFrameworkMetadata()["path"];
+                if(!FileWorker::exists($cdnFilePath)) throw new UploadedFileNotFoundException(FileWorker::getUploadFilePath($cdnFilePath));
+                $response = File::new("cdn_file", FileWorker::getUploadFilePath($cdnFilePath));
             }
         }
 
         return $response;
-    }   
+    }
 
     /**
      * This function is called at the end of every request and is responsible for outputting the response,
      * writing the close logs, and dumping the log stash into a file.
      *
-     * If no response is provided, it will generate a default response based on the request type.
-     * If the request is an API request, it will generate a 404 response.
-     * If the request is not an API request, it will generate a 301 response with a default path redirect.
-     *
-     * @param Response $response The response to output or process
+     * @param Template|Response|File $response The response to output or process
      */
-    public function close(Response $response): void {
-        if($this->request->getType() == EndpointType::VIEW) {
-            if($response->getSuccess() && isset($response->getData()["path"])) {
-                HeaderWorker::addHeader("Content-Type", "text/html; charset=utf-8");
-                $template = $response->getData()["template"];
-                $csrfToken = AuthWorker::isAuthorized() ? $_SESSION["sgas_csrf"] : null;
-                require_once $response->getData()["path"];
-            }
-        } else if ($this->request->getType() == EndpointType::API) {
+    public function close(Template|Response|File $response): void {
+        $statusCode = match(get_class($response)) {
+            Template::class => $response->hasData("errorCode") ? intval($response->getData("errorCode")) : 200,
+            Response::class => $response->getCode(),
+            File::class => 200,
+        };
+        http_response_code($statusCode);
+
+        if($response instanceof Template) {
+            HeaderWorker::addHeader("Content-Type", "text/html; charset=utf-8");
+            $template = $response;
+            $csrfToken = AuthWorker::isAuthorized() ? $_SESSION["sgas_csrf"] : null;
+            require_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
+        } else if ($response instanceof Response) {
             HeaderWorker::addHeader("Content-Type", "application/json; charset=utf-8");
             echo json_encode([
                 "success" => $response->getSuccess(),
                 "msg" => $response->getMessage(),
                 "data" => $response->getData()
             ]);
-        } elseif($this->request->getType() == EndpointType::CDN) {
-            if($response->getSuccess() && isset($response->getData()["path"])) {
-                HeaderWorker::addHeader("Content-Type", $response->getDataType()->value);
-                readfile($response->getData()["path"]);
-            }
+        } elseif($response instanceof File) {
+            HeaderWorker::addHeader("Content-Type", $response->getType()->value);
+            readfile($response->getPath());
         }
-
-        http_response_code($response->getCode());
+        
         if(session_status() === PHP_SESSION_ACTIVE) session_write_close();
 
         if (function_exists("fastcgi_finish_request")) fastcgi_finish_request();
@@ -301,7 +303,7 @@ final class Kernel {
         $elapsedTime = round(($diff - floor($diff)) * 1000);
 
         if($this->logSlave) {
-            $this->logSlave->writeCloseLogs($elapsedTime, $response->getCode());
+            $this->logSlave->writeCloseLogs($elapsedTime, $statusCode);
             $this->logSlave->dumpLogStashIntoFile();
         }
         

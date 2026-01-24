@@ -2,14 +2,10 @@
 
 namespace FastRaven;
 
-use FastRaven\Exceptions\BadFilterException;
 use FastRaven\Exceptions\BadProjectSkeletonException;
-use FastRaven\Exceptions\BadImplementationException;
 use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
-use FastRaven\Exceptions\AlreadyAuthorizedException;
 use FastRaven\Exceptions\RateLimitExceededException;
-use FastRaven\Exceptions\FilterDeniedException;
 use FastRaven\Exceptions\SmartException;
 
 use FastRaven\Internal\Core\Kernel;
@@ -17,8 +13,9 @@ use FastRaven\Internal\Core\Kernel;
 use FastRaven\Components\Core\Config;
 use FastRaven\Components\Core\Template;
 use FastRaven\Components\Routing\Router;
-use FastRaven\Components\Http\Request;
 use FastRaven\Components\Http\Response;
+use FastRaven\Components\Routing\Middleware;
+use FastRaven\Components\Data\Item;
 
 use FastRaven\Workers\LogWorker;
 use FastRaven\Workers\HeaderWorker;
@@ -35,8 +32,6 @@ final class Server {
 
     private Kernel $kernel;
     private bool $ready = false;
-    private array $starters = [];
-    private array $finishers = [];
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -50,6 +45,10 @@ final class Server {
 
     public static function getTemplate(): Template {
         return require_once Bee::buildProjectPath(ProjectFolderType::CONFIG, "template.php");
+    }
+
+    public static function getMiddleware(): Middleware {
+        return require_once Bee::buildProjectPath(ProjectFolderType::CONFIG, "middleware.php");
     }
 
     public static function getViewRouter(): Router {
@@ -92,35 +91,14 @@ final class Server {
      *
      * @param Config $config The configuration to use.
      * @param Template $template The default template for all views.
+     * @param Middleware $middleware The middleware to use.
      * @param Router $viewRouter The View Router to use.
      * @param Router $apiRouter The API Router to use.
      * @param Router $cdnRouter The CDN Router to use.
      */
-    public function configure(Config $config, Template $template, Router $viewRouter, Router $apiRouter, Router $cdnRouter): Server {
-        $this->kernel = new Kernel($config, $template, $viewRouter, $apiRouter, $cdnRouter);
+    public function configure(Config $config, Template $template, Middleware $middleware, Router $viewRouter, Router $apiRouter, Router $cdnRouter): Server {
+        $this->kernel = new Kernel($config, $template, $middleware, $viewRouter, $apiRouter, $cdnRouter);
         $this->ready = true;
-        return $this;
-    }
-
-    /**
-     * Adds a starter filter to be executed before the request processing.
-     *
-     * @param callable $starter func(Request $request): bool - return false to deny request processing.
-     * Supports FilterDeniedException to handle custom responses.
-     */
-    public function addStarter(callable $starter): Server {
-        $this->starters[] = $starter;
-        return $this;
-    }
-
-    /**
-     * Adds a finisher filter to be executed after the request processing and before the response is sent.
-     *
-     * @param callable $finisher func(Request $request, Response $response): bool - return false to deny response return.
-     * Supports FilterDeniedException to handle custom responses.
-     */
-    public function addFinisher(callable $finisher): Server {
-        $this->finishers[] = $finisher;
         return $this;
     }
 
@@ -130,9 +108,8 @@ final class Server {
     #----------------------------------------------------------------------
     #\ PRIVATE FUNCTIONS
 
-    private function handleException(SmartException $e): Response {
-        $statusCode = $this->kernel->isViewRequest() ? 301 : $e->getStatusCode();
-        $response = Response::new(false, $statusCode, $e->getPublicMessage());
+    private function handleException(SmartException $e): Response|Template {
+        $response = Response::new(false, $e->getStatusCode(), $e->getPublicMessage());
         LogWorker::error("SmartException: " . $e->getMessage());
 
         if($e instanceof RateLimitExceededException || is_subclass_of($e, RateLimitExceededException::class)) {
@@ -140,10 +117,15 @@ final class Server {
         }
 
         if($this->kernel->isViewRequest()) {
-            if($e instanceof NotFoundException || is_subclass_of($e, NotFoundException::class) ||
-            $e instanceof AlreadyAuthorizedException || is_subclass_of($e, AlreadyAuthorizedException::class)) {
+            $response = $this->kernel->getTemplate()
+                ->setFile("errors/generic.php")
+                ->setTitle($this->kernel->getTemplate()->getTitle() . " - Error")
+                ->addData(Item::new("errorCode", $e->getStatusCode()))
+                ->addData(Item::new("errorMessage", $e->getPublicMessage()));
+
+            if(is_subclass_of($e, NotFoundException::class)) {
                 HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultNotFoundPathRedirect());
-            } else if($e instanceof NotAuthorizedException || is_subclass_of($e, NotAuthorizedException::class)) {
+            } else if(is_subclass_of($e, NotAuthorizedException::class)) {
                 if($e->isDomainLevel()) {
                     HeaderWorker::addHeader("Location", "https://".Bee::getBuiltDomain($this->kernel->getConfig()->getDefaultUnauthorizedSubdomainRedirect()));
                 } else {
@@ -153,47 +135,6 @@ final class Server {
         }
 
         return $response;
-    }
-
-    /**
-     * Validates the filter callable signature.
-     *
-     * @throws BadImplementationException If the callable has invalid parameters.
-     */
-    private function validateFilter(callable $filter, array $params = []): void {
-        $reflection = new \ReflectionFunction($filter instanceof \Closure ? $filter : $filter(...));
-        $callbackParams = array_map(fn($p) => $p->getType(), $reflection->getParameters());
-
-        for($i = 0; $i < count($callbackParams); $i++) {
-            $type = $callbackParams[$i];
-            $expected = $params[$i] ?? "none";
-            
-            if ($type !== null && $type->getName() !== $expected) throw new BadFilterException("{$i}: Should be {$expected}");
-        }
-    }
-
-    /**
-     * Processes the starters.
-     *
-     * @throws FilterDeniedException If a starter filter denies access to a resource.
-     */
-    private function processStarters(): void {
-        foreach($this->starters as $starter) {
-            $this->validateFilter($starter, [Request::class]);
-            if ($starter($this->kernel->getRequest()) === false) throw new FilterDeniedException();
-        }
-    }
-
-    /**
-     * Processes the finishers.
-     *
-     * @throws FilterDeniedException If a finisher filter denies access to a resource.
-     */
-    private function processFinishers(Response $response): void {
-        foreach($this->finishers as $finisher) {
-            $this->validateFilter($finisher, [Request::class, Response::class]);
-            if ($finisher($this->kernel->getRequest(), $response) === false) throw new FilterDeniedException();
-        }
     }
 
     #/ PRIVATE FUNCTIONS
@@ -208,16 +149,14 @@ final class Server {
      * If the server has not been configured, it will return a 500 status code.
      *
      * Handles NotFoundException, BadImplementationException, EndpointFileNotFoundException, NotAuthorizedException,
-     * AlreadyAuthorizedException, RateLimitExceededException, FilterDeniedException, UploadedFileNotFoundException
+     * RateLimitExceededException, BadMiddlewareException, MiddlewareDeniedException, UploadedFileNotFoundException
      */
     public function run(): void {
         if ($this->ready) {
             $response = null;
             try {
                 $this->kernel->open(); // Workers/Slaves initialization
-                $this->processStarters(); // Starter callbacks execution
                 $response = $this->kernel->process(); // Request processing
-                $this->processFinishers($response); // Finisher callbacks execution
             } catch(SmartException $e) {
                 $response = $this->handleException($e); // Exception handling
             }
