@@ -10,7 +10,6 @@
 - MiddlewareDeniedException for middleware access denial.
 - Error page inside pages/errors for handling view exceptions.
 
-
 #### Changed
 - View endpoints now return Template objects instead of referencing HTML files directly.
 - Template::new signature changed to (file, title, version).

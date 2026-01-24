@@ -124,7 +124,7 @@ final class Bee {
      */
     public static function getFileMimeType(string $file, bool $returnType = false): string|DataType {
         if (!is_file($file)) {
-            return "application/octet-stream";
+            return $returnType ? DataType::BINARY : "application/octet-stream";
         }
 
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
@@ -142,6 +142,27 @@ final class Bee {
 
     public static function buildProjectPath(ProjectFolderType $folderType, string $file = ""): string {
         return SITE_PATH . $folderType->value . Bee::normalizePath($file);
+    }
+
+    /**
+     * Validates the callable signature.
+     *
+     * @return bool true if the callable signature is valid, false otherwise
+     */
+    public static function validateCallable(?callable $callable, array $params = []): bool {
+        if($callable === null || !is_callable($callable)) return false;
+
+        $reflection = new \ReflectionFunction($callable instanceof \Closure ? $callable : $callable(...));
+        $callableParams = array_map(fn($p) => $p->getType(), $reflection->getParameters());
+
+        for($i = 0; $i < count($callableParams); $i++) {
+            $paramType = $callableParams[$i];
+            $expected = $params[$i] ?? "none";
+            
+            if ($paramType !== null && $paramType->getName() !== $expected) return false;
+        }
+
+        return true;
     }
 
     #/ METHODS
