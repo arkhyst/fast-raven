@@ -41,19 +41,43 @@ final class DataWorker {
     #\ METHODS
 
     /**
-     * Retrieves one row from the database that matches the given id.
+     * Retrieves all rows from the database without any conditions.
      *
      * @param string $table The table to retrieve data from.
      * @param string[] $cols The columns to retrieve data from.
-     * @param int $id The id of the row to retrieve.
+     * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
+     * @param int $limit [optional] The maximum number of rows to retrieve.
+     * @param int $offset [optional] The number of rows to skip.
      *
      * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
-    public static function selectOneById(string $table, array $cols, int $id): ?array {
+    public static function select(string $table, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
         if(self::$busy) {
-            return self::$slave->select($table, $cols, ["id"], [$id], "", 1)[0] ?? null;
+            return self::$slave->select($table, $cols, [], [], $orderBy, $limit, $offset);
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves all rows from the database that match the given conditions.
+     *
+     * @param string $table The table to retrieve data from.
+     * @param string[] $cols The columns to retrieve data from.
+     * @param Collection $conditionCollection The conditions to filter the data with.
+     * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
+     * @param int $limit [optional] The maximum number of rows to retrieve.
+     * @param int $offset [optional] The number of rows to skip.
+     *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
+     * @return array|null The retrieved data, or null if an error occurred.
+     */
+    public static function selectWhere(string $table, array $cols, Collection $conditionCollection, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+        if(self::$busy) {
+            return self::$slave->select($table, $cols, $conditionCollection->getAllKeys(), $conditionCollection->getAllValues(), $orderBy, $limit, $offset);
         }
 
         return null;
@@ -79,43 +103,19 @@ final class DataWorker {
     }
 
     /**
-     * Retrieves all rows from the database that match the given conditions.
+     * Retrieves one row from the database that matches the given id.
      *
      * @param string $table The table to retrieve data from.
      * @param string[] $cols The columns to retrieve data from.
-     * @param Collection $conditionCollection The conditions to filter the data with.
-     * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
-     * @param int $limit [optional] The maximum number of rows to retrieve.
-     * @param int $offset [optional] The number of rows to skip.
+     * @param int $id The id of the row to retrieve.
      *
      * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
-    public static function selectAllWhere(string $table, array $cols, Collection $conditionCollection, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+    public static function selectOneById(string $table, array $cols, int $id): ?array {
         if(self::$busy) {
-            return self::$slave->select($table, $cols, $conditionCollection->getAllKeys(), $conditionCollection->getAllValues(), $orderBy, $limit, $offset);
-        }
-
-        return null;
-    }
-
-    /**
-     * Retrieves all rows from the database without any conditions.
-     *
-     * @param string $table The table to retrieve data from.
-     * @param string[] $cols The columns to retrieve data from.
-     * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
-     * @param int $limit [optional] The maximum number of rows to retrieve.
-     * @param int $offset [optional] The number of rows to skip.
-     *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
-     * 
-     * @return array|null The retrieved data, or null if an error occurred.
-     */
-    public static function selectAll(string $table, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
-        if(self::$busy) {
-            return self::$slave->select($table, $cols, [], [], $orderBy, $limit, $offset);
+            return self::$slave->select($table, $cols, ["id"], [$id], "", 1)[0] ?? null;
         }
 
         return null;

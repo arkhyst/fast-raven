@@ -485,7 +485,7 @@ $user = DataWorker::selectOneWhere("users", ["*"], Collection::new([
 ]));
 
 // Read multiple rows
-$users = DataWorker::selectAllWhere(
+$users = DataWorker::selectWhere(
     "users", 
     ["id", "name"], 
     Collection::new([Item::new("active", 1)]),
@@ -493,7 +493,7 @@ $users = DataWorker::selectAllWhere(
     10,          // limit
     0            // offset
 );
-$allUsers = DataWorker::selectAll("users", ["*"], "created_at DESC", 100, 0);
+$allUsers = DataWorker::select("users", ["*"], "created_at DESC", 100, 0);
 
 // Insert
 DataWorker::insert("users", Collection::new([
