@@ -66,6 +66,10 @@ class Collection {
         return $this;
     }
     
+    public function has(string $key): bool {
+        return isset($this->data[$key]);
+    }
+
     /**
      * Retrieves an Item from the Collection by its key.
      *
@@ -74,7 +78,7 @@ class Collection {
      * @return Item|null The Item with the given key, or null if not found.
      */
     public function get(string $key): ?Item {
-        if (isset($this->data[$key])) {
+        if ($this->has($key)) {
             return Item::new($key, $this->data[$key]);
         }
         return null;

@@ -72,12 +72,3 @@ class Lib {
         });
     }
 }
-
-for(const req of XXX_PHP_AUTOFILL) {
-    Lib.request(req["api"], "GET").then(data => {
-        const result = data.data;
-        if(result == null || result.length == 0) return;
-        
-        $(req["dom"]).html(result.toString());
-    });
-} 

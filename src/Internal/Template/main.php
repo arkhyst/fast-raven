@@ -1,5 +1,12 @@
+<?php
+
+use FastRaven\Workers\Bee;
+use FastRaven\Types\ProjectFolderType;
+
+?>
+
 <!DOCTYPE html>
-<html lang="<?= $template->getLang(); ?>">
+<html>
     <head>
         <meta charset="UTF-8">
         <?= $template->getHtmlTitle(); ?>
@@ -17,13 +24,13 @@
     </head>
     <body>
         <?php
-            $fragmentsPath = \FastRaven\Workers\Bee::buildProjectPath(\FastRaven\Types\ProjectFolderType::SRC_WEB_VIEWS_FRAGMENTS);
+            $fragmentsPath = Bee::buildProjectPath(ProjectFolderType::SRC_WEB_TEMPLATES_FRAGMENTS);
             foreach ($template->getBeforeFragments() as $beforeFragment) {
                 include $fragmentsPath . $beforeFragment;
             }
         ?>
         <main>
-            <?php include $template->getFile(); ?>
+            <?php include Bee::buildProjectPath(ProjectFolderType::SRC_WEB_TEMPLATES_PAGES, $template->getFile()); ?>
         </main>
         <?php 
             foreach ($template->getAfterFragments() as $afterFragment) {
@@ -37,11 +44,7 @@
             <?php if($csrfToken) { ?>
                 window.CSRF_TOKEN = "<?= $csrfToken; ?>";
             <?php } ?>
-            <?php 
-                $comp = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "packedlib.js");
-                $comp = str_replace("XXX_PHP_AUTOFILL", $template->getHtmlAutofill(), $comp);
-                echo $comp;
-            ?>
+            <?php include __DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "packedlib.js"; ?>
         </script>
         <?= $template->getHtmlScripts(); ?>
     </body>

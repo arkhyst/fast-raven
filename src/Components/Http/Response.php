@@ -20,10 +20,10 @@ final class Response {
     private string|array $data = [];
         public function getData(): string|array { return $this->data; }
         public function setData(string|array $data): Response { $this->data = $data; return $this; }
-    private DataType $dataType = DataType::TEXT;
-        public function getDataType(): DataType { return $this->dataType; }
-        public function setDataType(DataType $dataType): Response { $this->dataType = $dataType; return $this; }
     
+    private array $frameworkMetadata = [];
+        public function getFrameworkMetadata(): array { return $this->frameworkMetadata; }
+
     #/ VARIABLES
     #----------------------------------------------------------------------
 
@@ -54,13 +54,14 @@ final class Response {
      * @return Response The new Response instance.
      */
     public static function file(bool $success, string $path): Response {
-        return (new Response($success, $success ? 200 : 500))->setData(["path" => $path]);
+        return new Response($success, $success ? 200 : 500, ["path" => $path]);
     }
 
     
-    private function __construct(bool $success, int $code) {
+    private function __construct(bool $success, int $code, array $frameworkMetadata = []) {
         $this->success = $success;
         $this->code = $code;
+        $this->frameworkMetadata = $frameworkMetadata;
     }
 
     #/ INIT

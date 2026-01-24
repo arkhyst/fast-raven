@@ -21,8 +21,8 @@ final class Item {
     /**
      * Create a new Item instance.
      *
-     * @param string $key   The key of the item.
-     * @param string|int|float|bool $value   The value of the item.
+     * @param string $key The key of the item.
+     * @param string|int|float|bool $value The value of the item.
      *
      * @return Item
      */
