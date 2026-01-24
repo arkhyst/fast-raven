@@ -181,7 +181,7 @@ final class AuthSlave {
      * @return ?int The user's ID if the credentials are valid, null otherwise.
      */
     public function checkCredentials(string $user, string $pass, string $dbTable, string $dbIdCol, string $dbNameCol, string $dbPassCol): ?int {
-        $data = DataWorker::getOneWhere($dbTable, [$dbIdCol, $dbNameCol, $dbPassCol], Collection::new([
+        $data = DataWorker::selectOneWhere($dbTable, [$dbIdCol, $dbNameCol, $dbPassCol], Collection::new([
             Item::new($dbNameCol, $user)
         ]));
 

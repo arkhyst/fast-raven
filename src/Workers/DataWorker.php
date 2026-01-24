@@ -51,9 +51,9 @@ final class DataWorker {
      * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
-    public static function getOneById(string $table, array $cols, int $id): ?array {
+    public static function selectOneById(string $table, array $cols, int $id): ?array {
         if(self::$busy) {
-            return self::$slave->getOne($table, $cols, ["id"], [$id]);
+            return self::$slave->select($table, $cols, ["id"], [$id], "", 1)[0] ?? null;
         }
 
         return null;
@@ -70,9 +70,9 @@ final class DataWorker {
      * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
-    public static function getOneWhere(string $table, array $cols, Collection $conditionCollection): ?array {
+    public static function selectOneWhere(string $table, array $cols, Collection $conditionCollection): ?array {
         if(self::$busy) {
-            return self::$slave->getOne($table, $cols, $conditionCollection->getAllKeys(), $conditionCollection->getAllValues());
+            return self::$slave->select($table, $cols, $conditionCollection->getAllKeys(), $conditionCollection->getAllValues(), "", 1)[0] ?? null;
         }
 
         return null;
@@ -92,9 +92,9 @@ final class DataWorker {
      * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
-    public static function getAllWhere(string $table, array $cols, Collection $conditionCollection, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+    public static function selectAllWhere(string $table, array $cols, Collection $conditionCollection, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
         if(self::$busy) {
-            return self::$slave->getAll($table, $cols, $conditionCollection->getAllKeys(), $conditionCollection->getAllValues(), $orderBy, $limit, $offset);
+            return self::$slave->select($table, $cols, $conditionCollection->getAllKeys(), $conditionCollection->getAllValues(), $orderBy, $limit, $offset);
         }
 
         return null;
@@ -113,9 +113,9 @@ final class DataWorker {
      * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
-    public static function getAll(string $table, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+    public static function selectAll(string $table, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
         if(self::$busy) {
-            return self::$slave->getAll($table, $cols, [], [], $orderBy, $limit, $offset);
+            return self::$slave->select($table, $cols, [], [], $orderBy, $limit, $offset);
         }
 
         return null;

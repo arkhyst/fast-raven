@@ -479,13 +479,13 @@ use FastRaven\Workers\DataWorker;
 use FastRaven\Components\Data\{Collection, Item};
 
 // Read single row
-$user = DataWorker::getOneById("users", ["id", "name"], 1);
-$user = DataWorker::getOneWhere("users", ["*"], Collection::new([
+$user = DataWorker::selectOneById("users", ["id", "name"], 1);
+$user = DataWorker::selectOneWhere("users", ["*"], Collection::new([
     Item::new("email", $email)
 ]));
 
 // Read multiple rows
-$users = DataWorker::getAllWhere(
+$users = DataWorker::selectAllWhere(
     "users", 
     ["id", "name"], 
     Collection::new([Item::new("active", 1)]),
@@ -493,7 +493,7 @@ $users = DataWorker::getAllWhere(
     10,          // limit
     0            // offset
 );
-$allUsers = DataWorker::getAll("users", ["*"], "created_at DESC", 100, 0);
+$allUsers = DataWorker::selectAll("users", ["*"], "created_at DESC", 100, 0);
 
 // Insert
 DataWorker::insert("users", Collection::new([
@@ -967,7 +967,7 @@ use FastRaven\Workers\DataWorker;
 return function(Request $request, Template $baseTemplate): Template {
     // Get user data
     $userId = AuthWorker::getAuthorizedUserId();
-    $user = DataWorker::getOneById("users", ["name", "notifications"], $userId);
+    $user = DataWorker::selectOneById("users", ["name", "notifications"], $userId);
     
     // Create page-specific template
     $page = Template::new("dashboard.php", "Dashboard");
@@ -1026,7 +1026,7 @@ return function(Request $request): Response {
     }
     
     // Check if email already exists
-    $existing = DataWorker::getOneWhere("users", ["id"], Collection::new([
+    $existing = DataWorker::selectOneWhere("users", ["id"], Collection::new([
         Item::new("email", $email)
     ]));
     if ($existing && $existing["id"] !== $userId) {
@@ -1129,7 +1129,7 @@ return function(Request $request): Response {
     $id = $request->post("id", SanitizeType::ONLY_ALPHA);
     
     // 404 - Resource not found
-    $item = DataWorker::getOneById("items", ["*"], intval($id));
+    $item = DataWorker::selectOneById("items", ["*"], intval($id));
     if (!$item) {
         throw new NotFoundException();
     }

@@ -193,11 +193,10 @@ final class DataSlave {
      * @param QueryType $type The type of query to execute.
      * @param string $query The SQL query string to execute.
      * @param array $vars The array of variables to bind to the query.
-     * @param bool $fetchAll Whether to fetch all results or not.
      * 
      * @return array|bool|null The result of the query, or null if an error occurred.
      */
-    private function simpleRequestToDatabase(QueryType $type, string $query, array $vars = [], bool $fetchAll = false): array|bool|int|null {
+    private function simpleRequestToDatabase(QueryType $type, string $query, array $vars = []): array|bool|int|null {
         if($this->pdo === null) $this->initializePDO();
 
         if($this->pdo !== null) {
@@ -206,7 +205,7 @@ final class DataSlave {
                 $ok = $stmt->execute($vars);
 
                 if($ok) {
-                    if($type == QueryType::SELECT) return $fetchAll ? $stmt->fetchAll() : ($stmt->fetch() ?: null);
+                    if($type == QueryType::SELECT) return $stmt->fetchAll();
                     else if($type == QueryType::COUNT) return (int)$stmt->fetch()["count"];
                     else if($type == QueryType::DELETE) return $stmt->rowCount() > 0;
                     else if($type == QueryType::INSERT || $type == QueryType::UPDATE) return $ok;
@@ -233,26 +232,6 @@ final class DataSlave {
     #\ METHODS
 
     /**
-     * Executes a SQL query to retrieve one row from the database.
-     *
-     * @param string $table The table to retrieve data from.
-     * @param string[] $cols The columns to retrieve data from.
-     * @param string[] $cond The conditions to filter the data with.
-     * @param array $vars The variables to bind to the query.
-     * 
-     * @return array|null The retrieved data, or null if an error occurred.
-     */
-    public function getOne(string $table, array $cols, array $cond, array $vars): ?array {
-        try {
-            $query = $this->buildQuery(QueryType::SELECT, $table, $cols, $cond);
-            return $this->simpleRequestToDatabase(QueryType::SELECT, $query, $vars, false);
-        } catch (SecurityVulnerabilityException $e) {
-            LogWorker::error($e->getMessage());
-            return null;
-        }
-    }
-
-    /**
      * Executes a SQL query to retrieve all rows from the database that match the given conditions.
      *
      * @param string $table The table to retrieve data from.
@@ -262,10 +241,10 @@ final class DataSlave {
      * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
-    public function getAll(string $table, array $cols, array $cond, array $vars, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+    public function select(string $table, array $cols, array $cond, array $vars, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
         try {
             $query = $this->buildQuery(QueryType::SELECT, $table, $cols, $cond, $orderBy, $limit, $offset);
-            return $this->simpleRequestToDatabase(QueryType::SELECT, $query, $vars, true);
+            return $this->simpleRequestToDatabase(QueryType::SELECT, $query, $vars);
         } catch (SecurityVulnerabilityException $e) {
             LogWorker::error($e->getMessage());
             return null;

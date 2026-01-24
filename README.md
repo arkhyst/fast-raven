@@ -33,13 +33,12 @@ OR (not recommended)
 - ~~Implementation of endpoint specific middlewares.~~
 - ~~Implementation of native language support.~~
 - ~~Addition of frontend modular components.~~
-
-### Roadmap: v1.0
-- Implementation of Multi-DB support for DataSlave.
 - ~~Upgrade of Router component: refactor to support more complex architectures.~~
-- Upgrade of PHP version to 8.5 (if is globally supported by hosting providers).
 - Upgrade of ValidationWorker: failure details and added complexity.
-- Upgrade of DataSlave: ORM-like components, index and join for scalable queries.
+
+### Potential features
+- Implementation of Multi-DB support for DataSlave.
+- Upgrade of DataSlave: addition of ORM-like component to create complex queries. Refactor of whole class.
 
 ---
 
