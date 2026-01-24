@@ -1,15 +1,38 @@
 ### [v0.5] - 2026-01-XX
 #### Added
-- 
+- View folder for endpoint handler files.
+- Templates folder for HTML/PHP template files.
+- Middleware component for handling per-endpoint middleware functions.
+- Template data methods for handling data passing to templates.
+- Template favicon methods for dark mode favicon support.
+- Bee::validateCallable() for validating callable signatures.
+- BadMiddlewareException for middleware signature errors.
+- MiddlewareDeniedException for middleware access denial.
+- Error page inside pages/errors for handling view exceptions.
+
 
 #### Changed
-- MiddlewareType enum renamed to EndpointType.
+- View endpoints now return Template objects instead of referencing HTML files directly.
+- Template::new signature changed to (file, title, version).
+- ProjectFolderType enum restructured
+- Endpoint factory methods now use middlewareId instead of guestOnly and rateLimit.
+- Exception handling simplified: View exceptions now render error template instead of redirecting.
 
 #### Fixed
-- 
+- Bee::getFileMimeType() returns string instead of DataType when file doesn't exist and returnType is true.
 
 #### Removed
-- 
+- Template::flex() is no longer supported (nor needed).
+- Template::addAutofill() removed (use addData() instead).
+- Template::getLang() and Template::setLang() removed.
+- Endpoint::getTemplate() removed (templates returned by handlers).
+- Endpoint::getUnauthorizedExclusive() removed (use middleware instead).
+- Endpoint::getLimitPerMinute() removed (rate limit moved to Router).
+- AlreadyAuthorizedException removed (use middleware instead).
+- BadFilterException removed (replaced by BadMiddlewareException).
+- FilterDeniedException removed (replaced by MiddlewareDeniedException).
+- Server::addStarter() and Server::addFinisher() removed (use middleware).
+- filters.php configuration file removed (use middleware.php).
 
 ### [v0.4] - 2026-01-03
 #### Added
