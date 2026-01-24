@@ -2,6 +2,7 @@
 
 namespace FastRaven\Components\Core;
 
+use FastRaven\Workers\AuthWorker;
 use FastRaven\Workers\Bee;
 
 use FastRaven\Components\Data\Collection;
@@ -26,6 +27,13 @@ final class Template {
     private string $faviconDark = "";
         public function getFaviconDark(): string { return $this->faviconDark; }
         public function setFaviconDark(string $faviconDark): Template { $this->faviconDark = $faviconDark; return $this; }
+    private string $langFile = "global";
+        public function getLangFile(): string { return $this->langFile; }
+        public function setLangFile(string $langFile): Template { $this->langFile = $langFile; return $this; }
+    private string $defaultLang = "en";
+        public function getDefaultLang(): string { return $this->defaultLang; }
+        public function setDefaultLang(string $defaultLang): Template { $this->defaultLang = $defaultLang; return $this; }
+    
     private array $styles = [];
         public function getStyles(): array { return $this->styles; }
         public function addStyle(string $style): Template { $this->styles[] = $style; return $this; }
@@ -43,7 +51,6 @@ final class Template {
         public function hasData(string $key): bool { return $this->data->has($key); }
         public function getData(string $key): string { return $this->hasData($key) ? strval($this->data->get($key)->getValue()) : ""; }
         public function addData(Item $item): Template { $this->data->add($item); return $this; }
-
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -63,16 +70,10 @@ final class Template {
         return new Template($file, $title, $version);
     }
 
-    private function  __construct(string $file, string $title, string $version, string $faviconLight = "", string $faviconDark = "", array $styles = [], array $scripts = [], array $beforeFragments = [], array $afterFragments = []) {
+    private function  __construct(string $file, string $title, string $version = "") {
         $this->file = $file;
         $this->title = $title;
         $this->version = $version;
-        $this->faviconLight = $faviconLight;
-        $this->faviconDark = $faviconDark;
-        $this->styles = $styles;
-        $this->scripts = $scripts;
-        $this->beforeFragments = $beforeFragments;
-        $this->afterFragments = $afterFragments;
         $this->data = Collection::new();
     }
 
@@ -171,6 +172,30 @@ final class Template {
         }
 
         return $html;
+    }
+
+    /**
+     * Returns the HTML script element containing the language data of the page.
+     * 
+     * The language data is retrieved from the web/lang directory.
+     *
+     * @return string The HTML script element containing the language data of the page.
+     */
+    public function getHtmlLang(): string {
+        return "<script>window.LANG = " . json_encode(Bee::parseCSV("lang/" . $this->langFile . ".csv"), JSON_UNESCAPED_UNICODE) . ";</script>";
+    }
+
+    /**
+     * Returns the HTML script element containing the CSRF token of the page.
+     * 
+     * The CSRF token is retrieved from the session.
+     *
+     * @return string The HTML script element containing the CSRF token of the page.
+     */
+    public function getHtmlCSRF(): string {
+        if(AuthWorker::isAuthorized()) return "<script>window.CSRF_TOKEN = \"" . $_SESSION["sgas_csrf"] . "\";</script>";
+        
+        return "";
     }
 
     #/ METHODS

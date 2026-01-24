@@ -5,7 +5,10 @@
 - Middleware component for handling per-endpoint middleware functions.
 - Template data methods for handling data passing to templates.
 - Template favicon methods for dark mode favicon support.
+- Template i18n support with setLangFile() and setDefaultLang() methods.
+- Bee::parseCSV() for parsing CSV files into structured arrays.
 - Bee::validateCallable() for validating callable signatures.
+- Lib.changeLanguage(lang) JS method for dynamic language switching.
 - BadMiddlewareException for middleware signature errors.
 - MiddlewareDeniedException for middleware access denial.
 - Error page inside pages/errors for handling view exceptions.

@@ -165,6 +165,45 @@ final class Bee {
         return true;
     }
 
+
+    /**
+     * Parses a CSV file and returns an array that represents the CSV file.
+     *
+     * @param string $csvPath the path to the CSV file relative to src/web/
+     *
+     * @return array an array that represents the CSV file
+     */
+    public static function parseCSV(string $csvPath): array {
+        $fullPath = Bee::buildProjectPath(ProjectFolderType::SRC_WEB, $csvPath);
+
+        if (!file_exists($fullPath)) return [];
+        
+        $handle = fopen($fullPath, "r");
+        if (!$handle) return [];
+        
+        $result = [];
+        $cols = fgetcsv($handle);
+
+        if($cols === false || $cols[0] !== "key") {
+            fclose($handle);
+            return [];
+        }
+        
+        $cols = array_slice($cols, 1);
+        foreach($cols as $col) {
+            $result[$col] = [];
+        }
+
+        while(($row = fgetcsv($handle)) !== false) {
+            foreach($cols as $key => $col) {
+                $result[$col][$row[0]] = $row[$key+1];
+            }
+        }
+        
+        fclose($handle);
+        return $result;
+    }
+
     #/ METHODS
     #----------------------------------------------------------------------
 }

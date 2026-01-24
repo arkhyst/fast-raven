@@ -281,7 +281,6 @@ final class Kernel {
         if($response instanceof Template) {
             HeaderWorker::addHeader("Content-Type", "text/html; charset=utf-8");
             $template = $response;
-            $csrfToken = AuthWorker::isAuthorized() ? $_SESSION["sgas_csrf"] : null;
             require_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
         } else if ($response instanceof Response) {
             HeaderWorker::addHeader("Content-Type", "application/json; charset=utf-8");

@@ -31,18 +31,15 @@ OR (not recommended)
 
 ### Roadmap: v0.5
 - ~~Implementation of endpoint specific middlewares.~~
-- Implementation of native language support.
-- Addition of DataWorker ORM-like components to create queries.
+- ~~Implementation of native language support.~~
 - ~~Addition of frontend modular components.~~
-- Upgrade of DataSlave: implementation of index and join for scalable queries.
 
 ### Roadmap: v1.0
-- Improvement of ValidationWorker complexity and ValidationFlags.
-- Implementation of unauthorized flow with redirects after login.
 - Implementation of Multi-DB support for DataSlave.
 - ~~Upgrade of Router component: refactor to support more complex architectures.~~
 - Upgrade of PHP version to 8.5 (if is globally supported by hosting providers).
-- Upgrade of ValidationWorker: implementation of validation details when validation fails.
+- Upgrade of ValidationWorker: failure details and added complexity.
+- Upgrade of DataSlave: ORM-like components, index and join for scalable queries.
 
 ---
 

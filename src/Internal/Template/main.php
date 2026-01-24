@@ -40,11 +40,13 @@ use FastRaven\Types\ProjectFolderType;
         <script>
             <?php include __DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "jquery.min.js"; ?>
         </script>
+        <?= $template->getHtmlLang(); ?>
+        <?= $template->getHtmlCSRF(); ?>
         <script>
-            <?php if($csrfToken) { ?>
-                window.CSRF_TOKEN = "<?= $csrfToken; ?>";
-            <?php } ?>
             <?php include __DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "packedlib.js"; ?>
+        </script>
+        <script>
+            Lib.changeLanguage("<?= $template->getDefaultLang(); ?>");
         </script>
         <?= $template->getHtmlScripts(); ?>
     </body>

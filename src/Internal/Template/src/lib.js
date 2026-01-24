@@ -71,4 +71,18 @@ class Lib {
             });
         });
     }
+
+    /**
+     * Change the language of all elements with data-lang attribute.
+     * @param {string} lang - Language code (e.g., 'en', 'es').
+     */
+    static changeLanguage(lang) {
+        if (!window.LANG || !window.LANG[lang]) return;
+
+        const translations = window.LANG[lang];
+        $('[data-lang]').each(function() {
+            const key = $(this).data('lang');
+            if (translations[key] !== undefined) $(this).text(translations[key]);
+        });
+    }
 }
