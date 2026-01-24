@@ -12,6 +12,9 @@
 - BadMiddlewareException for middleware signature errors.
 - MiddlewareDeniedException for middleware access denial.
 - Error page inside pages/errors for handling view exceptions.
+- MailWorker::send() fireAndForget parameter for non-blocking email sending.
+- Bee::getCacheKey() for standardizing cache key generation.
+- Skeleton: ops/preload.php for OPcache preload script.
 
 #### Changed
 - View endpoints now return Template objects instead of referencing HTML files directly.
@@ -20,6 +23,8 @@
 - Endpoint factory methods now use middlewareId instead of guestOnly and rateLimit.
 - Exception handling simplified: View exceptions now render error template instead of redirecting.
 - CacheSlave shmop key generation now uses xxHash32 instead of CRC32 for better distribution.
+- MailWorker::sendMail() renamed to MailWorker::send().
+- Language files are now cached in memory for 1 hour to reuse them in other requests.
 
 #### Fixed
 - Bee::getFileMimeType() returns string instead of DataType when file doesn't exist and returnType is true.

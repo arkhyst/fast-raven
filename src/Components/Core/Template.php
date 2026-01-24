@@ -3,6 +3,7 @@
 namespace FastRaven\Components\Core;
 
 use FastRaven\Workers\AuthWorker;
+use FastRaven\Workers\CacheWorker;
 use FastRaven\Workers\Bee;
 
 use FastRaven\Components\Data\Collection;
@@ -182,7 +183,15 @@ final class Template {
      * @return string The HTML script element containing the language data of the page.
      */
     public function getHtmlLang(): string {
-        return "<script>window.LANG = " . json_encode(Bee::parseCSV("lang/" . $this->langFile . ".csv"), JSON_UNESCAPED_UNICODE) . ";</script>";
+        $cacheKey = Bee::getCacheKey("lang", $this->langFile);
+        
+        $langData = CacheWorker::read($cacheKey);
+        if ($langData === null) {
+            $langData = Bee::parseCSV("lang/" . $this->langFile . ".csv");
+            CacheWorker::write($cacheKey, $langData, 3600);
+        }
+        
+        return "<script>window.LANG = " . json_encode($langData, JSON_UNESCAPED_UNICODE) . ";</script>";
     }
 
     /**

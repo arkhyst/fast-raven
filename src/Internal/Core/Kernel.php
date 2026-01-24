@@ -119,7 +119,7 @@ final class Kernel {
      */
     private function handleRateLimit(int $limit): bool {
         if ($limit > 0) {
-            $rateLimitID = "fastraven:". $this->config->getSiteName().":ratelimit:". md5($_SERVER["REMOTE_ADDR"]);
+            $rateLimitID = Bee::getCacheKey("ratelimit", $_SERVER["REMOTE_ADDR"]);
             
             $cacheItem = CacheWorker::readWithMeta($rateLimitID);
             $newValue = ($cacheItem["value"] ?? 0) + 1;
@@ -301,6 +301,10 @@ final class Kernel {
 
         $diff = microtime(true) - $this->startRequestTime;
         $elapsedTime = round(($diff - floor($diff)) * 1000);
+
+        if($this->mailSlave) {
+            $this->mailSlave->processDeferredMails();
+        }
 
         if($this->logSlave) {
             $this->logSlave->writeCloseLogs($elapsedTime, $statusCode);

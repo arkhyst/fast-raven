@@ -72,7 +72,7 @@ final class DataSlave {
      * If the PDO object cannot be created, an error will be logged and the PDO object will be set to null.
      */
     private function initializePDO(): void {
-        if(!$this->pdo) {
+        if($this->pdo === null) {
             try {
                 $options = [
                     \PDO::ATTR_PERSISTENT => Bee::env("DB_PERSISTENT", "false") === "true",
@@ -198,9 +198,9 @@ final class DataSlave {
      * @return array|bool|null The result of the query, or null if an error occurred.
      */
     private function simpleRequestToDatabase(QueryType $type, string $query, array $vars = [], bool $fetchAll = false): array|bool|int|null {
-        $this->initializePDO();
+        if($this->pdo === null) $this->initializePDO();
 
-        if($this->pdo) {
+        if($this->pdo !== null) {
             try {
                 $stmt = $this->pdo->prepare($query);
                 $ok = $stmt->execute($vars);
@@ -298,8 +298,8 @@ final class DataSlave {
      * @return int|null The last insert ID, or null if an error occurred.
      */
     public function getLastInsertId(): ?int {
-        $this->initializePDO();
-        if($this->pdo) return (int)$this->pdo->lastInsertId();
+        if($this->pdo === null) $this->initializePDO();
+        if($this->pdo !== null) return (int)$this->pdo->lastInsertId();
         
         return null;
     }
@@ -379,8 +379,8 @@ final class DataSlave {
 
         try {
             $query = $this->buildQuery(QueryType::INSERT, $table, $cols);
-            $this->initializePDO();
-            if (!$this->pdo) return false;
+            if($this->pdo === null) $this->initializePDO();
+            if($this->pdo === null) return false;
 
             $this->pdo->beginTransaction();
             $stmt = $this->pdo->prepare($query);

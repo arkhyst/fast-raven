@@ -56,6 +56,15 @@ final class LogStash {
     }
 
     /**
+     * Checks if the log stash is empty.
+     *
+     * @return bool True if the log stash is empty, false otherwise.
+     */
+    public function isEmpty(): bool {
+        return empty($this->logList);
+    }
+
+    /**
      * Empties the log stash.
      *
      * This function is used to empty the log stash after it has been written to a file.
