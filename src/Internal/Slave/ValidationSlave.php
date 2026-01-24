@@ -89,7 +89,7 @@ final class ValidationSlave {
      * @return bool True if the password is valid, false otherwise.
      */
     public function validatePassword(string $password, ValidationFlags $flags): bool {
-        $length = strlen($password);
+        $length = mb_strlen($password);
         $hasNumber = preg_match_all('/[0-9]/', $password);
         $hasSpecial = preg_match_all('/[^a-zA-Z0-9]/', $password);
         $hasLowercase = preg_match_all('/[a-z]/', $password);
@@ -135,7 +135,7 @@ final class ValidationSlave {
      * @return bool True if the username is valid, false otherwise.
     */
     public function validateUsername(string $username, ValidationFlags $flags): bool {
-        $length = strlen($username);
+        $length = mb_strlen($username);
 
         return $length >= $flags->get("minLength")->getValue() &&
         $length <= $flags->get("maxLength")->getValue();
@@ -156,7 +156,7 @@ final class ValidationSlave {
      * @return bool True if the phone number is valid, false otherwise.
      */
     public function validatePhone(int $countryCode, string $phone): bool {
-        $length = strlen($phone);
+        $length = mb_strlen($phone);
 
         return $length >= 7 && $length <= 15 && $countryCode >= 1 && $countryCode <= 999;
     }

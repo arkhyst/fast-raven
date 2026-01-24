@@ -396,7 +396,7 @@ class RequestTest extends TestCase
         $internalId = $request->getInternalID();
 
         $this->assertIsString($internalId);
-        $this->assertEquals(8, strlen($internalId));
+        $this->assertEquals(8, mb_strlen($internalId));
         $this->assertMatchesRegularExpression('/^[a-f0-9]{8}$/', $internalId);
     }
 

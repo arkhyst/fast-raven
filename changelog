@@ -19,9 +19,12 @@
 - ProjectFolderType enum restructured
 - Endpoint factory methods now use middlewareId instead of guestOnly and rateLimit.
 - Exception handling simplified: View exceptions now render error template instead of redirecting.
+- CacheSlave shmop key generation now uses xxHash32 instead of CRC32 for better distribution.
 
 #### Fixed
 - Bee::getFileMimeType() returns string instead of DataType when file doesn't exist and returnType is true.
+- AuthWorker CSRF validation always returns false.
+- ValidationSlave fails length validation for multibyte characters.
 
 #### Removed
 - Template::flex() is no longer supported (nor needed).

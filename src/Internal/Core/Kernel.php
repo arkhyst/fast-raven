@@ -291,6 +291,7 @@ final class Kernel {
             ]);
         } elseif($response instanceof File) {
             HeaderWorker::addHeader("Content-Type", $response->getType()->value);
+            HeaderWorker::addHeader("Content-Length", filesize($response->getPath()));
             readfile($response->getPath());
         }
         
