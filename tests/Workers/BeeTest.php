@@ -456,5 +456,83 @@ class BeeTest extends TestCase
         // Null bytes should be stripped
         $this->assertStringNotContainsString("\0", $result);
     }
+
+    // =====================================================================
+    // validateCallable() tests
+    // =====================================================================
+
+    public function testValidateCallableReturnsTrueForValidCallable(): void
+    {
+        $callable = function(string $param1, int $param2): bool {
+            return true;
+        };
+
+        $result = Bee::validateCallable($callable, ['string', 'int']);
+
+        $this->assertTrue($result);
+    }
+
+    public function testValidateCallableReturnsFalseForInvalidSignature(): void
+    {
+        $callable = function(string $param1): bool {
+            return true;
+        };
+
+        $result = Bee::validateCallable($callable, ['int']);
+
+        $this->assertFalse($result);
+    }
+
+    public function testValidateCallableReturnsFalseForNull(): void
+    {
+        $result = Bee::validateCallable(null, []);
+
+        $this->assertFalse($result);
+    }
+
+    public function testValidateCallableReturnsTrueForEmptyParams(): void
+    {
+        $callable = function(): bool {
+            return true;
+        };
+
+        $result = Bee::validateCallable($callable, []);
+
+        $this->assertTrue($result);
+    }
+
+    public function testValidateCallableWithUntypedParameters(): void
+    {
+        $callable = function($param1, $param2): bool {
+            return true;
+        };
+
+        // Untyped parameters should pass any expected type
+        $result = Bee::validateCallable($callable, ['string', 'int']);
+
+        $this->assertTrue($result);
+    }
+
+    public function testValidateCallableWithClassTypes(): void
+    {
+        $callable = function(\FastRaven\Components\Http\Request $request): bool {
+            return true;
+        };
+
+        $result = Bee::validateCallable($callable, ['FastRaven\Components\Http\Request']);
+
+        $this->assertTrue($result);
+    }
+
+    public function testValidateCallableWithMismatchedClassTypes(): void
+    {
+        $callable = function(\FastRaven\Components\Http\Response $response): bool {
+            return true;
+        };
+
+        $result = Bee::validateCallable($callable, ['FastRaven\Components\Http\Request']);
+
+        $this->assertFalse($result);
+    }
 }
 

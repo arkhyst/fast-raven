@@ -18,9 +18,24 @@ class RouterTest extends TestCase
         $this->assertEmpty($router->getSubrouterList());
     }
 
+    public function testNewCreatesRouterWithRateLimit(): void
+    {
+        $router = Router::new(EndpointType::API, 200);
+
+        $this->assertEquals(EndpointType::API, $router->getType());
+        $this->assertEquals(200, $router->getLimitPerMinute());
+    }
+
+    public function testNewCreatesRouterWithDefaultRateLimit(): void
+    {
+        $router = Router::new(EndpointType::VIEW);
+
+        $this->assertEquals(-1, $router->getLimitPerMinute());
+    }
+
     public function testAddEndpointToRouter(): void
     {
-        $endpoint = Endpoint::view(false, '/', 'home.php');
+        $endpoint = Endpoint::view(false, '/', 'Home.php');
         
         $router = Router::new(EndpointType::VIEW)
             ->add($endpoint);
@@ -31,8 +46,8 @@ class RouterTest extends TestCase
 
     public function testAddMultipleEndpoints(): void
     {
-        $endpoint1 = Endpoint::view(false, '/home', 'home.php');
-        $endpoint2 = Endpoint::view(false, '/about', 'about.php');
+        $endpoint1 = Endpoint::view(false, '/home', 'Home.php');
+        $endpoint2 = Endpoint::view(false, '/about', 'About.php');
 
         $router = Router::new(EndpointType::VIEW)
             ->add($endpoint1)
@@ -79,5 +94,42 @@ class RouterTest extends TestCase
         $found = $router->getEndpointList()[$complexPath] ?? null;
 
         $this->assertSame($endpoint, $found);
+    }
+
+    public function testApiRouterWithRateLimit(): void
+    {
+        $router = Router::new(EndpointType::API, 100);
+
+        $this->assertEquals(100, $router->getLimitPerMinute());
+    }
+
+    public function testCdnRouterWithRateLimit(): void
+    {
+        $router = Router::new(EndpointType::CDN, 50);
+
+        $this->assertEquals(50, $router->getLimitPerMinute());
+    }
+
+    public function testViewRouterWithRateLimit(): void
+    {
+        $router = Router::new(EndpointType::VIEW, 300);
+
+        $this->assertEquals(300, $router->getLimitPerMinute());
+    }
+
+    public function testMethodChaining(): void
+    {
+        $endpoint1 = Endpoint::api(false, 'GET', '/health', 'Health.php');
+        $endpoint2 = Endpoint::api(false, 'GET', '/ping', 'Ping.php');
+        $subrouter = Endpoint::router(EndpointType::API, true, '/admin', 'admin.php');
+
+        $router = Router::new(EndpointType::API, 200)
+            ->add($endpoint1)
+            ->add($endpoint2)
+            ->add($subrouter);
+
+        $this->assertCount(2, $router->getEndpointList());
+        $this->assertCount(1, $router->getSubrouterList());
+        $this->assertEquals(200, $router->getLimitPerMinute());
     }
 }

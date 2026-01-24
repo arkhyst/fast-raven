@@ -4,7 +4,6 @@ namespace FastRaven\Tests\Components\Routing;
 
 use PHPUnit\Framework\TestCase;
 use FastRaven\Components\Routing\Endpoint;
-use FastRaven\Components\Core\Template;
 use FastRaven\Types\EndpointType;
 
 class EndpointTest extends TestCase
@@ -16,6 +15,7 @@ class EndpointTest extends TestCase
         $this->assertEquals('/api/users/#GET', $endpoint->getComplexPath());
         $this->assertEquals('users.php', $endpoint->getFile());
         $this->assertFalse($endpoint->getRestricted());
+        $this->assertEquals(EndpointType::API, $endpoint->getType());
     }
 
     public function testApiCreatesRestrictedEndpoint(): void
@@ -38,48 +38,115 @@ class EndpointTest extends TestCase
         $this->assertEquals('/api/users/1/#DELETE', $deleteEndpoint->getComplexPath());
     }
 
+    public function testApiWithMiddleware(): void
+    {
+        $endpoint = Endpoint::api(false, 'GET', 'admin', 'admin.php', 'requireAdmin');
+
+        $this->assertEquals('requireAdmin', $endpoint->getMiddlewareId());
+    }
+
+    public function testApiWithoutMiddleware(): void
+    {
+        $endpoint = Endpoint::api(false, 'GET', 'users', 'users.php');
+
+        $this->assertEquals('', $endpoint->getMiddlewareId());
+    }
+
     public function testViewCreatesEndpointWithoutApiPrefix(): void
     {
-        $endpoint = Endpoint::view(false, '/home', 'home.php');
+        $endpoint = Endpoint::view(false, '/home', 'Home.php');
 
         $this->assertEquals('/home/#GET', $endpoint->getComplexPath());
-        $this->assertEquals('home.php', $endpoint->getFile());
+        $this->assertEquals('Home.php', $endpoint->getFile());
         $this->assertFalse($endpoint->getRestricted());
+        $this->assertEquals(EndpointType::VIEW, $endpoint->getType());
     }
 
     public function testViewCreatesRestrictedEndpoint(): void
     {
-        $endpoint = Endpoint::view(true, '/admin', 'admin.php');
+        $endpoint = Endpoint::view(true, '/admin', 'Admin.php');
 
         $this->assertTrue($endpoint->getRestricted());
     }
 
     public function testViewAlwaysUsesGetMethod(): void
     {
-        $endpoint = Endpoint::view(false, '/about', 'about.php');
+        $endpoint = Endpoint::view(false, '/about', 'About.php');
 
         $this->assertStringEndsWith('#GET', $endpoint->getComplexPath());
     }
 
-    public function testViewWithoutTemplate(): void
+    public function testViewWithMiddleware(): void
     {
-        $endpoint = Endpoint::view(false, '/home', 'home.php');
+        $endpoint = Endpoint::view(false, '/login', 'Login.php', 'guestOnly');
 
-        $this->assertNull($endpoint->getTemplate());
+        $this->assertEquals('guestOnly', $endpoint->getMiddlewareId());
     }
 
-    public function testViewWithTemplate(): void
+    public function testViewWithoutMiddleware(): void
     {
-        $template = Template::new('Page Title', '1.0');
-        $endpoint = Endpoint::view(false, '/home', 'home.php', $template);
+        $endpoint = Endpoint::view(false, '/home', 'Home.php');
 
-        $this->assertInstanceOf(Template::class, $endpoint->getTemplate());
-        $this->assertSame($template, $endpoint->getTemplate());
+        $this->assertEquals('', $endpoint->getMiddlewareId());
+    }
+
+    public function testCdnCreatesEndpointWithCdnPrefix(): void
+    {
+        $endpoint = Endpoint::cdn(false, 'GET', 'favicon', 'Favicon.php');
+
+        $this->assertEquals('/cdn/favicon/#GET', $endpoint->getComplexPath());
+        $this->assertEquals('Favicon.php', $endpoint->getFile());
+        $this->assertFalse($endpoint->getRestricted());
+        $this->assertEquals(EndpointType::CDN, $endpoint->getType());
+    }
+
+    public function testCdnWithMiddleware(): void
+    {
+        $endpoint = Endpoint::cdn(false, 'GET', 'protected', 'Protected.php', 'requireAuth');
+
+        $this->assertEquals('requireAuth', $endpoint->getMiddlewareId());
+    }
+
+    public function testCdnWithoutMiddleware(): void
+    {
+        $endpoint = Endpoint::cdn(false, 'GET', 'public', 'Public.php');
+
+        $this->assertEquals('', $endpoint->getMiddlewareId());
+    }
+
+    public function testRouterCreatesEndpointWithRouterType(): void
+    {
+        $endpoint = Endpoint::router(EndpointType::API, false, '/admin', 'admin.php');
+
+        $this->assertEquals(EndpointType::ROUTER, $endpoint->getType());
+        $this->assertEquals('/api/admin/#GET', $endpoint->getComplexPath());
+    }
+
+    public function testRouterWithCdnTypeAddsCdnPrefix(): void
+    {
+        $endpoint = Endpoint::router(EndpointType::CDN, false, '/images', 'images.php');
+
+        $this->assertEquals('/cdn/images/#GET', $endpoint->getComplexPath());
+    }
+
+    public function testRouterWithViewTypeNoPrefix(): void
+    {
+        $endpoint = Endpoint::router(EndpointType::VIEW, false, '/admin', 'admin.php');
+
+        $this->assertEquals('/admin/#GET', $endpoint->getComplexPath());
+    }
+
+    public function testRouterWithMiddleware(): void
+    {
+        $endpoint = Endpoint::router(EndpointType::API, true, '/admin', 'admin.php', 'requireAdmin');
+
+        $this->assertEquals('requireAdmin', $endpoint->getMiddlewareId());
+        $this->assertTrue($endpoint->getRestricted());
     }
 
     public function testPathNormalizationRemovesLeadingSlash(): void
     {
-        $endpoint = Endpoint::view(false, '/about/', 'about.php');
+        $endpoint = Endpoint::view(false, '/about/', 'About.php');
 
         // Bee::normalizePath normalizes path, then we add trailing slash
         $this->assertEquals('/about/#GET', $endpoint->getComplexPath());
@@ -87,14 +154,14 @@ class EndpointTest extends TestCase
 
     public function testPathNormalizationHandlesRootPath(): void
     {
-        $endpoint = Endpoint::view(false, '/', 'home.php');
+        $endpoint = Endpoint::view(false, '/', 'Home.php');
 
         $this->assertEquals('/#GET', $endpoint->getComplexPath());
     }
 
     public function testPathNormalizationHandlesMultipleSlashes(): void
     {
-        $endpoint = Endpoint::view(false, '//path//to//page//', 'page.php');
+        $endpoint = Endpoint::view(false, '//path//to//page//', 'Page.php');
 
         // Should normalize to single slashes with trailing slash
         $this->assertStringStartsWith('/path/to/page/', $endpoint->getComplexPath());
@@ -110,15 +177,15 @@ class EndpointTest extends TestCase
 
     public function testFilePathNormalization(): void
     {
-        $endpoint = Endpoint::view(false, '/home', '//views//home.php');
+        $endpoint = Endpoint::view(false, '/home', '//views//Home.php');
 
         // File path should be normalized
-        $this->assertEquals('views/home.php', $endpoint->getFile());
+        $this->assertEquals('views/Home.php', $endpoint->getFile());
     }
 
     public function testGetRestrictedReturnsFalseByDefault(): void
     {
-        $endpoint = Endpoint::view(false, '/public', 'public.php');
+        $endpoint = Endpoint::view(false, '/public', 'Public.php');
 
         $this->assertFalse($endpoint->getRestricted());
     }
@@ -140,68 +207,16 @@ class EndpointTest extends TestCase
 
     public function testNestedViewPaths(): void
     {
-        $endpoint = Endpoint::view(false, '/admin/dashboard/stats', 'admin/dashboard/stats.php');
+        $endpoint = Endpoint::view(false, '/admin/dashboard/stats', 'admin/dashboard/Stats.php');
 
         $this->assertEquals('/admin/dashboard/stats/#GET', $endpoint->getComplexPath());
-        $this->assertEquals('admin/dashboard/stats.php', $endpoint->getFile());
+        $this->assertEquals('admin/dashboard/Stats.php', $endpoint->getFile());
     }
 
-    public function testApiUnauthorizedExclusiveDefaultsFalse(): void
+    public function testGetPath(): void
     {
         $endpoint = Endpoint::api(false, 'GET', 'users', 'users.php');
 
-        $this->assertFalse($endpoint->getUnauthorizedExclusive());
-    }
-
-    public function testApiUnauthorizedExclusiveTrue(): void
-    {
-        $endpoint = Endpoint::api(false, 'GET', 'register', 'register.php', true);
-
-        $this->assertTrue($endpoint->getUnauthorizedExclusive());
-    }
-
-    public function testApiUnauthorizedExclusiveFalse(): void
-    {
-        $endpoint = Endpoint::api(false, 'POST', 'login', 'login.php', false);
-
-        $this->assertFalse($endpoint->getUnauthorizedExclusive());
-    }
-
-    public function testViewUnauthorizedExclusiveDefaultsFalse(): void
-    {
-        $endpoint = Endpoint::view(false, '/home', 'home.php');
-
-        $this->assertFalse($endpoint->getUnauthorizedExclusive());
-    }
-
-    public function testViewUnauthorizedExclusiveTrue(): void
-    {
-        $endpoint = Endpoint::view(false, '/login', 'login.php', null, true);
-
-        $this->assertTrue($endpoint->getUnauthorizedExclusive());
-    }
-
-    public function testViewUnauthorizedExclusiveFalse(): void
-    {
-        $template = Template::new('Page', '1.0');
-        $endpoint = Endpoint::view(false, '/profile', 'profile.php', $template, false);
-
-        $this->assertFalse($endpoint->getUnauthorizedExclusive());
-    }
-
-    public function testApiRestrictedWithUnauthorizedExclusive(): void
-    {
-        $endpoint = Endpoint::api(true, 'GET', 'admin', 'admin.php', true);
-
-        $this->assertTrue($endpoint->getRestricted());
-        $this->assertTrue($endpoint->getUnauthorizedExclusive());
-    }
-
-    public function testViewRestrictedWithUnauthorizedExclusive(): void
-    {
-        $endpoint = Endpoint::view(true, '/dashboard', 'dashboard.php', null, true);
-
-        $this->assertTrue($endpoint->getRestricted());
-        $this->assertTrue($endpoint->getUnauthorizedExclusive());
+        $this->assertEquals('/api/users/', $endpoint->getPath());
     }
 }
