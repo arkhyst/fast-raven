@@ -9,6 +9,8 @@ use FastRaven\Workers\Bee;
 use FastRaven\Components\Data\Map;
 use FastRaven\Components\Data\Pair;
 
+use FastRaven\Types\ProjectFolderType;
+
 final class Template {
     #----------------------------------------------------------------------
     #\ VARIABLES
@@ -187,7 +189,9 @@ final class Template {
         
         $langData = CacheWorker::read($cacheKey);
         if ($langData === null) {
-            $langData = Bee::parseCSV("lang/" . $this->langFile . ".csv");
+            $langData = Bee::parseCSV(Bee::buildProjectPath(
+                ProjectFolderType::SRC_WEB_ASSETS_LANG,
+                $this->langFile . ".csv"));
             CacheWorker::write($cacheKey, $langData, 3600);
         }
         

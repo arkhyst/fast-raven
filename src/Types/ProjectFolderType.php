@@ -29,6 +29,7 @@ enum ProjectFolderType: string {
     case SRC_WEB_ASSETS = self::SRC_WEB->value . "assets" . DIRECTORY_SEPARATOR;
     case SRC_WEB_ASSETS_SCSS = self::SRC_WEB_ASSETS->value . "scss" . DIRECTORY_SEPARATOR;
     case SRC_WEB_ASSETS_JS = self::SRC_WEB_ASSETS->value . "js" . DIRECTORY_SEPARATOR;
+    case SRC_WEB_ASSETS_LANG = self::SRC_WEB_ASSETS->value . "lang" . DIRECTORY_SEPARATOR;
     case STORAGE = "storage" . DIRECTORY_SEPARATOR;
     case STORAGE_CACHE = self::STORAGE->value . "cache" . DIRECTORY_SEPARATOR;
     case STORAGE_LOGS = self::STORAGE->value . "logs" . DIRECTORY_SEPARATOR;
