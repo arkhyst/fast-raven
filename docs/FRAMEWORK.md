@@ -495,6 +495,24 @@ $users = DataWorker::selectWhere(
 );
 $allUsers = DataWorker::select("users", ["*"], "created_at DESC", 100, 0);
 
+// Joins
+// Simple join
+$join = DataWorker::join(
+    "users",
+    ["orders"],
+    Collection::new([Item::new("users.id", "orders.user_id")]),
+    ["users.name", "orders.total"]
+);
+
+// Join with WHERE clauses
+$joinFiltered = DataWorker::joinWhere(
+    "users",
+    ["orders"],
+    Collection::new([Item::new("users.id", "orders.user_id")]),
+    ["users.name", "orders.total"],
+    Collection::new([Item::new("users.active", 1)])
+);
+
 // Insert
 DataWorker::insert("users", Collection::new([
     Item::new("name", "John"),

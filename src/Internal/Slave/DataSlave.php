@@ -103,24 +103,47 @@ final class DataSlave {
      * @param string $table The name of the table to sanitize.
      * @param string[] $cols The array of column names to sanitize.
      * @param string[] $cond The array of condition column names to sanitize.
+     * @param string[] $joined The array of joined table names to sanitize.
+     * @param string[] $joinedLeftCols The array of joined table left column names to sanitize.
+     * @param string[] $joinedRightCols The array of joined table right column names to sanitize.
      * @param string $orderBy The optional order by clause to sanitize.
      * 
      * @throws SecurityVulnerabilityException If any possible SQL injection is found.
      */
-    private function sanitizeParameters(string &$table, array &$cols, array &$cond = [], string &$orderBy = ""): void {
-        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $table)) {
+    private function sanitizeParameters(string &$table, array &$cols, array &$cond = [], array &$joined = [], array &$joinedLeftCols = [], array &$joinedRightCols = [], string &$orderBy = ""): void {
+        $regex = '/^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$/';
+
+        if (!preg_match($regex, $table)) {
             throw new SecurityVulnerabilityException("Invalid table name: $table");
         }
 
         foreach ($cols as $col) {
-            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $col)) {
+            if (!preg_match($regex, $col)) {
                 throw new SecurityVulnerabilityException("Invalid column name: $col");
             }
         }
 
         foreach ($cond as $col) {
-            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $col)) {
+            if (!preg_match($regex, $col)) {
                 throw new SecurityVulnerabilityException("Invalid condition column name: $col");
+            }
+        }
+
+        foreach ($joined as $join) {
+            if (!preg_match($regex, $join)) {
+                throw new SecurityVulnerabilityException("Invalid joined table name: $join");
+            }
+        }
+
+        foreach ($joinedLeftCols as $joinLeftCol) {
+            if (!preg_match($regex, $joinLeftCol)) {
+                throw new SecurityVulnerabilityException("Invalid joined left column name: $joinLeftCol");
+            }
+        }
+
+        foreach ($joinedRightCols as $joinRightCol) {
+            if (!preg_match($regex, $joinRightCol)) {
+                throw new SecurityVulnerabilityException("Invalid joined right column name: $joinRightCol");
             }
         }
 
@@ -128,9 +151,14 @@ final class DataSlave {
             throw new SecurityVulnerabilityException("Invalid order by: $orderBy");
         }
 
-        $table = "`" . str_replace("`", "``", $table) . "`";
-        $cols = array_map(fn($col) => "`" . str_replace("`", "``", $col) . "`", $cols);
-        $cond = array_map(fn($col) => "`" . str_replace("`", "``", $col) . "`", $cond);
+        $escape = fn($s) => implode('.', array_map(fn($p) => "`" . str_replace("`", "``", $p) . "`", explode('.', $s)));
+
+        $table = $escape($table);
+        $cols = array_map($escape, $cols);
+        $cond = array_map($escape, $cond);
+        $joined = array_map($escape, $joined);
+        $joinedLeftCols = array_map($escape, $joinedLeftCols);
+        $joinedRightCols = array_map($escape, $joinedRightCols);
     }
 
     /**
@@ -145,22 +173,30 @@ final class DataSlave {
      * @param string $orderBy The optional order by clause.
      * @param int $limit The optional limit clause.
      * @param int $offset The optional offset clause.
+     * @param string[] $joined The optional array of joined table names.
+     * @param string[] $joinedLeftCols The optional array of joined table left column names.
+     * @param string[] $joinedRightCols The optional array of joined table right column names.
      * 
      * @throws SecurityVulnerabilityException If the query is unsafe.
      * 
      * @return string The constructed query string.
      */
-    private function buildQuery(QueryType $type, string $table, array $cols, array $cond = [], string $orderBy = "", int $limit = 0, int $offset = 0): string {
+    private function buildQuery(QueryType $type, string $table, array $cols, array $cond = [], string $orderBy = "", int $limit = 0, int $offset = 0, array $joined = [], array $joinedLeftCols = [], array $joinedRightCols = []): string {
         $q = "";
         
         try {
-            $this->sanitizeParameters($table, $cols, $cond, $orderBy);
+            $this->sanitizeParameters($table, $cols, $cond, $joined, $joinedLeftCols, $joinedRightCols, $orderBy);
         } catch (SecurityVulnerabilityException $e) {
             throw new SecurityVulnerabilityException("Possible SQL injection detected. Query not executed -> ".$e->getMessage());
         }
 
         if($type == QueryType::SELECT) {
             $q = "SELECT " . implode( ",", $cols) . " FROM " . $table;
+            if(!empty($joined)) {
+                for($i = 0; $i < count($joined); $i++) {
+                    $q .= " JOIN " . $joined[$i] . " ON " . $joinedLeftCols[$i]." = ". $joinedRightCols[$i];
+                }
+            }
             if(!empty($cond)) $q .= " WHERE " . implode(" AND ", array_map(fn($c) => "$c = ?", $cond));
             if($orderBy) $q .= " ORDER BY $orderBy";
             if($limit > 0) $q .= " LIMIT $limit";
@@ -244,6 +280,32 @@ final class DataSlave {
     public function select(string $table, array $cols, array $cond, array $vars, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
         try {
             $query = $this->buildQuery(QueryType::SELECT, $table, $cols, $cond, $orderBy, $limit, $offset);
+            return $this->simpleRequestToDatabase(QueryType::SELECT, $query, $vars);
+        } catch (SecurityVulnerabilityException $e) {
+            LogWorker::error($e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Executes a SQL query to retrieve all joined rows from the database that match the given conditions.
+     *
+     * @param string $table The table to retrieve data from.
+     * @param string[] $joined The joined tables to retrieve data from.
+     * @param string[] $joinedLeftCols The joined tables left columns to match.
+     * @param string[] $joinedRightCols The joined tables right columns to match.
+     * @param string[] $cols The columns to retrieve data from.
+     * @param string[] $cond The conditions to filter the data with.
+     * @param array $vars The variables to bind to the query.
+     * @param string $orderBy The optional order by clause to sanitize.
+     * @param int $limit The optional limit to sanitize.
+     * @param int $offset The optional offset to sanitize.
+     * 
+     * @return array|null The retrieved data, or null if an error occurred.
+     */
+    public function join(string $table, array $joined, array $joinedLeftCols, array $joinedRightCols, array $cols, array $cond, array $vars, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+        try {
+            $query = $this->buildQuery(QueryType::SELECT, $table, $cols, $cond, $orderBy, $limit, $offset, $joined, $joinedLeftCols, $joinedRightCols);
             return $this->simpleRequestToDatabase(QueryType::SELECT, $query, $vars);
         } catch (SecurityVulnerabilityException $e) {
             LogWorker::error($e->getMessage());

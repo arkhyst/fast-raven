@@ -122,6 +122,56 @@ final class DataWorker {
     }
 
     /**
+     * Retrieves all joinable rows from the database.
+     * 
+     * @warning All cols must be prefixed with the table name. (e.g., "table.col")
+     * 
+     * @param array $tables The tables to join.
+     * @param array $cols The columns to retrieve data from.
+     * @param Collection $joinedTableConditions The conditions to filter the data with.
+     * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
+     * @param int $limit [optional] The maximum number of rows to retrieve.
+     * @param int $offset [optional] The number of rows to skip.
+     *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
+     * @return array|null The retrieved data, or null if an error occurred.
+     */
+    public static function join(string $table, array $joinedTables, Collection $joinedTableConditions, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+        if(self::$busy) {
+            return self::$slave->join($table, $joinedTables, $joinedTableConditions->getAllKeys(), $joinedTableConditions->getAllValues(), $cols, [], [], $orderBy, $limit, $offset);
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves all joinable rows from the database that match the given conditions.
+     * 
+     * @warning All cols must be prefixed with the table name. (e.g., "table.col")
+     * 
+     * @param array $tables The tables to join.
+     * @param array $joinedTables The tables to join with.
+     * @param Collection $joinedTableConditions The conditions to filter the joined data with.
+     * @param array $cols The columns to retrieve data from.
+     * @param Collection $conditionCollection The conditions to filter the data with.
+     * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
+     * @param int $limit [optional] The maximum number of rows to retrieve.
+     * @param int $offset [optional] The number of rows to skip.
+     *
+     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
+     * @return array|null The retrieved data, or null if an error occurred.
+     */
+    public static function joinWhere(string $table, array $joinedTables, Collection $joinedTableConditions, array $cols, Collection $conditionCollection, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+        if(self::$busy) {
+            return self::$slave->join($table, $joinedTables, $joinedTableConditions->getAllKeys(), $joinedTableConditions->getAllValues(), $cols, $conditionCollection->getAllKeys(), $conditionCollection->getAllValues(), $orderBy, $limit, $offset);
+        }
+
+        return null;
+    }
+
+    /**
      * Inserts a new row into the database.
      *
      * @param string $table The table to insert into.

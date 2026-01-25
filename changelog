@@ -15,6 +15,7 @@
 - MailWorker::send() fireAndForget parameter for non-blocking email sending.
 - Bee::getCacheKey() for standardizing cache key generation.
 - Skeleton: ops/preload.php for OPcache preload script.
+- DataWorker JOIN support via join() and joinWhere() methods.
 
 #### Changed
 - View endpoints now return Template objects instead of referencing HTML files directly.
