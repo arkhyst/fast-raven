@@ -19,6 +19,7 @@
 - Condition component for handling SQL conditions.
 - ConditionList component for handling multiple conditions.
 - OperatorType enum for defining SQL operators.
+- Developer mistakes in endpoints are now catched by DeveloperException and registered in logs.
 
 #### Changed
 - View endpoints now return Template objects instead of referencing HTML files directly.

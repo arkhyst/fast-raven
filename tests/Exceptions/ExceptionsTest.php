@@ -9,6 +9,8 @@ use FastRaven\Exceptions\MiddlewareDeniedException;
 use FastRaven\Exceptions\EndpointFileNotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
 use FastRaven\Exceptions\NotFoundException;
+use FastRaven\Exceptions\SmartException;
+use FastRaven\Exceptions\DeveloperException;
 
 class ExceptionsTest extends TestCase
 {
@@ -220,5 +222,42 @@ class ExceptionsTest extends TestCase
     {
         $exception = new NotFoundException();
         $this->assertEquals("Resource not found.", $exception->getPublicMessage());
+    }
+
+    // DeveloperException Tests
+    public function testDeveloperExceptionCanBeThrownAndCaught(): void
+    {
+        $this->expectException(DeveloperException::class);
+        $this->expectExceptionMessage("{test.php} Error message");
+
+        throw new DeveloperException("test.php", "Error message");
+    }
+
+    public function testDeveloperExceptionExtendsSmartException(): void
+    {
+        $exception = new DeveloperException("test.php", "message");
+        $this->assertInstanceOf(SmartException::class, $exception);
+    }
+
+    public function testDeveloperExceptionHasCorrectStatusCode(): void
+    {
+        $exception = new DeveloperException("test.php", "message");
+        $this->assertEquals(500, $exception->getStatusCode());
+    }
+
+    public function testDeveloperExceptionHasCorrectPublicMessage(): void
+    {
+        $exception = new DeveloperException("test.php", "message");
+        $this->assertEquals("This resource is not available at this time.", $exception->getPublicMessage());
+    }
+
+    // SmartException Tests
+    public function testSmartExceptionGetExceptionName(): void
+    {
+        $exception = new NotFoundException();
+        $this->assertEquals("NotFoundException", $exception->getExceptionName());
+
+        $devException = new DeveloperException("file", "msg");
+        $this->assertEquals("DeveloperException", $devException->getExceptionName());
     }
 }

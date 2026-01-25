@@ -14,4 +14,8 @@ class SmartException extends \Exception
         $this->publicMessage = $publicMessage;
         parent::__construct($message, 1, null);
     }
+
+    public function getExceptionName(): string {
+        return (new \ReflectionClass($this))->getShortName();
+    }
 }

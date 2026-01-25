@@ -110,7 +110,7 @@ final class Server {
 
     private function handleException(SmartException $e): Response|Template {
         $response = Response::new(false, $e->getStatusCode(), $e->getPublicMessage());
-        LogWorker::error("SmartException: " . $e->getMessage());
+        LogWorker::error($e->getExceptionName() . ": " . $e->getMessage());
 
         if($e instanceof RateLimitExceededException || is_subclass_of($e, RateLimitExceededException::class)) {
             HeaderWorker::addHeader("Retry-After", $e->getTimeLeft());

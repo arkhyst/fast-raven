@@ -2,6 +2,7 @@
 
 namespace FastRaven\Internal\Core;
 
+use FastRaven\Exceptions\DeveloperException;
 use FastRaven\Workers\AuthWorker;
 use FastRaven\Workers\FileWorker;
 use FastRaven\Workers\HeaderWorker;
@@ -29,7 +30,6 @@ use FastRaven\Components\Routing\Middleware;
 use FastRaven\Exceptions\BadImplementationException;
 use FastRaven\Exceptions\EndpointFileNotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
-use FastRaven\Exceptions\AlreadyAuthorizedException;
 use FastRaven\Exceptions\BadMiddlewareException;
 use FastRaven\Exceptions\MiddlewareDeniedException;
 use FastRaven\Exceptions\NotFoundException;
@@ -211,9 +211,9 @@ final class Kernel {
      * 
      * @throws NotFoundException If no matching route is found for the request.
      * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
-     * @throws AlreadyAuthorizedException If the endpoint is unauthorized exclusive and the request is authorized.
      * @throws EndpointFileNotFoundException If the endpoint file does not exist.
      * @throws BadImplementationException If the API function does not return a Response object.
+     * @throws DeveloperException If the developer makes a mistake on View/API/CDN endpoints.
      */
     public function process(): Template|Response|File {
         [$router, $folder] = match ($this->request->getType()) {
@@ -246,12 +246,24 @@ final class Kernel {
         $response = null;
 
         if($this->request->getType() === EndpointType::VIEW) {
-            if(Bee::validateCallable($fn, [Request::class, Template::class])) $response = $fn($this->request, $this->template);
+            if(Bee::validateCallable($fn, [Request::class, Template::class])) {
+                try {
+                    $response = $fn($this->request, $this->template);
+                } catch (\Throwable $e) {
+                    throw new DeveloperException($endpoint->getFile(), $e->getMessage());
+                }
+            }
             if($response === null || !$response instanceof Template) throw new BadImplementationException($endpoint->getFile(), "Template");
 
             $response = $this->template->merge($response);
         } else {
-            if(Bee::validateCallable($fn, [Request::class])) $response = $fn($this->request);
+            if(Bee::validateCallable($fn, [Request::class])) {
+                try {
+                    $response = $fn($this->request);
+                } catch (\Throwable $e) {
+                    throw new DeveloperException($endpoint->getFile(), $e->getMessage());
+                }
+            }
             if($response === null || !$response instanceof Response) throw new BadImplementationException($endpoint->getFile(), "Response");
 
             if($this->request->getType() === EndpointType::CDN) {
