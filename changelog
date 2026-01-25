@@ -27,6 +27,7 @@
 - MailWorker::sendMail() renamed to MailWorker::send().
 - Language files are now cached in memory for 1 hour to reuse them in other requests.
 - DataWorker methods renamed from get* to select* (getOneById → selectOneById).
+- Response::new() now accepts null for data parameter.
 
 #### Fixed
 - Bee::getFileMimeType() returns string instead of DataType when file doesn't exist and returnType is true.

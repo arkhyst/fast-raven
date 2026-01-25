@@ -40,9 +40,9 @@ final class Response {
      * 
      * @return Response The new Response instance.
      */
-    public static function new(bool $success, int $code, string $message = "", string|array $data = []): Response
+    public static function new(bool $success, int $code, string $message = "", string|array|null $data = []): Response
     {
-        return (new Response($success, $code))->setData($data)->setMessage($message);
+        return (new Response($success, $code))->setData($data ?? [])->setMessage($message);
     }
 
     /**
