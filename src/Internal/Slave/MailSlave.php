@@ -88,7 +88,7 @@ final class MailSlave {
 
         $this->mailer->isSMTP();
         $this->mailer->SMTPAuth = true;
-        $this->mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $this->mailer->SMTPSecure = Bee::env("SMTP_ENCRYPTION", PHPMailer::ENCRYPTION_STARTTLS);
         $this->mailer->Host = Bee::env("SMTP_HOST", "smtp.notvalid.com");
         $this->mailer->Username = Bee::env("SMTP_USER", "notvalid");
         $this->mailer->Password = Bee::env("SMTP_PASS", "notvalid");

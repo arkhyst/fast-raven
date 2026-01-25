@@ -22,6 +22,7 @@
 - Developer mistakes in endpoints are now catched by DeveloperException and registered in logs.
 - ValidationWorker::string(...) and ValidationWorker::number(...) methods for flexible validation.
 - ValidationType enum for defining what criteria to validate.
+- Environment variable added for dynamic SMTP encryption support.
 
 #### Changed
 - View endpoints now return Template objects instead of referencing HTML files directly.
