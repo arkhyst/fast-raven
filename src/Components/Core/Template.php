@@ -6,8 +6,8 @@ use FastRaven\Workers\AuthWorker;
 use FastRaven\Workers\CacheWorker;
 use FastRaven\Workers\Bee;
 
-use FastRaven\Components\Data\Collection;
-use FastRaven\Components\Data\Item;
+use FastRaven\Components\Data\Map;
+use FastRaven\Components\Data\Pair;
 
 final class Template {
     #----------------------------------------------------------------------
@@ -48,10 +48,10 @@ final class Template {
         public function getAfterFragments(): array { return $this->afterFragments; }
         public function setAfterFragments(array $fragments): Template { $this->afterFragments = $fragments; return $this; }
     
-    private Collection $data;
+    private Map $data;
         public function hasData(string $key): bool { return $this->data->has($key); }
-        public function getData(string $key): string { return $this->hasData($key) ? strval($this->data->get($key)->getValue()) : ""; }
-        public function addData(Item $item): Template { $this->data->add($item); return $this; }
+        public function getData(string $key): string { return $this->hasData($key) ? strval($this->data->get($key)) : ""; }
+        public function addData(Pair $item): Template { $this->data->add($item->getKey(), $item->getValue()); return $this; }
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -75,7 +75,7 @@ final class Template {
         $this->file = $file;
         $this->title = $title;
         $this->version = $version;
-        $this->data = Collection::new();
+        $this->data = Map::new();
     }
 
     #/ INIT

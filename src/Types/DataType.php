@@ -9,7 +9,7 @@ namespace FastRaven\Types;
  * MIME types organized by category, most commonly used first.
  */
 enum DataType: string {
-    // ─── Web Essentials ───────────────────────────────────────────────
+    // Web Essentials
     case HTML = "text/html";
     case CSS = "text/css";
     case JS = "text/javascript";
@@ -17,14 +17,14 @@ enum DataType: string {
     case XML = "application/xml";
     case TEXT = "text/plain";
 
-    // ─── Data Formats ─────────────────────────────────────────────────
+    // Data Formats
     case CSV = "text/csv";
     case YAML = "text/yaml";
     case TOML = "application/toml";
     case FORM = "application/x-www-form-urlencoded";
     case MULTIPART = "multipart/form-data";
 
-    // ─── Images ───────────────────────────────────────────────────────
+    // Images
     case PNG = "image/png";
     case JPG = "image/jpeg";
     case GIF = "image/gif";
@@ -35,7 +35,7 @@ enum DataType: string {
     case BMP = "image/bmp";
     case TIFF = "image/tiff";
 
-    // ─── Audio ────────────────────────────────────────────────────────
+    // Audio
     case MP3 = "audio/mpeg";
     case OGG_AUDIO = "audio/ogg";
     case WAV = "audio/wav";
@@ -44,7 +44,7 @@ enum DataType: string {
     case WEBM_AUDIO = "audio/webm";
     case M4A = "audio/mp4";
 
-    // ─── Video ────────────────────────────────────────────────────────
+    // Video
     case MP4 = "video/mp4";
     case WEBM = "video/webm";
     case OGG_VIDEO = "video/ogg";
@@ -53,7 +53,7 @@ enum DataType: string {
     case MKV = "video/x-matroska";
     case MPEG = "video/mpeg";
 
-    // ─── Documents & Office ───────────────────────────────────────────
+    // Documents & Office
     case PDF = "application/pdf";
     case DOC = "application/msword";
     case DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -66,14 +66,14 @@ enum DataType: string {
     case RTF = "application/rtf";
     case EPUB = "application/epub+zip";
 
-    // ─── Fonts ────────────────────────────────────────────────────────
+    // Fonts
     case WOFF = "font/woff";
     case WOFF2 = "font/woff2";
     case TTF = "font/ttf";
     case OTF = "font/otf";
     case EOT = "application/vnd.ms-fontobject";
 
-    // ─── Archives ─────────────────────────────────────────────────────
+    // Archives
     case ZIP = "application/zip";
     case GZIP = "application/gzip";
     case TAR = "application/x-tar";
@@ -81,7 +81,7 @@ enum DataType: string {
     case SEVENZ = "application/x-7z-compressed";
     case BZIP2 = "application/x-bzip2";
 
-    // ─── Miscellaneous ────────────────────────────────────────────────
+    // Miscellaneous
     case BINARY = "application/octet-stream";
     case ICS = "text/calendar";
     case WASM = "application/wasm";

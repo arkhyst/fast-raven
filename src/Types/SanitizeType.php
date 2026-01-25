@@ -6,11 +6,11 @@ namespace FastRaven\Types;
  * Sanitization levels for request data. Levels cascade: higher levels include all previous transformations.
  * 
  * Hierarchy:
- *   RAW ──────────────────────── No changes
- *     └─ SAFE ────────────────── Strips null bytes + PHP tags
- *         ├─ ENCODED ─────────── + htmlspecialchars (non-destructive)
- *         └─ SANITIZED ───────── + strip_tags (destructive)
- *             └─ ONLY_ALPHA ──── + alphanumeric/spaces only
+ *   RAW ------------------------ No changes
+ *     \ SAFE ------------------ Strips null bytes + PHP tags
+ *        \ ENCODED --------------- + htmlspecialchars (non-destructive)
+ *        \ SANITIZED ------------- + strip_tags (destructive)
+ *           \ ONLY_ALPHA ------------ + alphanumeric/spaces only
  */
 enum SanitizeType: int {
     case RAW = 0;

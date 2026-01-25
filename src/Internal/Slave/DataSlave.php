@@ -2,12 +2,14 @@
 
 namespace FastRaven\Internal\Slave;
 
-use FastRaven\Workers\DataWorker;
-use FastRaven\Workers\LogWorker;
-
 use FastRaven\Exceptions\SecurityVulnerabilityException;
 
+use FastRaven\Workers\DataWorker;
+use FastRaven\Workers\LogWorker;
 use FastRaven\Workers\Bee;
+
+use FastRaven\Components\Data\ConditionList;
+use FastRaven\Components\Data\Map;
 
 use FastRaven\Types\QueryType;
 
@@ -169,7 +171,7 @@ final class DataSlave {
      * @param QueryType $type The type of query to construct.
      * @param string $table The name of the table to query.
      * @param string[] $cols The array of column names to query.
-     * @param string[] $cond The optional array of condition key-value pairs.
+     * @param ConditionList $cond The optional array of condition key-value pairs.
      * @param string $orderBy The optional order by clause.
      * @param int $limit The optional limit clause.
      * @param int $offset The optional offset clause.
@@ -181,11 +183,13 @@ final class DataSlave {
      * 
      * @return string The constructed query string.
      */
-    private function buildQuery(QueryType $type, string $table, array $cols, array $cond = [], string $orderBy = "", int $limit = 0, int $offset = 0, array $joined = [], array $joinedLeftCols = [], array $joinedRightCols = []): string {
+    private function buildQuery(QueryType $type, string $table, array $cols, ?ConditionList $cond = null, string $orderBy = "", int $limit = 0, int $offset = 0, array $joined = [], array $joinedLeftCols = [], array $joinedRightCols = []): string {
         $q = "";
         
         try {
-            $this->sanitizeParameters($table, $cols, $cond, $joined, $joinedLeftCols, $joinedRightCols, $orderBy);
+            $condCols = $cond->getAllLeftValues();
+            $this->sanitizeParameters($table, $cols, $condCols, $joined, $joinedLeftCols, $joinedRightCols, $orderBy);
+            $cond->replaceAllLeftValues($condCols);
         } catch (SecurityVulnerabilityException $e) {
             throw new SecurityVulnerabilityException("Possible SQL injection detected. Query not executed -> ".$e->getMessage());
         }
@@ -197,25 +201,25 @@ final class DataSlave {
                     $q .= " JOIN " . $joined[$i] . " ON " . $joinedLeftCols[$i]." = ". $joinedRightCols[$i];
                 }
             }
-            if(!empty($cond)) $q .= " WHERE " . implode(" AND ", array_map(fn($c) => "$c = ?", $cond));
+            if($cond !== null) $q .= " WHERE " . implode(" AND ", array_map(fn($c) => $c->parseToQuery(), $cond->getRawData()));
             if($orderBy) $q .= " ORDER BY $orderBy";
             if($limit > 0) $q .= " LIMIT $limit";
             if($offset > 0) $q .= " OFFSET $offset";
         
         } else if($type == QueryType::COUNT) {
             $q = "SELECT COUNT(*) as count FROM " . $table;
-            if(!empty($cond)) $q .= " WHERE " . implode(" AND ", array_map(fn($c) => "$c = ?", $cond));
+            if($cond !== null) $q .= " WHERE " . implode(" AND ", array_map(fn($c) => $c->parseToQuery(), $cond->getRawData()));
         
         } else if($type == QueryType::INSERT) {
             $q = "INSERT INTO " . $table . "(" . implode(",", $cols) . ") VALUES (" . implode(",", array_fill(0, count($cols), "?")) . ")";
         
         } else if($type == QueryType::UPDATE) {
             $q = "UPDATE " . $table . " SET " . implode(",", array_map(fn($c) => "$c = ?", $cols));
-            $q .= " WHERE " . implode(" AND ", array_map(fn($c) => "$c = ?", $cond));
+            $q .= " WHERE " . implode(" AND ", array_map(fn($c) => $c->parseToQuery(), $cond->getRawData()));
         
         } else if($type == QueryType::DELETE) {
             $q = "DELETE FROM " . $table;
-            if(!empty($cond)) $q .= " WHERE " . implode(" AND ", array_map(fn($c) => "$c = ?", $cond));
+            $q .= " WHERE " . implode(" AND ", array_map(fn($c) => $c->parseToQuery(), $cond->getRawData()));
         }
 
         return "$q;";
@@ -272,15 +276,17 @@ final class DataSlave {
      *
      * @param string $table The table to retrieve data from.
      * @param string[] $cols The columns to retrieve data from.
-     * @param string[] $cond The conditions to filter the data with.
-     * @param array $vars The variables to bind to the query.
+     * @param ConditionList $cond The conditions to filter the data with.
+     * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
+     * @param int $limit [optional] The maximum number of rows to retrieve.
+     * @param int $offset [optional] The number of rows to skip.
      * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
-    public function select(string $table, array $cols, array $cond, array $vars, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+    public function select(string $table, array $cols, ?ConditionList $cond = null, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
         try {
             $query = $this->buildQuery(QueryType::SELECT, $table, $cols, $cond, $orderBy, $limit, $offset);
-            return $this->simpleRequestToDatabase(QueryType::SELECT, $query, $vars);
+            return $this->simpleRequestToDatabase(QueryType::SELECT, $query, $cond === null ? [] : $cond->getAllRightValues());
         } catch (SecurityVulnerabilityException $e) {
             LogWorker::error($e->getMessage());
             return null;
@@ -295,18 +301,17 @@ final class DataSlave {
      * @param string[] $joinedLeftCols The joined tables left columns to match.
      * @param string[] $joinedRightCols The joined tables right columns to match.
      * @param string[] $cols The columns to retrieve data from.
-     * @param string[] $cond The conditions to filter the data with.
-     * @param array $vars The variables to bind to the query.
+     * @param ConditionList $cond The conditions to filter the data with.
      * @param string $orderBy The optional order by clause to sanitize.
      * @param int $limit The optional limit to sanitize.
      * @param int $offset The optional offset to sanitize.
      * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
-    public function join(string $table, array $joined, array $joinedLeftCols, array $joinedRightCols, array $cols, array $cond, array $vars, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+    public function join(string $table, array $joined, array $joinedLeftCols, array $joinedRightCols, array $cols, ?ConditionList $cond = null, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
         try {
             $query = $this->buildQuery(QueryType::SELECT, $table, $cols, $cond, $orderBy, $limit, $offset, $joined, $joinedLeftCols, $joinedRightCols);
-            return $this->simpleRequestToDatabase(QueryType::SELECT, $query, $vars);
+            return $this->simpleRequestToDatabase(QueryType::SELECT, $query, $cond === null ? [] : $cond->getAllRightValues());
         } catch (SecurityVulnerabilityException $e) {
             LogWorker::error($e->getMessage());
             return null;
@@ -349,16 +354,15 @@ final class DataSlave {
      * Updates rows in the database that match the given conditions.
      *
      * @param string $table The table to update rows in.
-     * @param string[] $cols The columns to update.
-     * @param string[] $cond The conditions to filter the rows to update with.
-     * @param array $vars The variables to bind to the query.
+     * @param Map $cols The columns to update.
+     * @param ConditionList $cond The conditions to filter the rows to update with.
      * 
      * @return bool True if the update was successful, false otherwise.
      */
-    public function update(string $table, array $cols, array $cond, array $vars): bool {
+    public function update(string $table, Map $cols, ConditionList $cond): bool {
         try {
-            $query = $this->buildQuery(QueryType::UPDATE, $table, $cols, $cond);
-            $res = $this->simpleRequestToDatabase(QueryType::UPDATE, $query, $vars);
+            $query = $this->buildQuery(QueryType::UPDATE, $table, $cols->getAllKeys(), $cond);
+            $res = $this->simpleRequestToDatabase(QueryType::UPDATE, $query, array_merge($cols->getAllValues(), $cond->getAllRightValues()));
             return $res === true;
         } catch (SecurityVulnerabilityException $e) {
             LogWorker::error($e->getMessage());
@@ -370,15 +374,14 @@ final class DataSlave {
      * Deletes rows from the database that match the given conditions.
      *
      * @param string $table The table to delete rows from.
-     * @param string[] $cond The conditions to filter the rows to delete.
-     * @param array $vars The variables to bind to the query.
+     * @param ConditionList $cond The conditions to filter the rows to delete.
      * 
      * @return bool True if the deletion was successful, false otherwise.
      */
-    public function delete(string $table, array $cond, array $vars): bool {
+    public function delete(string $table, ConditionList $cond): bool {
         try {
             $query = $this->buildQuery(QueryType::DELETE, $table, [], $cond);
-            $res = $this->simpleRequestToDatabase(QueryType::DELETE, $query, $vars);
+            $res = $this->simpleRequestToDatabase(QueryType::DELETE, $query, $cond->getAllRightValues());
             return $res === true;
         } catch (SecurityVulnerabilityException $e) {
             LogWorker::error($e->getMessage());
@@ -390,15 +393,14 @@ final class DataSlave {
      * Counts rows in the database that match the given conditions.
      *
      * @param string $table The table to count rows from.
-     * @param string[] $cond The conditions to filter the rows to count.
-     * @param array $vars The variables to bind to the query.
+     * @param ConditionList $cond The conditions to filter the rows to count.
      * 
      * @return int The number of rows that match the conditions.
      */
-    public function count(string $table, array $cond, array $vars): int {
+    public function count(string $table, ?ConditionList $cond = null): int {
         try {
             $query = $this->buildQuery(QueryType::COUNT, $table, [], $cond);
-            $res = $this->simpleRequestToDatabase(QueryType::COUNT, $query, $vars);
+            $res = $this->simpleRequestToDatabase(QueryType::COUNT, $query, $cond === null ? [] : $cond->getAllRightValues());
             return $res ?? 0;
         } catch (SecurityVulnerabilityException $e) {
             LogWorker::error($e->getMessage());

@@ -16,11 +16,14 @@
 - Bee::getCacheKey() for standardizing cache key generation.
 - Skeleton: ops/preload.php for OPcache preload script.
 - DataWorker JOIN support via join() and joinWhere() methods.
+- Condition component for handling SQL conditions.
+- ConditionList component for handling multiple conditions.
+- OperatorType enum for defining SQL operators.
 
 #### Changed
 - View endpoints now return Template objects instead of referencing HTML files directly.
 - Template::new signature changed to (file, title, version).
-- ProjectFolderType enum restructured
+- ProjectFolderType enum restructured.
 - Endpoint factory methods now use middlewareId instead of guestOnly and rateLimit.
 - Exception handling simplified: View exceptions now render error template instead of redirecting.
 - CacheSlave shmop key generation now uses xxHash32 instead of CRC32 for better distribution.
@@ -28,6 +31,10 @@
 - Language files are now cached in memory for 1 hour to reuse them in other requests.
 - DataWorker methods renamed from get* to select* (getOneById → selectOneById).
 - Response::new() now accepts null for data parameter.
+- Collection component does not work with Item components anymore.
+- Collection component renamed to Map.
+- Item component renamed to Pair.
+- DataWorker methods signature changed to use ConditionList instead of Collections.
 
 #### Fixed
 - Bee::getFileMimeType() returns string instead of DataType when file doesn't exist and returnType is true.

@@ -6,8 +6,8 @@ use FastRaven\Workers\MailWorker;
 use FastRaven\Workers\LogWorker;
 
 use FastRaven\Components\Core\Mail;
-use FastRaven\Components\Data\Collection;
-use FastRaven\Components\Data\Item;
+use FastRaven\Components\Data\Map;
+use FastRaven\Components\Data\Pair;
 
 use FastRaven\Types\ProjectFolderType;
 
@@ -99,11 +99,11 @@ final class MailSlave {
     /**
      * Sets the sender, recipient, and BCC addresses for the PHPMailer instance.
      *
-     * @param Item $origin The sender's email information (key: name, value: email address).
-     * @param Item $destination The recipient's email information (key: name, value: email address).
-     * @param ?Collection $bccMails Optional collection of BCC email addresses (key: name, value: email address).
+     * @param Pair $origin The sender's email information (key: name, value: email address).
+     * @param Pair $destination The recipient's email information (key: name, value: email address).
+     * @param ?Map $bccMails Optional collection of BCC email addresses (key: name, value: email address).
      */
-    private function setMailerAddress(Item $origin, Item $destination, ?Collection $bccMails): void {
+    private function setMailerAddress(Pair $origin, Pair $destination, ?Map $bccMails): void {
         $this->mailer->setFrom($origin->getValue(), $origin->getKey());
         $this->mailer->addAddress($destination->getValue(), $destination->getKey());
 
@@ -119,9 +119,9 @@ final class MailSlave {
      *
      * @param string $template The HTML template content.
      * @param string $subject The email subject line.
-     * @param ?Collection $replaceValues Optional collection of placeholder replacements (key: placeholder, value: replacement).
+     * @param ?Map $replaceValues Optional collection of placeholder replacements (key: placeholder, value: replacement).
      */
-    private function setMailerBody(string $template, string $subject, ?Collection $replaceValues): void {
+    private function setMailerBody(string $template, string $subject, ?Map $replaceValues): void {
         $this->mailer->isHTML(true);
         $this->mailer->Subject = $subject;
 
@@ -135,9 +135,9 @@ final class MailSlave {
     /**
      * Adds attachments to the PHPMailer instance from the storage/uploads directory.
      *
-     * @param ?Collection $attachments Optional collection of attachments (key: display name, value: file path relative to src/assets/).
+     * @param ?Map $attachments Optional collection of attachments (key: display name, value: file path relative to src/assets/).
      */
-    private function setMailerAttachments(?Collection $attachments): void {
+    private function setMailerAttachments(?Map $attachments): void {
         if($attachments) {
             foreach($attachments->getRawData() as $attachment) {
                 $path = realpath(Bee::buildProjectPath(ProjectFolderType::STORAGE_UPLOADS, $attachment->getValue()));

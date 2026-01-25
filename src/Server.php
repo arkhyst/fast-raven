@@ -15,7 +15,7 @@ use FastRaven\Components\Core\Template;
 use FastRaven\Components\Routing\Router;
 use FastRaven\Components\Http\Response;
 use FastRaven\Components\Routing\Middleware;
-use FastRaven\Components\Data\Item;
+use FastRaven\Components\Data\Pair;
 
 use FastRaven\Workers\LogWorker;
 use FastRaven\Workers\HeaderWorker;
@@ -120,8 +120,8 @@ final class Server {
             $response = $this->kernel->getTemplate()
                 ->setFile("errors/generic.php")
                 ->setTitle($this->kernel->getTemplate()->getTitle() . " - Error")
-                ->addData(Item::new("errorCode", $e->getStatusCode()))
-                ->addData(Item::new("errorMessage", $e->getPublicMessage()));
+                ->addData(Pair::new("errorCode", $e->getStatusCode()))
+                ->addData(Pair::new("errorMessage", $e->getPublicMessage()));
 
             if(is_subclass_of($e, NotFoundException::class)) {
                 HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultNotFoundPathRedirect());

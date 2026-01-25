@@ -3,7 +3,7 @@
 namespace FastRaven\Components\Data;
 
 
-final class ValidationFlags extends Collection {
+final class ValidationFlags extends Map {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
@@ -25,8 +25,8 @@ final class ValidationFlags extends Collection {
      */
     public static function email(int $minLength = 0, int $maxLength = 255): ValidationFlags {
         return new ValidationFlags([
-            Item::new("minLength", $minLength),
-            Item::new("maxLength", $maxLength),
+            "minLength" => $minLength,
+            "maxLength" => $maxLength,
         ]);
     }
 
@@ -44,12 +44,12 @@ final class ValidationFlags extends Collection {
      */
     public static function password(int $minLength = 0, int $maxLength = 255, int $minNumber = 0, int $minSpecial = 0, int $minLowercase = 0, int $minUppercase = 0): ValidationFlags {
         return new ValidationFlags([
-            Item::new("minLength", $minLength),
-            Item::new("maxLength", $maxLength),
-            Item::new("minNumber", $minNumber),
-            Item::new("minSpecial", $minSpecial),
-            Item::new("minLowercase", $minLowercase),
-            Item::new("minUppercase", $minUppercase),
+            "minLength" => $minLength,
+            "maxLength" => $maxLength,
+            "minNumber" => $minNumber,
+            "minSpecial" => $minSpecial,
+            "minLowercase" => $minLowercase,
+            "minUppercase" => $minUppercase,
         ]);
     }
 
@@ -63,8 +63,8 @@ final class ValidationFlags extends Collection {
      */
     public static function age(int $minAge = 12, int $maxAge = 120): ValidationFlags {
         return new ValidationFlags([
-            Item::new("minAge", $minAge),
-            Item::new("maxAge", $maxAge),
+            "minAge" => $minAge,
+            "maxAge" => $maxAge,
         ]);
     }
 
@@ -78,8 +78,8 @@ final class ValidationFlags extends Collection {
      */
     public static function username(int $minLength = 0, int $maxLength = 255): ValidationFlags {
         return new ValidationFlags([
-            Item::new("minLength", $minLength),
-            Item::new("maxLength", $maxLength),
+            "minLength" => $minLength,
+            "maxLength" => $maxLength,
         ]);
     }
 
@@ -98,15 +98,15 @@ final class ValidationFlags extends Collection {
     #\ METHODS
 
     /**
-     * Retrieves an Item from the Collection by its key.
+     * Retrieves an Pair from the Map by its key.
      *
-     * @param string $key The key of the Item to retrieve.
+     * @param string $key The key of the Pair to retrieve.
      *
-     * @return Item The Item with the given key, or a new Item with the given key and value 0 if not found.
+     * @return Pair The Pair with the given key, or a new Pair with the given key and value 0 if not found.
      */
-    public function get(string $key): Item {
-        $item = parent::get($key);
-        return $item ?? Item::new($key, 0);
+    public function get(string $key): Pair {
+        $value = parent::get($key);
+        return Pair::new($key, $value ?? 0);
     }
 
     #/ METHODS

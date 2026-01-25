@@ -3,7 +3,7 @@
 namespace FastRaven\Components\Data;
 
 
-final class Item {
+final class Pair {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
@@ -19,23 +19,23 @@ final class Item {
     #\ INIT
 
     /**
-     * Create a new Item instance.
+     * Create a new Pair instance.
      *
      * @param string $key The key of the item.
      * @param string|int|float|bool $value The value of the item.
      *
-     * @return Item
+     * @return Pair
      */
-    public static function new(string $key, string|int|float|bool $value): Item {
-        return new Item($key, $value);
+    public static function new(string $key, string|int|float|bool $value): Pair {
+        return new Pair($key, $value);
     }
 
-    public static function mail(string $name, string $address): Item {
-        return new Item($name, $address);
+    public static function mail(string $name, string $address): Pair {
+        return new Pair($name, $address);
     }
 
-    public static function file(string $name, string $path): Item {
-        return new Item($name, $path);
+    public static function file(string $name, string $path): Pair {
+        return new Pair($name, $path);
     }
 
     private function  __construct(string $key, string|int|float|bool $value) {

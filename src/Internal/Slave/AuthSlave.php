@@ -4,8 +4,8 @@ namespace FastRaven\Internal\Slave;
 
 use FastRaven\Workers\AuthWorker;
 use FastRaven\Workers\DataWorker;
-use FastRaven\Components\Data\Collection;
-use FastRaven\Components\Data\Item;
+use FastRaven\Components\Data\ConditionList;
+use FastRaven\Components\Data\Condition;
 
 use FastRaven\Workers\Bee;
 
@@ -181,8 +181,8 @@ final class AuthSlave {
      * @return ?int The user's ID if the credentials are valid, null otherwise.
      */
     public function checkCredentials(string $user, string $pass, string $dbTable, string $dbIdCol, string $dbNameCol, string $dbPassCol): ?int {
-        $data = DataWorker::selectOneWhere($dbTable, [$dbIdCol, $dbNameCol, $dbPassCol], Collection::new([
-            Item::new($dbNameCol, $user)
+        $data = DataWorker::selectOneWhere($dbTable, [$dbIdCol, $dbNameCol, $dbPassCol], ConditionList::new([
+           Condition::equals($dbNameCol, $user)
         ]));
 
         $hash = $data[$dbPassCol] ?? '$argon2id$v=19$m=65536,t=4,p=2$ZmliL05XbHdMclJtSVgydw$blAJZoufwbnQMbZeiG7LVX7TuIRv3myA9cpQqq1P+a0';
