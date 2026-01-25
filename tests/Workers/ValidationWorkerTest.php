@@ -5,7 +5,7 @@ namespace FastRaven\Tests\Workers;
 use PHPUnit\Framework\TestCase;
 use FastRaven\Workers\ValidationWorker;
 use FastRaven\Internal\Slave\ValidationSlave;
-use FastRaven\Components\Data\ValidationFlags;
+use FastRaven\Types\ValidationType;
 
 class ValidationWorkerTest extends TestCase
 {
@@ -81,297 +81,287 @@ class ValidationWorkerTest extends TestCase
     #----------------------------------------------------------------------
 
     #----------------------------------------------------------------------
-    #\ PASSWORD VALIDATION TESTS
+    #\ STRING VALIDATION TESTS
 
-    public function testPasswordValidatesWithAllCriteriaMet(): void
+    #----------------------------------------------------------------------
+    #\ STRING VALIDATION TESTS
+
+    public function testStringValidatesWithAllCriteriaMet(): void
     {
-        $flags = ValidationFlags::password(8, 20, 1, 1, 1, 1);
-        $password = 'Passw0rd!';
+        $flags = [
+            ValidationType::MIN_LENGTH->value => 8, 
+            ValidationType::MAX_LENGTH->value => 20, 
+            ValidationType::MIN_DIGITS->value => 1, 
+            ValidationType::MIN_SPECIAL->value => 1, 
+            ValidationType::MIN_LOWERCASE->value => 1, 
+            ValidationType::MIN_UPPERCASE->value => 1
+        ];
+        $text = 'Passw0rd!';
 
-        $result = ValidationWorker::password($password, $flags);
+        $result = ValidationWorker::string($text, $flags);
 
         $this->assertTrue($result);
     }
 
-    public function testPasswordRejectsTooShortPassword(): void
+    public function testStringRejectsTooShort(): void
     {
-        $flags = ValidationFlags::password(8, 20, 0, 0, 0, 0);
-        $password = 'short';
+        $flags = [ValidationType::MIN_LENGTH->value => 8];
+        $text = 'short';
 
-        $result = ValidationWorker::password($password, $flags);
+        $result = ValidationWorker::string($text, $flags);
 
         $this->assertFalse($result);
     }
 
-    public function testPasswordRejectsTooLongPassword(): void
+    public function testStringRejectsTooLong(): void
     {
-        $flags = ValidationFlags::password(0, 10, 0, 0, 0, 0);
-        $password = 'thispasswordistoolong';
+        $flags = [ValidationType::MAX_LENGTH->value => 10];
+        $text = 'thisstringistoolong';
 
-        $result = ValidationWorker::password($password, $flags);
+        $result = ValidationWorker::string($text, $flags);
 
         $this->assertFalse($result);
     }
 
-    public function testPasswordRejectsWhenMissingNumbers(): void
+    public function testStringRejectsWhenMissingDigits(): void
     {
-        $flags = ValidationFlags::password(0, 255, 1, 0, 0, 0);
-        $password = 'PasswordWithoutNumber';
+        $flags = [ValidationType::MIN_DIGITS->value => 1];
+        $text = 'NoDigitsHere';
 
-        $result = ValidationWorker::password($password, $flags);
+        $result = ValidationWorker::string($text, $flags);
 
         $this->assertFalse($result);
     }
 
-    public function testPasswordRejectsWhenMissingSpecialChars(): void
+    public function testStringRejectsWhenMissingSpecialChars(): void
     {
-        $flags = ValidationFlags::password(0, 255, 0, 1, 0, 0);
-        $password = 'PasswordWithoutSpecial123';
+        $flags = [ValidationType::MIN_SPECIAL->value => 1];
+        $text = 'NoSpecialChars123';
 
-        $result = ValidationWorker::password($password, $flags);
+        $result = ValidationWorker::string($text, $flags);
 
         $this->assertFalse($result);
     }
 
-    public function testPasswordRejectsWhenMissingLowercase(): void
+    public function testStringRejectsWhenMissingLowercase(): void
     {
-        $flags = ValidationFlags::password(0, 255, 0, 0, 1, 0);
-        $password = 'PASSWORDWITHOURLOWERCASE123!';
+        $flags = [ValidationType::MIN_LOWERCASE->value => 1];
+        $text = 'ALLUPPERCASE123!';
 
-        $result = ValidationWorker::password($password, $flags);
+        $result = ValidationWorker::string($text, $flags);
 
         $this->assertFalse($result);
     }
 
-    public function testPasswordRejectsWhenMissingUppercase(): void
+    public function testStringRejectsWhenMissingUppercase(): void
     {
-        $flags = ValidationFlags::password(0, 255, 0, 0, 0, 1);
-        $password = 'passwordwithoutuppercase123!';
+        $flags = [ValidationType::MIN_UPPERCASE->value => 1];
+        $text = 'alllowercase123!';
 
-        $result = ValidationWorker::password($password, $flags);
+        $result = ValidationWorker::string($text, $flags);
 
         $this->assertFalse($result);
     }
 
-    public function testPasswordValidatesExactMinLength(): void
+    public function testStringValidatesExactMinLength(): void
     {
-        $flags = ValidationFlags::password(8, 20, 0, 0, 0, 0);
-        $password = 'exactly8';
+        $flags = [ValidationType::MIN_LENGTH->value => 8];
+        $text = 'exactly8';
 
-        $result = ValidationWorker::password($password, $flags);
+        $result = ValidationWorker::string($text, $flags);
 
         $this->assertTrue($result);
     }
 
-    public function testPasswordValidatesExactMaxLength(): void
+    public function testStringValidatesExactMaxLength(): void
     {
-        $flags = ValidationFlags::password(0, 10, 0, 0, 0, 0);
-        $password = '1234567890';
+        $flags = [ValidationType::MAX_LENGTH->value => 10];
+        $text = '1234567890';
 
-        $result = ValidationWorker::password($password, $flags);
+        $result = ValidationWorker::string($text, $flags);
 
         $this->assertTrue($result);
     }
 
-    public function testPasswordReturnsFalseForNull(): void
+    public function testStringReturnsFalseForNull(): void
     {
-        $flags = ValidationFlags::password(0, 255, 0, 0, 0, 0);
+        $flags = [];
 
-        $result = ValidationWorker::password(null, $flags);
+        $result = ValidationWorker::string(null, $flags);
 
         $this->assertFalse($result);
     }
 
-    public function testPasswordHandlesUnicodeCharacters(): void
+    public function testStringHandlesUnicodeCharacters(): void
     {
-        $flags = ValidationFlags::password(0, 255, 0, 0, 0, 0);
-        $password = 'пароль密码🔒';
+        $flags = [];
+        $text = 'пароль密码🔒';
 
-        $result = ValidationWorker::password($password, $flags);
+        $result = ValidationWorker::string($text, $flags);
 
         $this->assertTrue($result);
     }
 
-    public function testPasswordValidatesMultipleNumbers(): void
+    public function testStringValidatesMultipleDigits(): void
     {
-        $flags = ValidationFlags::password(0, 255, 3, 0, 0, 0);
-        $password = 'password123';
+        $flags = [ValidationType::MIN_DIGITS->value => 3];
+        $text = 'text123';
 
-        $result = ValidationWorker::password($password, $flags);
+        $result = ValidationWorker::string($text, $flags);
 
         $this->assertTrue($result);
     }
 
-    public function testPasswordRejectsInsufficientNumbers(): void
+    public function testStringRejectsInsufficientDigits(): void
     {
-        $flags = ValidationFlags::password(0, 255, 3, 0, 0, 0);
-        $password = 'password12';
+        $flags = [ValidationType::MIN_DIGITS->value => 3];
+        $text = 'text12';
 
-        $result = ValidationWorker::password($password, $flags);
+        $result = ValidationWorker::string($text, $flags);
 
         $this->assertFalse($result);
     }
 
-    #/ PASSWORD VALIDATION TESTS
+    public function testStringPopulatesResultPointer(): void
+    {
+        $flags = [
+            ValidationType::MIN_LENGTH->value => 5,
+            ValidationType::MIN_DIGITS->value => 2
+        ];
+        $text = 'abc1'; // Length 4 (fail), Digits 1 (fail)
+        $details = [];
+
+        $result = ValidationWorker::string($text, $flags, $details);
+
+        $this->assertFalse($result);
+        $this->assertArrayHasKey(ValidationType::MIN_LENGTH->value, $details);
+        $this->assertArrayHasKey(ValidationType::MIN_DIGITS->value, $details);
+        $this->assertFalse($details[ValidationType::MIN_LENGTH->value]);
+        $this->assertFalse($details[ValidationType::MIN_DIGITS->value]);
+        
+        // Test mixed success
+        $text = 'abc12'; // Length 5 (pass), Digits 2 (pass)
+        $result = ValidationWorker::string($text, $flags, $details);
+        $this->assertTrue($result);
+        $this->assertTrue($details[ValidationType::MIN_LENGTH->value]);
+        $this->assertTrue($details[ValidationType::MIN_DIGITS->value]);
+    }
+
+    #/ STRING VALIDATION TESTS
     #----------------------------------------------------------------------
 
     #----------------------------------------------------------------------
-    #\ AGE VALIDATION TESTS
-
-    public function testAgeValidatesWithinRange(): void
-    {
-        $flags = ValidationFlags::age(18, 65);
-        $age = 30;
-
-        $result = ValidationWorker::age($age, $flags);
-
-        $this->assertTrue($result);
-    }
-
-    public function testAgeRejectsTooYoung(): void
-    {
-        $flags = ValidationFlags::age(18, 65);
-        $age = 17;
-
-        $result = ValidationWorker::age($age, $flags);
-
-        $this->assertFalse($result);
-    }
-
-    public function testAgeRejectsTooOld(): void
-    {
-        $flags = ValidationFlags::age(18, 65);
-        $age = 66;
-
-        $result = ValidationWorker::age($age, $flags);
-
-        $this->assertFalse($result);
-    }
-
-    public function testAgeValidatesExactMinAge(): void
-    {
-        $flags = ValidationFlags::age(18, 65);
-        $age = 18;
-
-        $result = ValidationWorker::age($age, $flags);
-
-        $this->assertTrue($result);
-    }
-
-    public function testAgeValidatesExactMaxAge(): void
-    {
-        $flags = ValidationFlags::age(18, 65);
-        $age = 65;
-
-        $result = ValidationWorker::age($age, $flags);
-
-        $this->assertTrue($result);
-    }
-
-    public function testAgeReturnsFalseForNull(): void
-    {
-        $flags = ValidationFlags::age(18, 65);
-
-        $result = ValidationWorker::age(null, $flags);
-
-        $this->assertFalse($result);
-    }
-
-    public function testAgeReturnsFalseForZero(): void
-    {
-        $flags = ValidationFlags::age(1, 120);
-
-        $result = ValidationWorker::age(0, $flags);
-
-        $this->assertFalse($result);
-    }
-
-    #/ AGE VALIDATION TESTS
-    #----------------------------------------------------------------------
+    #\ NUMBER VALIDATION TESTS
 
     #----------------------------------------------------------------------
-    #\ USERNAME VALIDATION TESTS
+    #\ NUMBER VALIDATION TESTS
 
-    public function testUsernameValidatesWithinLengthRange(): void
+    public function testNumberValidatesWithinRange(): void
     {
-        $flags = ValidationFlags::username(3, 20);
-        $username = 'validuser';
+        $flags = [
+            ValidationType::MIN_NUMBER->value => 18, 
+            ValidationType::MAX_NUMBER->value => 65
+        ];
+        $number = 30;
 
-        $result = ValidationWorker::username($username, $flags);
+        $result = ValidationWorker::number($number, $flags);
 
         $this->assertTrue($result);
     }
 
-    public function testUsernameRejectsTooShort(): void
+    public function testNumberRejectsTooSmall(): void
     {
-        $flags = ValidationFlags::username(3, 20);
-        $username = 'ab';
+        $flags = [
+            ValidationType::MIN_NUMBER->value => 18, 
+            ValidationType::MAX_NUMBER->value => 65
+        ];
+        $number = 17;
 
-        $result = ValidationWorker::username($username, $flags);
+        $result = ValidationWorker::number($number, $flags);
 
         $this->assertFalse($result);
     }
 
-    public function testUsernameRejectsTooLong(): void
+    public function testNumberRejectsTooLarge(): void
     {
-        $flags = ValidationFlags::username(3, 20);
-        $username = str_repeat('a', 21);
+        $flags = [
+            ValidationType::MIN_NUMBER->value => 18, 
+            ValidationType::MAX_NUMBER->value => 65
+        ];
+        $number = 66;
 
-        $result = ValidationWorker::username($username, $flags);
+        $result = ValidationWorker::number($number, $flags);
 
         $this->assertFalse($result);
     }
 
-    public function testUsernameValidatesExactMinLength(): void
+    public function testNumberValidatesExactMin(): void
     {
-        $flags = ValidationFlags::username(3, 20);
-        $username = 'abc';
+        $flags = [
+            ValidationType::MIN_NUMBER->value => 18, 
+            ValidationType::MAX_NUMBER->value => 65
+        ];
+        $number = 18;
 
-        $result = ValidationWorker::username($username, $flags);
+        $result = ValidationWorker::number($number, $flags);
 
         $this->assertTrue($result);
     }
 
-    public function testUsernameValidatesExactMaxLength(): void
+    public function testNumberValidatesExactMax(): void
     {
-        $flags = ValidationFlags::username(3, 20);
-        $username = str_repeat('a', 20);
+        $flags = [
+            ValidationType::MIN_NUMBER->value => 18, 
+            ValidationType::MAX_NUMBER->value => 65
+        ];
+        $number = 65;
 
-        $result = ValidationWorker::username($username, $flags);
+        $result = ValidationWorker::number($number, $flags);
 
         $this->assertTrue($result);
     }
 
-    public function testUsernameReturnsFalseForNull(): void
+    public function testNumberReturnsFalseForNull(): void
     {
-        $flags = ValidationFlags::username(3, 20);
+        $flags = [
+            ValidationType::MIN_NUMBER->value => 18, 
+            ValidationType::MAX_NUMBER->value => 65
+        ];
 
-        $result = ValidationWorker::username(null, $flags);
+        $result = ValidationWorker::number(null, $flags);
 
         $this->assertFalse($result);
     }
 
-    public function testUsernameReturnsFalseForEmptyString(): void
+    public function testNumberReturnsFalseForZeroIfOutOfRange(): void
     {
-        $flags = ValidationFlags::username(1, 20);
+        $flags = [
+            ValidationType::MIN_NUMBER->value => 1, 
+            ValidationType::MAX_NUMBER->value => 100
+        ];
 
-        $result = ValidationWorker::username(null, $flags);
+        $result = ValidationWorker::number(0, $flags);
 
         $this->assertFalse($result);
     }
 
-    public function testUsernameHandlesSpecialCharacters(): void
+    public function testNumberValidatesFloat(): void
     {
-        $flags = ValidationFlags::username(0, 50);
-        $username = 'user_name-123';
+        $flags = [
+            ValidationType::MIN_NUMBER->value => 10.5, 
+            ValidationType::MAX_NUMBER->value => 20.5
+        ];
+        $number = 15.5;
 
-        $result = ValidationWorker::username($username, $flags);
+        $result = ValidationWorker::number($number, $flags);
 
         $this->assertTrue($result);
     }
 
-    #/ USERNAME VALIDATION TESTS
+    #/ NUMBER VALIDATION TESTS
     #----------------------------------------------------------------------
+
+
 
     #----------------------------------------------------------------------
     #\ PHONE VALIDATION TESTS

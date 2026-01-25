@@ -34,7 +34,7 @@ OR (not recommended)
 - ~~Implementation of native language support.~~
 - ~~Addition of frontend modular components.~~
 - ~~Upgrade of Router component: refactor to support more complex architectures.~~
-- Upgrade of ValidationWorker: failure details and added complexity.
+- ~~Upgrade of ValidationWorker: failure details and added complexity.~~
 
 ### Potential features
 - Implementation of Multi-DB support for DataSlave.

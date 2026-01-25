@@ -20,6 +20,8 @@
 - ConditionList component for handling multiple conditions.
 - OperatorType enum for defining SQL operators.
 - Developer mistakes in endpoints are now catched by DeveloperException and registered in logs.
+- ValidationWorker::string(...) and ValidationWorker::number(...) methods for flexible validation.
+- ValidationType enum for defining what criteria to validate.
 
 #### Changed
 - View endpoints now return Template objects instead of referencing HTML files directly.
@@ -36,6 +38,7 @@
 - Collection component renamed to Map.
 - Item component renamed to Pair.
 - DataWorker methods signature changed to use ConditionList instead of Collections.
+- ValidationWorker now return result of validation using an array of ValidationType => bool.
 
 #### Fixed
 - Bee::getFileMimeType() returns string instead of DataType when file doesn't exist and returnType is true.
@@ -54,6 +57,8 @@
 - FilterDeniedException removed (replaced by MiddlewareDeniedException).
 - Server::addStarter() and Server::addFinisher() removed (use middleware).
 - filters.php configuration file removed (use middleware.php).
+- ValidationFlags class.
+- ValidationWorker unnecessary methods removed.
 
 ### [v0.4] - 2026-01-03
 #### Added
