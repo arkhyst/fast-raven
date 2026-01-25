@@ -82,7 +82,7 @@ class Lib {
         const translations = window.LANG[lang];
         $('[data-lang]').each(function() {
             const key = $(this).data('lang');
-            if (translations[key] !== undefined) $(this).text(translations[key]);
+            if (translations[key] !== undefined) $(this).html(translations[key]);
         });
     }
 }
