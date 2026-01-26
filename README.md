@@ -29,14 +29,7 @@ OR (not recommended)
 
 ---
 
-### Roadmap: v0.5
-- ~~Implementation of endpoint specific middlewares.~~
-- ~~Implementation of native language support.~~
-- ~~Addition of frontend modular components.~~
-- ~~Upgrade of Router component: refactor to support more complex architectures.~~
-- ~~Upgrade of ValidationWorker: failure details and added complexity.~~
-
-### Potential features
+### Potential features for v1.0
 - Implementation of Multi-DB support for DataSlave.
 - Upgrade of DataSlave: addition of ORM-like component to create complex queries. Refactor of whole class.
 
