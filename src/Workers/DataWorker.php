@@ -43,6 +43,24 @@ final class DataWorker {
     #\ METHODS
 
     /**
+     * Executes a raw SQL query.
+     *
+     * @param string $query The SQL query to execute.
+     * @param array $vars [optional] The variables to bind to the query.
+     *
+     * @warning NEVER TRUST USER INPUT. ONLY $vars ARE PROTECTED AGAINST SQL INJECTION.
+     * 
+     * @return array|bool|int|null The result of the query, or null if an error occurred.
+     */
+    public static function sql(string $query, array $vars = []): array|bool|int|null {
+        if(self::$busy) {
+            return self::$slave->raw($query, $vars);
+        }
+
+        return false;
+    }
+
+    /**
      * Retrieves all rows from the database without any conditions.
      *
      * @param string $table The table to retrieve data from.

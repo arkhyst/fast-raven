@@ -272,6 +272,27 @@ final class DataSlave {
     #\ METHODS
 
     /**
+     * Executes a raw SQL query and returns the result.
+     *
+     * @param string $query The SQL query to execute.
+     * @param array $vars The variables to bind to the query.
+     * 
+     * @return array|bool|int|null The result of the query, or null if an error occurred.
+     */
+    public function raw(string $query, array $vars = []): array|bool|int|null {
+        $q = strtoupper(trim($query));
+        $type = match(true) {
+            str_starts_with($q, QueryType::SELECT->value) => QueryType::SELECT,
+            str_starts_with($q, QueryType::COUNT->value) => QueryType::COUNT,
+            str_starts_with($q, QueryType::INSERT->value) => QueryType::INSERT,
+            str_starts_with($q, QueryType::UPDATE->value) => QueryType::UPDATE,
+            str_starts_with($q, QueryType::DELETE->value) => QueryType::DELETE,
+            default => QueryType::SELECT,
+        };
+        return $this->simpleRequestToDatabase($type, $query, $vars);
+    }
+
+    /**
      * Executes a SQL query to retrieve all rows from the database that match the given conditions.
      *
      * @param string $table The table to retrieve data from.

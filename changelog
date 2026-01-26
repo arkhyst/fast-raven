@@ -23,6 +23,7 @@
 - ValidationWorker::string(...) and ValidationWorker::number(...) methods for flexible validation.
 - ValidationType enum for defining what criteria to validate.
 - Environment variable added for dynamic SMTP encryption support.
+- DataSlave::raw() for executing raw SQL queries (no protection).
 
 #### Changed
 - View endpoints now return Template objects instead of referencing HTML files directly.
