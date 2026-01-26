@@ -2,9 +2,11 @@
 
 namespace FastRaven\Workers;
 
+use FastRaven\Components\Data\ConditionList;
 use FastRaven\Internal\Slave\DataSlave;
 
-use FastRaven\Components\Data\Collection;
+use FastRaven\Components\Data\Map;
+use FastRaven\Components\Data\Condition;
 
 final class DataWorker {
     #----------------------------------------------------------------------
@@ -41,63 +43,21 @@ final class DataWorker {
     #\ METHODS
 
     /**
-     * Retrieves one row from the database that matches the given id.
+     * Executes a raw SQL query.
      *
-     * @param string $table The table to retrieve data from.
-     * @param string[] $cols The columns to retrieve data from.
-     * @param int $id The id of the row to retrieve.
+     * @param string $query The SQL query to execute.
+     * @param array $vars [optional] The variables to bind to the query.
      *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * @warning NEVER TRUST USER INPUT. ONLY $vars ARE PROTECTED AGAINST SQL INJECTION.
      * 
-     * @return array|null The retrieved data, or null if an error occurred.
+     * @return array|bool|int|null The result of the query, or null if an error occurred.
      */
-    public static function getOneById(string $table, array $cols, int $id): ?array {
+    public static function sql(string $query, array $vars = []): array|bool|int|null {
         if(self::$busy) {
-            return self::$slave->getOne($table, $cols, ["id"], [$id]);
+            return self::$slave->raw($query, $vars);
         }
 
-        return null;
-    }
-
-    /**
-     * Retrieves one row from the database that matches the given conditions.
-     *
-     * @param string $table The table to retrieve data from.
-     * @param string[] $cols The columns to retrieve data from.
-     * @param Collection $conditionCollection The conditions to filter the data with.
-     *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
-     * 
-     * @return array|null The retrieved data, or null if an error occurred.
-     */
-    public static function getOneWhere(string $table, array $cols, Collection $conditionCollection): ?array {
-        if(self::$busy) {
-            return self::$slave->getOne($table, $cols, $conditionCollection->getAllKeys(), $conditionCollection->getAllValues());
-        }
-
-        return null;
-    }
-
-    /**
-     * Retrieves all rows from the database that match the given conditions.
-     *
-     * @param string $table The table to retrieve data from.
-     * @param string[] $cols The columns to retrieve data from.
-     * @param Collection $conditionCollection The conditions to filter the data with.
-     * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
-     * @param int $limit [optional] The maximum number of rows to retrieve.
-     * @param int $offset [optional] The number of rows to skip.
-     *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
-     * 
-     * @return array|null The retrieved data, or null if an error occurred.
-     */
-    public static function getAllWhere(string $table, array $cols, Collection $conditionCollection, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
-        if(self::$busy) {
-            return self::$slave->getAll($table, $cols, $conditionCollection->getAllKeys(), $conditionCollection->getAllValues(), $orderBy, $limit, $offset);
-        }
-
-        return null;
+        return false;
     }
 
     /**
@@ -109,13 +69,124 @@ final class DataWorker {
      * @param int $limit [optional] The maximum number of rows to retrieve.
      * @param int $offset [optional] The number of rows to skip.
      *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 
      * @return array|null The retrieved data, or null if an error occurred.
      */
-    public static function getAll(string $table, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+    public static function select(string $table, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
         if(self::$busy) {
-            return self::$slave->getAll($table, $cols, [], [], $orderBy, $limit, $offset);
+            return self::$slave->select($table, $cols, null, $orderBy, $limit, $offset);
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves all rows from the database that match the given conditions.
+     *
+     * @param string $table The table to retrieve data from.
+     * @param string[] $cols The columns to retrieve data from.
+     * @param ConditionList $conditions The conditions to filter the data with.
+     * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
+     * @param int $limit [optional] The maximum number of rows to retrieve.
+     * @param int $offset [optional] The number of rows to skip.
+     *
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
+     * @return array|null The retrieved data, or null if an error occurred.
+     */
+    public static function selectWhere(string $table, array $cols, ConditionList $conditions, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+        if(self::$busy) {
+            return self::$slave->select($table, $cols, $conditions, $orderBy, $limit, $offset);
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves one row from the database that matches the given conditions.
+     *
+     * @param string $table The table to retrieve data from.
+     * @param string[] $cols The columns to retrieve data from.
+     * @param ConditionList $conditions The conditions to filter the data with.
+     *
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
+     * @return array|null The retrieved data, or null if an error occurred.
+     */
+    public static function selectOneWhere(string $table, array $cols, ConditionList $conditions): ?array {
+        if(self::$busy) {
+            return self::$slave->select($table, $cols, $conditions, "", 1)[0] ?? null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves one row from the database that matches the given id.
+     *
+     * @param string $table The table to retrieve data from.
+     * @param string[] $cols The columns to retrieve data from.
+     * @param int $id The id of the row to retrieve.
+     *
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
+     * @return array|null The retrieved data, or null if an error occurred.
+     */
+    public static function selectOneById(string $table, array $cols, int $id): ?array {
+        if(self::$busy) {
+            return self::$slave->select($table, $cols, ConditionList::new([Condition::equals("id", $id)]), "", 1)[0] ?? null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves all joinable rows from the database.
+     * 
+     * @warning All cols must be prefixed with the table name. (e.g., "table.col")
+     * 
+     * @param string $table The table to retrieve data from.
+     * @param array $joinedTables Tables to join with.
+     * @param Map $joinedTablesLinks Links to join the tables with.
+     * @param array $cols The columns to retrieve data from.
+     * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
+     * @param int $limit [optional] The maximum number of rows to retrieve.
+     * @param int $offset [optional] The number of rows to skip.
+     *
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
+     * @return array|null The retrieved data, or null if an error occurred.
+     */
+    public static function join(string $table, array $joinedTables, Map $joinedTablesLinks, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+        if(self::$busy) {
+            return self::$slave->join($table, $joinedTables, $joinedTablesLinks->getAllKeys(), $joinedTablesLinks->getAllValues(), $cols, null, $orderBy, $limit, $offset);
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves all joinable rows from the database that match the given conditions.
+     * 
+     * @warning All cols must be prefixed with the table name. (e.g., "table.col")
+     * 
+     * @param string $table The table to retrieve data from.
+     * @param array $joinedTables The tables to join with.
+     * @param Map $joinedTablesLinks Links to join the tables with.
+     * @param array $cols The columns to retrieve data from.
+     * @param ConditionList $conditions The conditions to filter the data with.
+     * @param string $orderBy [optional] The ORDER BY clause (e.g., "name ASC", "created_at DESC").
+     * @param int $limit [optional] The maximum number of rows to retrieve.
+     * @param int $offset [optional] The number of rows to skip.
+     *
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
+     * @return array|null The retrieved data, or null if an error occurred.
+     */
+    public static function joinWhere(string $table, array $joinedTables, Map $joinedTablesLinks, array $cols, ConditionList $conditions, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
+        if(self::$busy) {
+            return self::$slave->join($table, $joinedTables, $joinedTablesLinks->getAllKeys(), $joinedTablesLinks->getAllValues(), $cols, $conditions, $orderBy, $limit, $offset);
         }
 
         return null;
@@ -125,15 +196,15 @@ final class DataWorker {
      * Inserts a new row into the database.
      *
      * @param string $table The table to insert into.
-     * @param Collection $columnCollection Collection of columns to insert data into and their values.
+     * @param Map $columnValueMap Map of columns to insert data into and their values.
      *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 
      * @return bool True if the insertion was successful, false otherwise.
      */
-    public static function insert(string $table, Collection $columnCollection) : bool {
+    public static function insert(string $table, Map $columnValueMap) : bool {
         if(self::$busy) {
-            return self::$slave->insert($table, $columnCollection->getAllKeys(), $columnCollection->getAllValues());
+            return self::$slave->insert($table, $columnValueMap->getAllKeys(), $columnValueMap->getAllValues());
         }
 
         return false;
@@ -144,19 +215,19 @@ final class DataWorker {
      * Inserts multiple rows into the database in a single transaction.
      *
      * @param string $table The table to insert into.
-     * @param Collection[] $columnCollectionList List of Collections to insert data into and their values.
+     * @param Map[] $columnValueMapList List of Maps of columns to insert data into and their values.
      *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 
      * @return bool True if all insertions were successful, false otherwise.
      */
-    public static function insertBatch(string $table, array $columnCollectionList): bool {
+    public static function insertBatch(string $table, array $columnValueMapList): bool {
         if(self::$busy) {
-            if(!empty($columnCollectionList)) { // Hmmmm....
-                $cols = $columnCollectionList[0]->getAllKeys();
+            if(!empty($columnValueMapList)) {
+                $cols = $columnValueMapList[0]->getAllKeys();
                 $values = [];
-                foreach($columnCollectionList as $columnCollection) {
-                    $values[] = $columnCollection->getAllValues();
+                foreach($columnValueMapList as $columnValueMap) {
+                    $values[] = $columnValueMap->getAllValues();
                 }
                 return self::$slave->insertBatch($table, $cols, $values);
             }
@@ -182,16 +253,16 @@ final class DataWorker {
      * Updates existing rows in the database that match the given conditions.
      *
      * @param string $table The table to update rows in.
-     * @param Collection $columnCollection Collection of columns to update and their new values.
-     * @param Collection $conditionCollection Collection of conditions to filter the rows to update with.
+     * @param Map $columnValueMap Map of columns to update and their new values.
+     * @param ConditionList $conditions List of conditions to filter the rows to update with.
      *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 
      * @return bool True if the update was successful, false otherwise.
      */
-    public static function updateWhere(string $table, Collection $columnCollection, Collection $conditionCollection) : bool {
+    public static function updateWhere(string $table, Map $columnValueMap, ConditionList $conditions) : bool {
         if(self::$busy) {
-            return self::$slave->update($table, $columnCollection->getAllKeys(), $conditionCollection->getAllKeys(), array_merge($columnCollection->getAllValues(), $conditionCollection->getAllValues()));
+            return self::$slave->update($table, $columnValueMap, $conditions);
         }
 
         return false;
@@ -201,16 +272,16 @@ final class DataWorker {
      * Updates a single row in the database by its ID.
      *
      * @param string $table The table to update the row in.
-     * @param Collection $columnCollection Collection of columns to update and their new values.
+     * @param Map $columnValueMap Map of columns to update and their new values.
      * @param int $id The ID of the row to update.
      *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 
      * @return bool True if the update was successful, false otherwise.
      */
-    public static function updateById(string $table, int $id, Collection $columnCollection): bool {
+    public static function updateById(string $table, int $id, Map $columnValueMap): bool {
         if(self::$busy) {
-            return self::$slave->update($table, $columnCollection->getAllKeys(), ["id"], array_merge($columnCollection->getAllValues(), [$id]));
+            return self::$slave->update($table, $columnValueMap, ConditionList::new([Condition::equals("id", $id)]));
         }
 
         return false;
@@ -222,13 +293,13 @@ final class DataWorker {
      * @param string $table The table to delete the row from.
      * @param int $id The ID of the row to delete.
      *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 
      * @return bool True if the deletion was successful, false otherwise.
      */
     public static function deleteById(string $table, int $id): bool {
         if(self::$busy) {
-            return self::$slave->delete($table, ["id"], [$id]);
+            return self::$slave->delete($table, ConditionList::new([Condition::equals("id", $id)]));
         }
 
         return false;
@@ -238,15 +309,15 @@ final class DataWorker {
      * Deletes rows from the database that match the given conditions.
      *
      * @param string $table The table to delete rows from.
-     * @param Collection $conditionCollection Collection of conditions to filter the rows to delete.
+     * @param ConditionList $conditionList List of conditions to filter the rows to delete.
      *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 
      * @return bool True if the deletion was successful, false otherwise.
      */
-    public static function deleteWhere(string $table, Collection $conditionCollection): bool {
+    public static function deleteWhere(string $table, ConditionList $conditionList): bool {
         if(self::$busy) {
-            return self::$slave->delete($table, $conditionCollection->getAllKeys(), $conditionCollection->getAllValues());
+            return self::$slave->delete($table, $conditionList);
         }
 
         return false;   
@@ -256,15 +327,15 @@ final class DataWorker {
      * Counts the number of rows in the database that match the given conditions.
      *
      * @param string $table The table to count rows from.
-     * @param Collection $conditionCollection Collection of conditions to filter the rows to count.
+     * @param ConditionList $conditionList List of conditions to filter the rows to count.
      *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 
      * @return int The number of rows that match the conditions.
      */
-    public static function count(string $table, Collection $conditionCollection): int {
+    public static function count(string $table, ConditionList $conditionList): int {
         if(self::$busy) {
-            return self::$slave->count($table, $conditionCollection->getAllKeys(), $conditionCollection->getAllValues());
+            return self::$slave->count($table, $conditionList);
         }
 
         return 0;
@@ -275,13 +346,13 @@ final class DataWorker {
      *
      * @param string $table The table to count rows from.
      *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 
      * @return int The total number of rows in the table.
      */
     public static function countAll(string $table): int {
         if(self::$busy) {
-            return self::$slave->count($table, [], []);
+            return self::$slave->count($table, null);
         }
 
         return 0;
@@ -291,15 +362,15 @@ final class DataWorker {
      * Checks if a row exists in the database that matches the given conditions.
      *
      * @param string $table The table to check for existence.
-     * @param Collection $conditionCollection Collection of conditions to filter the rows.
+     * @param ConditionList $conditionList List of conditions to filter the rows.
      * 
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
-     *
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * 
      * @return bool True if at least one row exists, false otherwise.
      */
-    public static function exists(string $table, Collection $conditionCollection): bool {
+    public static function exists(string $table, ConditionList $conditionList): bool {
         if(self::$busy) {
-            return self::$slave->count($table, $conditionCollection->getAllKeys(), $conditionCollection->getAllValues()) > 0;
+            return self::$slave->count($table, $conditionList) > 0;
         }
 
         return false;
@@ -311,13 +382,13 @@ final class DataWorker {
      * @param string $table The table to check for existence.
      * @param int $id The ID to check for.
      *
-     * @warning NEVER TRUST USER INPUT. ONLY COLLECTION VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
+     * @warning NEVER TRUST USER INPUT. ONLY MAP VARIABLES ARE PROTECTED AGAINST SQL INJECTION.
      * 
      * @return bool True if a row with the given ID exists, false otherwise.
      */
     public static function existsById(string $table, int $id): bool {
         if(self::$busy) {
-            return self::$slave->count($table, ["id"], [$id]) > 0;
+            return self::$slave->count($table, ConditionList::new([Condition::equals("id", $id)])) > 0;
         }
 
         return false;

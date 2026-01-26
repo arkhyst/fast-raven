@@ -2,7 +2,7 @@
 
 namespace FastRaven\Components\Core;
 
-use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\EndpointType;
 
 
 final class Config {
@@ -39,14 +39,14 @@ final class Config {
         /**
          * Get the rate limit for a specific middleware type.
          *
-         * @param MiddlewareType $type The middleware type to get the rate limit for.
+         * @param EndpointType $type The middleware type to get the rate limit for.
          * @return int The rate limit for the specified middleware type.
          */
-        public function getRateLimit(MiddlewareType $type): int {
+        public function getRateLimit(EndpointType $type): int {
             return match($type) {
-                MiddlewareType::VIEW => $this->rateLimitView,
-                MiddlewareType::API => $this->rateLimitAPI,
-                MiddlewareType::CDN => $this->rateLimitCDN,
+                EndpointType::VIEW => $this->rateLimitView,
+                EndpointType::API => $this->rateLimitAPI,
+                EndpointType::CDN => $this->rateLimitCDN,
                 default => -1,
             };
         }

@@ -12,12 +12,13 @@
 | 🔐 Auth | Session-based with automatic CSRF validation |
 | 📊 Database | PDO with prepared statements, SQL injection protection |
 | ⚡ Caching | APCu → shmop → file fallback with auto-selection |
+| 🎨 Templates | Fragments, data passing, asset versioning |
+| 🌐 i18n | CSV-based translations with dynamic language switching |
+| 🎯 Middlewares | Per-endpoint request control |
 | ✅ Validation | Email, password, username, age, phone |
 | 📧 Email | PHPMailer with templates and attachments |
 | 📁 Files | Secure uploads with MIME validation via magic bytes |
 | 📝 Logging | Request logging with debug/warn/error levels |
-| 🎨 Templates | Fragments, autofill, asset versioning |
-| 🎯 Filters | Starters and finishers for request/response control |
 
 ---
 
@@ -32,10 +33,8 @@ graph TD
     H --> I{Site Restricted?}
     I -->|Yes| J{Authorized?}
     J -->|No| K[NotAuthorizedException]
-    I -->|No| L[processStarters]
-    J -->|Yes| L
-    L -->|Return false| M[FilterDeniedException]
-    L -->|All pass| N{Rate Limit OK?}
+    I -->|No| N{Rate Limit OK?}
+    J -->|Yes| N
     N -->|No| O[RateLimitExceededException]
     N -->|Yes| P[Kernel::process]
     P --> Q{Route Match?}
@@ -43,19 +42,16 @@ graph TD
     Q -->|Yes| S{Endpoint Restricted?}
     S -->|Yes| T{Authorized?}
     T -->|No| K
-    S -->|No| U{UnauthorizedExclusive?}
+    S -->|No| U{Middleware?}
     T -->|Yes| U
-    U -->|Yes + Authorized| V[AlreadyAuthorizedException]
-    U -->|No| W{View, API or CDN?}
-    W -->|View| X[Render Template]
-    W -->|API| Y[Execute Function]
-    W -->|CDN| Z[Execute Function]
-    X --> AA[Response]
-    Y --> AA
-    Z --> AA
-    AA --> AB[processFinishers]
-    AB -->|Return false| M
-    AB -->|All pass| AC[Kernel::close]
+    U -->|Denied| V[MiddlewareDeniedException]
+    U -->|Pass| W{View, API or CDN?}
+    W -->|View| X[Execute Handler → Template]
+    W -->|API| Y[Execute Handler → Response]
+    W -->|CDN| Z[Execute Handler → File]
+    X --> AC[Kernel::close]
+    Y --> AC
+    Z --> AC
     AC --> AD[Output Response]
     AD --> AE[Write Logs]
     AE --> AF[Garbage Collection]
@@ -64,14 +60,12 @@ graph TD
 ### Execution Order Summary
 
 1. **Server::initialize()** - Validates skeleton structure, loads `.env` files
-2. **Server::configure()** - Creates Kernel with Config, Template, and Routers
-3. **require filters.php** - Registers starters and finishers
-4. **Server::run()** - Main execution loop
-5. **Kernel::open()** - Initializes Request, Workers/Slaves, handles site-level auth
-6. **processStarters()** - Executes starter filters (can abort request)
-7. **Kernel::process()** - Route matching, rate limiting, endpoint execution
-8. **processFinishers()** - Executes finisher filters (can abort response)
-9. **Kernel::close()** - Sends response, writes logs, garbage collection
+2. **Server::configure()** - Creates Kernel with Config, Template, Middleware, and Routers
+3. **Server::run()** - Main execution loop
+4. **Kernel::open()** - Initializes Request, Workers/Slaves, handles site-level auth
+5. **Kernel::process()** - Rate limiting, route matching, middleware execution, endpoint execution
+6. **Kernel::close()** - Sends response, writes logs, garbage collection
+
 
 ---
 
@@ -88,12 +82,13 @@ skeleton/
     │   ├── router/           views.php, api.php, cdn.php
     │   ├── config.php        Main configuration
     │   ├── template.php      Default template
-    │   └── filters.php       Starters and finishers
+    │   └── middleware.php    Middleware definitions
     ├── src/
-    │   ├── api/              API endpoint files
-    │   ├── cdn/              CDN endpoint files
+    │   ├── api/              API endpoint handlers
+    │   ├── cdn/              CDN endpoint handlers
+    │   ├── views/            View endpoint handlers
     │   └── web/
-    │       ├── views/        pages/, fragments/, mails/
+    │       ├── templates/    pages/, fragments/, mails/
     │       └── assets/       scss/, js/ (compiled via watch.sh)
     ├── public/assets/        css/, js/, img/, fonts/ (compiled output)
     ├── storage/              cache/, logs/, uploads/
@@ -106,7 +101,7 @@ skeleton/
 
 ### index.php
 
-The entry point initializes the server, configures it, loads filters, and starts processing:
+The entry point initializes the server, configures it, and starts processing:
 
 ```php
 <?php
@@ -115,8 +110,6 @@ declare(strict_types=1);
 require __DIR__ . "/../../vendor/autoload.php";
 
 use FastRaven\Server;
-use FastRaven\Workers\Bee;
-use FastRaven\Types\ProjectFolderType;
 
 // Server initialization. sitePath SHOULD ALWAYS BE __DIR__
 $server = Server::initialize(__DIR__);
@@ -125,13 +118,11 @@ $server = Server::initialize(__DIR__);
 $server->configure(
     Server::getConfiguration(),
     Server::getTemplate(),
+    Server::getMiddleware(),
     Server::getViewRouter(),
     Server::getApiRouter(),
     Server::getCdnRouter()
 );
-
-// Load starters and finishers
-require_once Bee::buildProjectPath(ProjectFolderType::CONFIG, "filters.php");
 
 // Start request processing
 $server->run();
@@ -194,13 +185,14 @@ Default template for all views:
 use FastRaven\Components\Core\Template;
 use FastRaven\Workers\Bee;
 
-// Default template for all views
-$template = Template::new("Fast Raven Site", Bee::env("VERSION", "0.0.1"), "en")
-    ->setFavicon("favicon.png")
-    ->addStyle("main.css")
-    ->addScript("app.js")
-    ->setBeforeFragments(["header.html"])
-    ->setAfterFragments(["footer.html"]);
+// Default template for all views.
+$template = Template::new("main.php", "Fast Raven Site", Bee::env("VERSION", "0.0.1"));
+$template->setLangFile("global")           // CSV file in src/web/assets/lang/
+         ->setDefaultLang("en")            // Default language column
+         ->setFavicon("favicon.png")
+         ->setBeforeFragments(["header.php"])
+         ->addStyle("style.css")
+         ->addScript("main.js");
 
 return $template;
 ```
@@ -209,54 +201,95 @@ return $template;
 
 | Method | Description |
 |--------|-------------|
-| `new(title, version, lang, favicon)` | Create new template |
-| `flex(...)` | One-liner with all parameters |
-| `setTitle/setVersion/setLang/setFavicon` | Setters with chaining |
+| `new(file, title, version)` | Create new template |
+| `setFile/setTitle/setVersion` | Setters with chaining |
+| `setFavicon(filename)` | Set favicon for both light/dark mode |
+| `setFaviconLight/setFaviconDark(filename)` | Set mode-specific favicons |
+| `setLangFile(filename)` | Set language CSV file (without .csv extension) |
+| `setDefaultLang(lang)` | Set default language column to use |
 | `addStyle(filename)` | Add CSS file from public/assets/css/ |
 | `addScript(filename)` | Add JS file from public/assets/js/ |
 | `setBeforeFragments(array)` | Fragments to render before main content |
 | `setAfterFragments(array)` | Fragments to render after main content |
-| `addAutofill(domSelector, apiEndpoint)` | Auto-populate DOM element with API data |
+| `addData(Item)` | Add data for template rendering |
+| `getData(key)` | Get data value by key |
+| `hasData(key)` | Check if data key exists |
 | `merge(?Template)` | Merge another template (overwrites non-empty values) |
 
 ---
 
-### filters.php
+### Internationalization (i18n)
 
-Starters run before request processing, finishers run after:
+FastRaven provides built-in language support using CSV files:
+
+**1. Create language file** at `src/web/assets/lang/global.csv`:
+```csv
+key,en,es,fr
+WELCOME,Welcome,Bienvenido,Bienvenue
+GOODBYE,Goodbye,Adiós,Au revoir
+```
+
+**2. Configure template** in `config/template.php`:
+```php
+$template->setLangFile("global")    // Uses src/web/assets/lang/global.csv
+         ->setDefaultLang("en");    // Default language on page load
+```
+
+**3. Use in HTML** with `data-lang` attribute:
+```html
+<span data-lang="WELCOME"></span>
+<p data-lang="GOODBYE"></p>
+```
+
+**4. Change language dynamically** via JavaScript:
+```javascript
+// Switch to Spanish
+Lib.changeLanguage('es');
+
+// Switch to English  
+Lib.changeLanguage('en');
+```
+
+**How it works:**
+- On page load, `window.LANG` is populated with all translations from the CSV
+- `Lib.changeLanguage(lang)` updates all `data-lang` elements with translations for that language
+- **Performance:** Language data is cached for 1 hour to avoid re-parsing the CSV on every request
+
+---
+
+### middleware.php
+
+Middleware are reusable functions that can be attached to individual endpoints:
 
 ```php
 <?php
 
 use FastRaven\Workers\LogWorker;
 use FastRaven\Components\Http\Request;
-use FastRaven\Components\Http\Response;
+use FastRaven\Components\Routing\Middleware;
 
-// Starter: Runs BEFORE Kernel::process()
-// Return false to deny request (throws FilterDeniedException)
-$server->addStarter(function(Request $request) {
-    LogWorker::log("Pre-processing request");
-    
-    // Example: Maintenance mode check
-    // if (Bee::env("MAINTENANCE") === "true") return false;
-    
-    // Example: Block specific request types
-    // if ($request->getType() === MiddlewareType::API) { ... }
-    
+// Create a new middleware holder instance.
+$middleware = Middleware::new();
+
+// Add middleware with a unique ID
+$middleware->add("alwaysPass", function(Request $request): bool {
+    LogWorker::log("Middleware executed for request");
+    return true; // Return false to deny request (throws MiddlewareDeniedException)
+});
+
+$middleware->add("requireAdmin", function(Request $request): bool {
+    // Example: Check if user has admin role
+    // $userId = AuthWorker::getAuthorizedUserId();
+    // return $userId && isAdmin($userId);
     return true;
 });
 
-// Finisher: Runs AFTER Kernel::process() but BEFORE response is sent
-// Return false to deny response (throws FilterDeniedException)
-$server->addFinisher(function(Request $request, Response $response) { 
-    LogWorker::log("Post-processing response");
-    return true;
-});
+return $middleware;
 ```
 
-**Filter Signatures:**
-- Starters: `function(Request $request): bool`
-- Finishers: `function(Request $request, Response $response): bool`
+**Middleware Signature:**
+- `function(Request $request): bool`
+- Return `false` to deny request (throws `MiddlewareDeniedException`)
 
 ---
 
@@ -267,18 +300,14 @@ $server->addFinisher(function(Request $request, Response $response) {
 ```php
 <?php
 
-use FastRaven\Components\Core\Template;
 use FastRaven\Components\Routing\{Endpoint, Router};
-use FastRaven\Components\Data\{Collection, Item};
-use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\EndpointType;
 
-$viewRouter = Router::new(MiddlewareType::VIEW)
-    ->add(Endpoint::view(false, "/", "main.html"))
-    ->add(Endpoint::view(true, "/dashboard", "dashboard.html"))  // Restricted
-    ->add(Endpoint::view(false, "/ping", "ping.html", Template::flex(
-        title: "Ping test",
-        autofill: Collection::new([Item::new("#api-result-span", "/api/ping")])
-    )));
+// View Router configuration. Each view must return a Template.
+$viewRouter = Router::new(EndpointType::VIEW)
+    ->add(Endpoint::view(false, "/", "Home.php"))
+    ->add(Endpoint::view(true, "/dashboard", "Dashboard.php"))  // Restricted
+    ->add(Endpoint::view(false, "/ping", "Ping.php", "alwaysPass"));  // With middleware
 
 return $viewRouter;
 ```
@@ -289,14 +318,14 @@ return $viewRouter;
 <?php
 
 use FastRaven\Components\Routing\{Endpoint, Router};
-use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\EndpointType;
 
 // API Router - /api/ prefix is automatically added
-$apiRouter = Router::new(MiddlewareType::API)
+$apiRouter = Router::new(EndpointType::API, 200)  // Rate limit: 200 req/min
     ->add(Endpoint::api(false, "GET", "/health", "Health.php"))
-    ->add(Endpoint::api(false, "GET", "/ping", "Pong.php"))
+    ->add(Endpoint::api(false, "GET", "/pong", "Pong.php"))
     ->add(Endpoint::api(true, "POST", "/user/update", "user/Update.php"))  // Restricted
-    ->add(Endpoint::api(false, "POST", "/login", "auth/Login.php", true, 5));  // guestOnly, rateLimit
+    ->add(Endpoint::api(false, "POST", "/login", "auth/Login.php", "guestOnly"));  // With middleware
 
 return $apiRouter;
 ```
@@ -307,10 +336,10 @@ return $apiRouter;
 <?php
 
 use FastRaven\Components\Routing\{Endpoint, Router};
-use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\EndpointType;
 
 // CDN Router - /cdn/ prefix is automatically added
-$cdnRouter = Router::new(MiddlewareType::CDN)
+$cdnRouter = Router::new(EndpointType::CDN)
     ->add(Endpoint::cdn(false, "GET", "/favicon", "Favicon.php"));
 
 return $cdnRouter;
@@ -322,15 +351,17 @@ return $cdnRouter;
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `view()` | `(restricted, path, file, ?template, ?guestOnly, ?rateLimit)` | HTML page endpoint |
-| `api()` | `(restricted, method, path, file, ?guestOnly, ?rateLimit)` | JSON API endpoint |
-| `cdn()` | `(restricted, method, path, file, ?rateLimit)` | Binary/file endpoint |
-| `router()` | `(type, restricted, path, routerFile, ?rateLimit)` | Nested router |
+| `view()` | `(restricted, path, file, ?middlewareId)` | View endpoint (returns Template) |
+| `api()` | `(restricted, method, path, file, ?middlewareId)` | JSON API endpoint |
+| `cdn()` | `(restricted, method, path, file, ?middlewareId)` | Binary/file endpoint |
+| `router()` | `(type, restricted, path, routerFile, ?middlewareId)` | Nested router |
 
 **Parameters:**
 - `restricted` - Require authentication
-- `guestOnly` - Only accessible when NOT authenticated (for login pages)
-- `rateLimit` - Per-minute limit (must be ≤ global limit)
+- `middlewareId` - Optional ID of middleware to run before endpoint
+
+**Router Constructor:**
+- `Router::new(EndpointType $type, int $limitPerMinute = -1)` - Rate limiting is now set at the router level
 
 ---
 
@@ -389,6 +420,20 @@ $type = Bee::getFileMimeType("/path/to/file", true);     // Returns DataType enu
 // Domain
 $domain = Bee::getBaseDomain();                  // From SITE_ADDRESS
 $full = Bee::getBuiltDomain("admin");            // "admin.example.com"
+
+// Callable validation
+$valid = Bee::validateCallable($callable, [Request::class, Template::class]);
+
+// CSV parsing (for i18n)
+$langs = Bee::parseCSV(
+    Bee::buildProjectPath(
+        ProjectFolderType::SRC_WEB_ASSETS_LANG,
+        "global.csv"
+    )
+);  // Returns ["en" => ["KEY" => "value"], ...]
+
+// Cache Keys
+$key = Bee::getCacheKey("session", "user_1"); // → "fastraven:example.com:session:hash"
 ```
 
 ---
@@ -432,57 +477,79 @@ AuthWorker::autologin(
 
 ### DataWorker
 
-> ⚠️ Only `Collection` values are protected via prepared statements. Never use user input for table/column names.
+> ⚠️ Only `Map` values are protected via prepared statements. Never use user input for table/column names.
 
 ```php
 use FastRaven\Workers\DataWorker;
-use FastRaven\Components\Data\{Collection, Item};
+use FastRaven\Components\Data\{Map, ConditionList, Condition, Pair};
+use FastRaven\Types\OperatorType;
+
+// Raw SQL (CAREFUL: No SQL protection provided by the framework from hereon!)
+$result = DataWorker::sql("SELECT * FROM users WHERE id = ?", [$id]);
 
 // Read single row
-$user = DataWorker::getOneById("users", ["id", "name"], 1);
-$user = DataWorker::getOneWhere("users", ["*"], Collection::new([
-    Item::new("email", $email)
+$user = DataWorker::selectOneById("users", ["id", "name"], 1);
+$user = DataWorker::selectOneWhere("users", ["*"], ConditionList::new([
+    Condition::email("email", $email)
 ]));
 
 // Read multiple rows
-$users = DataWorker::getAllWhere(
+$users = DataWorker::selectWhere(
     "users", 
     ["id", "name"], 
-    Collection::new([Item::new("active", 1)]),
+    ConditionList::new([Condition::equals("active", 1)]),
     "name ASC",  // orderBy
     10,          // limit
     0            // offset
 );
-$allUsers = DataWorker::getAll("users", ["*"], "created_at DESC", 100, 0);
+$allUsers = DataWorker::select("users", ["*"], "created_at DESC", 100, 0);
+
+// Joins
+// Simple join
+$join = DataWorker::join(
+    "users",
+    ["orders"],
+    Map::new(["users.id" => "orders.user_id"]),
+    ["users.name", "orders.total"]
+);
+
+// Join with WHERE clauses
+$joinFiltered = DataWorker::joinWhere(
+    "users",
+    ["orders"],
+    Map::new(["users.id" => "orders.user_id"]),
+    ["users.name", "orders.total"],
+    ConditionList::new([Condition::equals("users.active", 1)])
+);
 
 // Insert
-DataWorker::insert("users", Collection::new([
-    Item::new("name", "John"),
-    Item::new("email", "john@example.com")
+DataWorker::insert("users", Map::new([
+    "name" => "John",
+    "email" => "john@example.com"
 ]));
 $id = DataWorker::getLastInsertId();
 
 // Batch insert (single transaction)
 DataWorker::insertBatch("logs", [
-    Collection::new([Item::new("action", "login")]),
-    Collection::new([Item::new("action", "logout")])
+    Map::new(["action" => "login"]),
+    Map::new(["action" => "logout"])
 ]);
 
 // Update
-DataWorker::updateById("users", 1, Collection::new([
-    Item::new("name", "Jane")
+DataWorker::updateById("users", 1, Map::new([
+    "name" => "Jane"
 ]));
 DataWorker::updateWhere("users", 
-    Collection::new([Item::new("active", 0)]),
-    Collection::new([Item::new("old", 1)])
+    Map::new(["active" => 0]),
+    ConditionList::new([Condition::equals("old", 1)])
 );
 
 // Delete
 DataWorker::deleteById("users", 1);
-DataWorker::deleteWhere("users", Collection::new([Item::new("expired", 1)]));
+DataWorker::deleteWhere("users", ConditionList::new([Condition::equals("expired", 1)]));
 
 // Count/Exists
-$count = DataWorker::count("users", Collection::new([Item::new("active", 1)]));
+$count = DataWorker::count("users", ConditionList::new([Condition::equals("active", 1)]));
 $exists = DataWorker::existsById("users", 1);
 ```
 
@@ -497,27 +564,21 @@ use FastRaven\Components\Data\ValidationFlags;
 // Email validation
 ValidationWorker::email($email);  // Uses filter_var
 
-// Password validation
-ValidationWorker::password($password, ValidationFlags::password(
-    minLength: 8,
-    maxLength: 128,
-    minNumber: 1,
-    minSpecial: 1,
-    minLowercase: 1,
-    minUppercase: 1
-));
+// String validation (replaces username, password, etc.)
+ValidationWorker::string($text, [
+    ValidationType::MIN_LENGTH->value => 8,
+    ValidationType::MAX_LENGTH->value => 128,
+    ValidationType::MIN_DIGITS->value => 1,
+    ValidationType::MIN_SPECIAL->value => 1,
+    ValidationType::MIN_LOWERCASE->value => 1,
+    ValidationType::MIN_UPPERCASE->value => 1
+]);
 
-// Age validation
-ValidationWorker::age($age, ValidationFlags::age(
-    minAge: 18,
-    maxAge: 120
-));
-
-// Username validation
-ValidationWorker::username($username, ValidationFlags::username(
-    minLength: 3,
-    maxLength: 20
-));
+// Number validation (replaces age, etc.)
+ValidationWorker::number($age, [
+    ValidationType::MIN_NUMBER->value => 18,
+    ValidationType::MAX_NUMBER->value => 120
+]);
 
 // Phone validation
 ValidationWorker::phone($countryCode, $phone);  // 7-15 chars, code 1-999
@@ -580,38 +641,59 @@ LogWorker::debug("Debug info");          // /SG/ prefix, dev only
 
 ### MailWorker
 
+Sends emails using PHPMailer with SMTP. Configure SMTP settings in `.env`.
+
 ```php
 use FastRaven\Workers\MailWorker;
 use FastRaven\Components\Core\Mail;
-use FastRaven\Components\Data\{Collection, Item};
+use FastRaven\Components\Data\{Map, Pair};
 
 $mail = Mail::new(
-    Item::mail("Site", "noreply@example.com"),   // From
-    Item::mail("User", "user@example.com"),       // To
-    "Welcome!",                                    // Subject
-    "welcome.html"                                 // Template in src/web/views/mails/
+    Pair::mail("Site", "noreply@example.com"),   // From
+    Pair::mail("User", "user@example.com"),      // To
+    "Welcome!",                                  // Subject
+    "welcome.php"                                // Template in src/web/templates/mails/
 );
 
-$mail->setReplaceValues(Collection::new([
-    Item::new("{{NAME}}", "John"),
-    Item::new("{{LINK}}", "https://example.com/verify")
+$mail->setReplaceValues(Map::new([
+    "{{NAME}}" => "John",
+    "{{LINK}}" => "https://example.com/verify"
 ]));
 
 // Optional: Add BCC recipients
-$mail->setBccMails(Collection::new([
-    Item::mail("Admin", "admin@example.com")
+$mail->setBccMails(Map::new([
+    "Admin" => "admin@example.com"
 ]));
 
-// Optional: Add attachments
-$mail->setAttachments(Collection::new([
-    Item::new("report.pdf", "/full/path/to/report.pdf")
+// Optional: Add attachments (relative to storage/uploads/)
+$mail->setAttachments(Map::new([
+    "report.pdf" => "documents/report.pdf"
 ]));
 
 // Optional: Set timeout (default 3000ms)
 $mail->setTimeout(5000);
 
-MailWorker::sendMail($mail);
+// Send synchronously - blocks until sent, returns success/failure
+MailWorker::send($mail);
+
+// Send async (fire-and-forget) - queued, sent after response
+// Use for notifications that don't need confirmation
+MailWorker::send($mail, true);
 ```
+
+**Sending Modes:**
+
+| Mode | Usage | Blocks? | Returns |
+|------|-------|---------|---------|
+| `send($mail)` | Registration, password reset | Yes | `bool` (success) |
+| `send($mail, true)` | Notifications, alerts | No | `bool` (queued) |
+
+Fire-and-forget emails are processed after `fastcgi_finish_request()`, so the user receives their response immediately while emails are sent in the background.
+
+**Mail Templates:**
+- Location: `src/web/templates/mails/`
+- Format: HTML files with placeholder support (e.g., `{{PLACEHOLDER}}`)
+- Placeholders are replaced using `setReplaceValues()`
 
 ---
 
@@ -633,7 +715,7 @@ HeaderWorker::removeHeader("X-Custom");
 ### Request
 
 ```php
-$request->getType();              // MiddlewareType::VIEW/API/CDN
+$request->getType();              // EndpointType::VIEW/API/CDN
 $request->getMethod();            // GET, POST, PUT, DELETE, PATCH
 $request->getPath();              // /api/users/
 $request->getComplexPath();       // /api/users/#POST (for routing)
@@ -680,27 +762,27 @@ Response::new(true, 200)
 
 ---
 
-### Collection & Item
+### Map & Pair
 
 O(1) hash map for type-safe key-value pairs:
 
 ```php
-use FastRaven\Components\Data\{Collection, Item};
+use FastRaven\Components\Data\{Map, Pair};
 
-$collection = Collection::new([
-    Item::new("email", "john@example.com"),
-    Item::new("name", "John")
+// Map replaces Collection and uses associative internal storage
+$map = Map::new([
+    "email" => "john@example.com",
+    "name" => "John"
 ]);
 
 // Add/Get/Set/Remove
-$collection->add(Item::new("age", 25));
-$item = $collection->get("email");      // Item or null
-$value = $item->getValue();             // "john@example.com"
-$collection->set("email", Item::new("email", "jane@example.com"));
-$collection->remove("age");
+$map->add("age", 25);
+$value = $map->get("email");      // mixed value or null (not an object)
+$map->set("email", "jane@example.com");
+$map->remove("age");
 
-// Special factory for mail
-$mailItem = Item::mail("John Doe", "john@example.com");
+// Pair is mostly used for specific strict-typed returns or specific APIs like Mail
+$mailPair = Pair::mail("John Doe", "john@example.com");
 ```
 
 ---
@@ -735,9 +817,9 @@ use FastRaven\Components\Data\{Collection, Item};
 
 $mail = Mail::new(
     Item::mail("Site Name", "noreply@example.com"),  // From
-    Item::mail("User Name", "user@example.com"),      // To
-    "Welcome to our site!",                           // Subject
-    "welcome.html"                                     // Template in src/web/views/mails/
+    Item::mail("User Name", "user@example.com"),     // To
+    "Welcome to our site!",                          // Subject
+    "welcome.php"                                    // Template in src/web/templates/mails/
 );
 
 // All available setters (chainable)
@@ -762,46 +844,39 @@ $mail
 
 ---
 
-### ValidationFlags
-
-Factory class for validation rules:
+### Validation usage
+Use `ValidationType` enum values as keys for configuration arrays:
 
 ```php
-use FastRaven\Components\Data\ValidationFlags;
+use FastRaven\Types\ValidationType;
+use FastRaven\Workers\ValidationWorker;
 
-// Email flags
-ValidationFlags::email(
-    minLength: 5,    // Default: 0
-    maxLength: 255   // Default: 255
-);
+// String flags
+$flags = [
+    ValidationType::MIN_LENGTH->value => 8,      // Default: 0
+    ValidationType::MAX_LENGTH->value => 255,    // Default: 255
+    ValidationType::MIN_DIGITS->value => 1,      // Default: 0
+    ValidationType::MIN_SPECIAL->value => 1,     // Default: 0
+    ValidationType::MIN_LOWERCASE->value => 1,   // Default: 0
+    ValidationType::MIN_UPPERCASE->value => 1    // Default: 0
+];
 
-// Password flags
-ValidationFlags::password(
-    minLength: 8,      // Default: 0
-    maxLength: 128,    // Default: 255
-    minNumber: 1,      // Default: 0
-    minSpecial: 1,     // Default: 0
-    minLowercase: 1,   // Default: 0
-    minUppercase: 1    // Default: 0
-);
+// Number flags
+$numberFlags = [
+    ValidationType::MIN_NUMBER->value => 18,   // Default: 0
+    ValidationType::MAX_NUMBER->value => 120   // Default: 255
+];
 
-// Age flags
-ValidationFlags::age(
-    minAge: 18,   // Default: 12
-    maxAge: 120   // Default: 120
-);
-
-// Username flags
-ValidationFlags::username(
-    minLength: 3,    // Default: 0
-    maxLength: 20    // Default: 255
-);
-```
-
-**Usage with ValidationWorker:**
-```php
-if (!ValidationWorker::password($pass, ValidationFlags::password(8, 128, 1, 1, 1, 1))) {
-    return Response::new(false, 400, "Password must be 8+ chars with uppercase, lowercase, number, and special char");
+// Usage with ValidationWorker:
+$details = [];
+if (!ValidationWorker::string($pass, [
+    ValidationType::MIN_LENGTH->value => 8, 
+    ValidationType::MIN_DIGITS->value => 1, 
+    ValidationType::MIN_SPECIAL->value => 1
+], $details)) {
+    // $details contains specific boolean results for each check
+    // e.g., $details[ValidationType::MIN_LENGTH->value] === false
+    return Response::new(false, 400, "Password requirements not met", $details);
 }
 ```
 
@@ -825,16 +900,17 @@ Used with `Bee::buildProjectPath()` for type-safe path construction.
 | `PUBLIC_ASSETS_IMG` | `public/assets/img/` |
 | `PUBLIC_ASSETS_FONTS` | `public/assets/fonts/` |
 | `SRC` | `src/` |
+| `SRC_VIEWS` | `src/views/` |
+| `SRC_API` | `src/api/` |
+| `SRC_CDN` | `src/cdn/` |
 | `SRC_WEB` | `src/web/` |
-| `SRC_WEB_VIEWS` | `src/web/views/` |
-| `SRC_WEB_VIEWS_FRAGMENTS` | `src/web/views/fragments/` |
-| `SRC_WEB_VIEWS_MAILS` | `src/web/views/mails/` |
-| `SRC_WEB_VIEWS_PAGES` | `src/web/views/pages/` |
+| `SRC_WEB_TEMPLATES` | `src/web/templates/` |
+| `SRC_WEB_TEMPLATES_FRAGMENTS` | `src/web/templates/fragments/` |
+| `SRC_WEB_TEMPLATES_MAILS` | `src/web/templates/mails/` |
+| `SRC_WEB_TEMPLATES_PAGES` | `src/web/templates/pages/` |
 | `SRC_WEB_ASSETS` | `src/web/assets/` |
 | `SRC_WEB_ASSETS_SCSS` | `src/web/assets/scss/` |
 | `SRC_WEB_ASSETS_JS` | `src/web/assets/js/` |
-| `SRC_API` | `src/api/` |
-| `SRC_CDN` | `src/cdn/` |
 | `STORAGE` | `storage/` |
 | `STORAGE_CACHE` | `storage/cache/` |
 | `STORAGE_LOGS` | `storage/logs/` |
@@ -860,36 +936,80 @@ Input sanitization levels (use with `$request->get()` / `$request->post()`):
 
 | Enum | Values |
 |------|--------|
-| `MiddlewareType` | VIEW, API, CDN, ROUTER |
+| `EndpointType` | VIEW, API, CDN, ROUTER |
 | `CacheType` | APCU, SHARED, FILE |
 | `QueryType` | SELECT, INSERT, UPDATE, DELETE, COUNT |
 | `DataType` | 55+ MIME types (HTML, JSON, PNG, PDF, etc.) |
+| `ValidationType` | MIN_LENGTH, MAX_LENGTH, MIN_DIGITS, MIN_FLOAT, etc. |
 
 ---
 
 ## 8. Exceptions
 
-All exceptions extend `SmartException` with `getStatusCode()`, `getMessage()`, and `getPublicMessage()`.
+All exceptions extend `SmartException` with `getStatusCode()`, `getMessage()`, `getPublicMessage()`, and `getExceptionName()`.
 
 | Exception | Code | Description |
 |-----------|------|-------------|
 | `SmartException` | - | Base class for all framework exceptions |
-| `NotFoundException` | 404 | Route not found, View: redirect to 404 path |
-| `NotAuthorizedException` | 401 | Auth required, View: redirect to login |
+| `NotFoundException` | 404 | Route not found |
+| `NotAuthorizedException` | 401 | Auth required |
 | `NotAuthorizedException(true)` | 401 | Subdomain redirect |
-| `AlreadyAuthorizedException` | 403 | Already logged in (for login pages) |
-| `FilterDeniedException` | 400 | Starter/finisher rejected request |
-| `BadFilterException` | 500 | Filter has incorrect signature |
+| `BadMiddlewareException` | 500 | Middleware has incorrect signature |
+| `MiddlewareDeniedException` | 400 | Middleware rejected request |
 | `RateLimitExceededException` | 429 | Rate limit exceeded, includes Retry-After header |
-| `BadImplementationException` | 500 | API endpoint doesn't return Response |
+| `BadImplementationException` | 500 | Endpoint doesn't return correct type |
 | `EndpointFileNotFoundException` | 500 | Endpoint file missing |
 | `UploadedFileNotFoundException` | 500 | Uploaded file not in tmp directory |
 | `BadProjectSkeletonException` | 500 | Required project folder missing |
 | `SecurityVulnerabilityException` | 500 | SQL injection detected |
+| `DeveloperException` | 500 | Developer mistake on View/API/CDN endpoints |
 
 ---
 
-## 9. API Endpoint Example
+## 9. View Endpoint Example
+
+View endpoints now use PHP handler files that return a `Template` object:
+
+```php
+<?php
+// src/views/Dashboard.php
+
+use FastRaven\Components\Core\Template;
+use FastRaven\Components\Http\Request;
+use FastRaven\Components\Data\Item;
+use FastRaven\Workers\AuthWorker;
+use FastRaven\Workers\DataWorker;
+
+return function(Request $request, Template $baseTemplate): Template {
+    // Get user data
+    $userId = AuthWorker::getAuthorizedUserId();
+    $user = DataWorker::selectOneById("users", ["name", "notifications"], $userId);
+    
+    // Create page-specific template
+    $page = Template::new("dashboard.php", "Dashboard");
+    
+    // Add dynamic data for the template
+    $page->addData(Item::new("username", $user["name"]));
+    $page->addData(Item::new("notifications", $user["notifications"]));
+    
+    return $page;
+};
+```
+
+**Template file** (`src/web/templates/pages/dashboard.php`):
+```php
+<h1>Welcome, <?= $template->getData("username") ?></h1>
+<p>You have <?= $template->getData("notifications") ?> notifications</p>
+```
+
+**Handler Signature:**
+- `function(Request $request, Template $baseTemplate): Template`
+- `$baseTemplate` is the default template from `config/template.php`
+- Return a new Template that will be merged with the base template
+
+---
+
+## 10. API Endpoint Example
 
 Complete example of an API endpoint:
 
@@ -922,7 +1042,7 @@ return function(Request $request): Response {
     }
     
     // Check if email already exists
-    $existing = DataWorker::getOneWhere("users", ["id"], Collection::new([
+    $existing = DataWorker::selectOneWhere("users", ["id"], Collection::new([
         Item::new("email", $email)
     ]));
     if ($existing && $existing["id"] !== $userId) {
@@ -941,7 +1061,7 @@ return function(Request $request): Response {
 
 ---
 
-## 10. CDN Endpoint Example
+## 11. CDN Endpoint Example
 
 CDN endpoints serve files (images, documents, etc.) from storage:
 
@@ -977,19 +1097,19 @@ return function(Request $request): Response {
 
 ---
 
-## 11. Nested Router Example
+## 12. Nested Router Example
 
 For organizing large applications, use nested routers:
 
 ```php
 // config/router/api.php (main router)
 use FastRaven\Components\Routing\{Router, Endpoint};
-use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\EndpointType;
 
-$apiRouter = Router::new(MiddlewareType::API)
+$apiRouter = Router::new(EndpointType::API)
     ->add(Endpoint::api(false, "GET", "/health", "Health.php"))
     // Nested router for all /api/admin/* endpoints
-    ->add(Endpoint::router(MiddlewareType::API, true, "/admin", "admin.php"));
+    ->add(Endpoint::router(EndpointType::API, true, "/admin", "admin.php"));
 
 return $apiRouter;
 ```
@@ -997,12 +1117,12 @@ return $apiRouter;
 ```php
 // config/router/admin.php (nested router)
 use FastRaven\Components\Routing\{Router, Endpoint};
-use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\EndpointType;
 
-// All endpoints here are already under /api/admin/ and restricted
-$adminRouter = Router::new(MiddlewareType::API)
-    ->add(Endpoint::api(false, "GET", "/users", "admin/Users.php"))
-    ->add(Endpoint::api(false, "POST", "/ban", "admin/Ban.php"));
+// All endpoints here are already under /api/ and restricted
+$adminRouter = Router::new(EndpointType::API)
+    ->add(Endpoint::api(false, "GET", "/admin/users", "admin/Users.php"))
+    ->add(Endpoint::api(false, "POST", "/admin/ban", "admin/Ban.php"));
 
 return $adminRouter;
 ```
@@ -1013,20 +1133,19 @@ return $adminRouter;
 
 ---
 
-## 12. Error Handling
+## 13. Error Handling
 
 ### Throwing Exceptions in Endpoints
 
 ```php
 use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
-use FastRaven\Exceptions\FilterDeniedException;
 
 return function(Request $request): Response {
     $id = $request->post("id", SanitizeType::ONLY_ALPHA);
     
     // 404 - Resource not found
-    $item = DataWorker::getOneById("items", ["*"], intval($id));
+    $item = DataWorker::selectOneById("items", ["*"], intval($id));
     if (!$item) {
         throw new NotFoundException();
     }
@@ -1072,7 +1191,7 @@ return function(Request $request): Response {
 
 ---
 
-## 13. JavaScript Client (Lib)
+## 14. JavaScript Client (Lib)
 
 The framework injects `Lib` class into all views with CSRF token handling.
 
@@ -1119,7 +1238,7 @@ return function(Request $request): Response {
 
 ---
 
-## 14. Shared Classes
+## 15. Shared Classes
 
 Create reusable classes in `shared/` available across all sites via the `Shared\` namespace:
 
@@ -1143,7 +1262,7 @@ $price = HelperClass::formatCurrency(99.99);  // "99,99 €"
 
 ---
 
-## 15. Directory Structure (Framework)
+## 16. Directory Structure (Framework)
 
 ```
 framework/src/
@@ -1151,7 +1270,7 @@ framework/src/
 │   ├── Core/             Config, Template, Mail, File
 │   ├── Data/             Collection, Item, ValidationFlags
 │   ├── Http/             Request, Response
-│   └── Routing/          Router, Endpoint
+│   └── Routing/          Router, Endpoint, Middleware
 ├── Exceptions/           # SmartException and 11 subclasses
 ├── Internal/             # Kernel, Slaves (not for direct use)
 ├── Workers/              # Public API (9 workers)
@@ -1170,7 +1289,7 @@ framework/src/
 
 ---
 
-## 16. Testing
+## 17. Testing
 
 ```bash
 cd framework

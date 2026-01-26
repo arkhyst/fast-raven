@@ -4,19 +4,19 @@ namespace FastRaven\Tests\Components\Core;
 
 use PHPUnit\Framework\TestCase;
 use FastRaven\Components\Core\Mail;
-use FastRaven\Components\Data\Item;
-use FastRaven\Components\Data\Collection;
+use FastRaven\Components\Data\Pair;
+use FastRaven\Components\Data\Map;
 
 class MailTest extends TestCase
 {
-    private Item $origin;
-    private Item $destination;
+    private Pair $origin;
+    private Pair $destination;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->origin = Item::new("Sender Name", "sender@example.com");
-        $this->destination = Item::new("Recipient Name", "recipient@example.com");
+        $this->origin = Pair::new("Sender Name", "sender@example.com");
+        $this->destination = Pair::new("Recipient Name", "recipient@example.com");
     }
 
     public function testNewCreatesMailInstance(): void
@@ -52,7 +52,7 @@ class MailTest extends TestCase
             "test/template.html"
         );
 
-        $newOrigin = Item::new("New Sender", "newsender@example.com");
+        $newOrigin = Pair::new("New Sender", "newsender@example.com");
         $mail->setOrigin($newOrigin);
 
         $this->assertEquals($newOrigin, $mail->getOrigin());
@@ -79,7 +79,7 @@ class MailTest extends TestCase
             "test/template.html"
         );
 
-        $newDestination = Item::new("New Recipient", "newrecipient@example.com");
+        $newDestination = Pair::new("New Recipient", "newrecipient@example.com");
         $mail->setDestination($newDestination);
 
         $this->assertEquals($newDestination, $mail->getDestination());
@@ -150,14 +150,15 @@ class MailTest extends TestCase
             "test/template.html"
         );
 
-        $bccList = Collection::new();
-        $bccList->add(Item::new("BCC User 1", "bcc1@example.com"));
-        $bccList->add(Item::new("BCC User 2", "bcc2@example.com"));
+        $bccList = Map::new([
+            "BCC User 1" => "bcc1@example.com",
+            "BCC User 2" => "bcc2@example.com"
+        ]);
 
         $mail->setBccMails($bccList);
 
         $this->assertEquals($bccList, $mail->getBccMails());
-        $this->assertCount(2, $mail->getBccMails()->getRawData());
+        $this->assertCount(2, $mail->getBccMails()->getAllKeys());
     }
 
     public function testSetReplaceValuesUpdatesValue(): void
@@ -169,14 +170,15 @@ class MailTest extends TestCase
             "test/template.html"
         );
 
-        $replacements = Collection::new();
-        $replacements->add(Item::new("{{NAME}}", "John"));
-        $replacements->add(Item::new("{{LINK}}", "https://example.com"));
+        $replacements = Map::new([
+            "{{NAME}}" => "John",
+            "{{LINK}}" => "https://example.com"
+        ]);
 
         $mail->setReplaceValues($replacements);
 
         $this->assertEquals($replacements, $mail->getReplaceValues());
-        $this->assertCount(2, $mail->getReplaceValues()->getRawData());
+        $this->assertCount(2, $mail->getReplaceValues()->getAllKeys());
     }
 
     public function testSetAttachmentsUpdatesValue(): void
@@ -188,14 +190,15 @@ class MailTest extends TestCase
             "test/template.html"
         );
 
-        $attachments = Collection::new();
-        $attachments->add(Item::new("document.pdf", "files/document.pdf"));
-        $attachments->add(Item::new("image.jpg", "images/image.jpg"));
+        $attachments = Map::new([
+            "document.pdf" => "files/document.pdf",
+            "image.jpg" => "images/image.jpg"
+        ]);
 
         $mail->setAttachments($attachments);
 
         $this->assertEquals($attachments, $mail->getAttachments());
-        $this->assertCount(2, $mail->getAttachments()->getRawData());
+        $this->assertCount(2, $mail->getAttachments()->getAllKeys());
     }
 
     public function testGetTimeoutReturnsDefaultValue(): void

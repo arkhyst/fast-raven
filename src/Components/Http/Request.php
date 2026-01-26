@@ -6,15 +6,15 @@ use FastRaven\Components\Core\File;
 
 use FastRaven\Workers\Bee;
 
-use FastRaven\Types\MiddlewareType;
+use FastRaven\Types\EndpointType;
 use FastRaven\Types\SanitizeType;
 
 final class Request {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private MiddlewareType $type;
-        public function getType(): MiddlewareType { return $this->type; }
+    private EndpointType $type;
+        public function getType(): EndpointType { return $this->type; }
     private string $internalID;
         public function getInternalID(): string { return $this->internalID; }
     private array $query = [];
@@ -62,9 +62,9 @@ final class Request {
         if($this->path !== "/") $this->path .= "/";
         $this->complexPath = $this->path."#".$this->method;
 
-        $this->type = MiddlewareType::VIEW;
-        if(str_starts_with($this->path, "/api/")) $this->type = MiddlewareType::API;
-        elseif(str_starts_with($this->path, "/cdn/")) $this->type = MiddlewareType::CDN;
+        $this->type = EndpointType::VIEW;
+        if(str_starts_with($this->path, "/api/")) $this->type = EndpointType::API;
+        elseif(str_starts_with($this->path, "/cdn/")) $this->type = EndpointType::CDN;
     }
 
     #/ INIT

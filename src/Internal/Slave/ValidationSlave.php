@@ -3,8 +3,7 @@
 namespace FastRaven\Internal\Slave;
 
 use FastRaven\Workers\ValidationWorker;
-
-use FastRaven\Components\Data\ValidationFlags;
+use FastRaven\Types\ValidationType;
 
 final class ValidationSlave {
     #----------------------------------------------------------------------
@@ -58,6 +57,62 @@ final class ValidationSlave {
     #\ METHODS
 
     /**
+     * Validates a string according to the given flags.
+     * 
+     * This function will validate a string based on the passed flags.
+     * 
+     * @param string $text The string to validate.
+     * @param array<ValidationType, int> $flags The flags to use for validation.
+     * @param array<ValidationType, bool>|null $result Pointer to an array that will be filled with the result of the validation.
+     * 
+     * @return bool True if the string is valid, false otherwise.
+     */
+    public function validateString(string $text, array $flags, ?array &$result = null): bool {
+        $length = mb_strlen($text);
+        $numbers = preg_match_all('/[0-9]/', $text);
+        $specials = preg_match_all('/[^a-zA-Z0-9]/', $text);
+        $lowercases = preg_match_all('/[a-z]/', $text);
+        $uppercases = preg_match_all('/[A-Z]/', $text);
+
+        if($result === null) $result = [];
+        $result = [
+            ValidationType::MIN_LENGTH->value => $length >= ($flags[ValidationType::MIN_LENGTH->value] ?? 0),
+            ValidationType::MAX_LENGTH->value => $length <= ($flags[ValidationType::MAX_LENGTH->value] ?? PHP_FLOAT_MAX),
+            ValidationType::MIN_DIGITS->value => $numbers >= ($flags[ValidationType::MIN_DIGITS->value] ?? 0),
+            ValidationType::MAX_DIGITS->value => $numbers <= ($flags[ValidationType::MAX_DIGITS->value] ?? PHP_FLOAT_MAX),
+            ValidationType::MIN_SPECIAL->value => $specials >= ($flags[ValidationType::MIN_SPECIAL->value] ?? 0),
+            ValidationType::MAX_SPECIAL->value => $specials <= ($flags[ValidationType::MAX_SPECIAL->value] ?? PHP_FLOAT_MAX),
+            ValidationType::MIN_LOWERCASE->value => $lowercases >= ($flags[ValidationType::MIN_LOWERCASE->value] ?? 0),
+            ValidationType::MAX_LOWERCASE->value => $lowercases <= ($flags[ValidationType::MAX_LOWERCASE->value] ?? PHP_FLOAT_MAX),
+            ValidationType::MIN_UPPERCASE->value => $uppercases >= ($flags[ValidationType::MIN_UPPERCASE->value] ?? 0),
+            ValidationType::MAX_UPPERCASE->value => $uppercases <= ($flags[ValidationType::MAX_UPPERCASE->value] ?? PHP_FLOAT_MAX),
+        ];
+
+        return !\in_array(false, $result);
+    }
+
+    /**
+     * Validates a number according to the given flags.
+     * 
+     * This function will validate a number based on the following criteria:
+     * 
+     * @param int|float $number The number to validate.
+     * @param array<ValidationType, int> $flags The flags to use for validation.
+     * @param array<ValidationType, bool>|null $result Pointer to an array that will be filled with the result of the validation.
+     * 
+     * @return bool True if the number is valid, false otherwise.
+     */
+    public function validateNumber(int|float $number, array $flags, ?array &$result = null): bool {
+        if($result === null) $result = [];
+        $result = [
+            ValidationType::MIN_NUMBER->value => $number >= ($flags[ValidationType::MIN_NUMBER->value] ?? -PHP_FLOAT_MAX),
+            ValidationType::MAX_NUMBER->value => $number <= ($flags[ValidationType::MAX_NUMBER->value] ?? PHP_FLOAT_MAX),
+        ];
+
+        return !\in_array(false, $result);
+    }
+
+    /**
      * Validates an email address according to the Unicode standard.
      * 
      * This function will use the filter_var() function to validate the email address.
@@ -69,76 +124,6 @@ final class ValidationSlave {
      */
     public function validateEmail(string $email): bool {
         return filter_var($email, FILTER_VALIDATE_EMAIL, FILTER_FLAG_EMAIL_UNICODE) !== false;
-    }
-
-    /**
-     * Validates a password according to the given flags.
-     * 
-     * This function will validate a password based on the following criteria:
-     * 
-     * - The password must be at least $flags->get("minLength")->getValue() characters long.
-     * - The password must be at most $flags->get("maxLength")->getValue() characters long.
-     * - The password must contain at least $flags->get("minNumber")->getValue() numbers.
-     * - The password must contain at least $flags->get("minSpecial")->getValue() special characters.
-     * - The password must contain at least $flags->get("minLowercase")->getValue() lowercase characters.
-     * - The password must contain at least $flags->get("minUppercase")->getValue() uppercase characters.
-     * 
-     * @param string $password The password to validate.
-     * @param ValidationFlags $flags The flags to use for validation.
-     * 
-     * @return bool True if the password is valid, false otherwise.
-     */
-    public function validatePassword(string $password, ValidationFlags $flags): bool {
-        $length = strlen($password);
-        $hasNumber = preg_match_all('/[0-9]/', $password);
-        $hasSpecial = preg_match_all('/[^a-zA-Z0-9]/', $password);
-        $hasLowercase = preg_match_all('/[a-z]/', $password);
-        $hasUppercase = preg_match_all('/[A-Z]/', $password);
-
-        return $length >= $flags->get("minLength")->getValue() &&
-        $length <= $flags->get("maxLength")->getValue() &&
-        $hasNumber >= $flags->get("minNumber")->getValue() &&
-        $hasSpecial >= $flags->get("minSpecial")->getValue() &&
-        $hasLowercase >= $flags->get("minLowercase")->getValue() &&
-        $hasUppercase >= $flags->get("minUppercase")->getValue();
-    }
-
-    /**
-     * Validates an age according to the given flags.
-     * 
-     * This function will validate an age based on the following criteria:
-     * 
-     * - The age must be at least $flags->get("minAge")->getValue() years old.
-     * - The age must be at most $flags->get("maxAge")->getValue() years old.
-     * 
-     * @param int $age The age to validate.
-     * @param ValidationFlags $flags The flags to use for validation.
-     * 
-     * @return bool True if the age is valid, false otherwise.
-     */
-    public function validateAge(int $age, ValidationFlags $flags): bool {
-        return $age >= $flags->get("minAge")->getValue() && 
-        $age <= $flags->get("maxAge")->getValue();
-    }
-
-    /**
-     * Validates a username according to the given flags.
-     * 
-     * This function will validate a username based on the following criteria:
-     * 
-     * - The username must be at least $flags->get("minLength")->getValue() characters long.
-     * - The username must be at most $flags->get("maxLength")->getValue() characters long.
-     * 
-     * @param string $username The username to validate.
-     * @param ValidationFlags $flags The flags to use for validation.
-     * 
-     * @return bool True if the username is valid, false otherwise.
-    */
-    public function validateUsername(string $username, ValidationFlags $flags): bool {
-        $length = strlen($username);
-
-        return $length >= $flags->get("minLength")->getValue() &&
-        $length <= $flags->get("maxLength")->getValue();
     }
 
     /**
@@ -156,7 +141,7 @@ final class ValidationSlave {
      * @return bool True if the phone number is valid, false otherwise.
      */
     public function validatePhone(int $countryCode, string $phone): bool {
-        $length = strlen($phone);
+        $length = mb_strlen($phone);
 
         return $length >= 7 && $length <= 15 && $countryCode >= 1 && $countryCode <= 999;
     }

@@ -115,10 +115,10 @@ final class LogSlave {
      * Finally, the stash will be emptied.
      */
     public function dumpLogStashIntoFile(): void { 
-        $textBlock = "";
-        foreach($this->stash->getLogList() as $log) $textBlock .= $log."\n";
-        $this->writeIntoFile($textBlock);
+        if($this->stash->isEmpty()) return;
 
+        $textBlock = implode("\n", $this->stash->getLogList()) . "\n";
+        $this->writeIntoFile($textBlock);
         $this->stash->empty();
     }
 

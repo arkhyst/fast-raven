@@ -6,8 +6,8 @@ use FastRaven\Workers\MailWorker;
 use FastRaven\Workers\LogWorker;
 
 use FastRaven\Components\Core\Mail;
-use FastRaven\Components\Data\Collection;
-use FastRaven\Components\Data\Item;
+use FastRaven\Components\Data\Map;
+use FastRaven\Components\Data\Pair;
 
 use FastRaven\Types\ProjectFolderType;
 
@@ -20,6 +20,9 @@ final class MailSlave {
     #\ VARIABLES
 
     private static bool $busy = false;
+
+    private ?PHPMailer $mailer = null;
+    private array $deferredMails = [];
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -66,7 +69,7 @@ final class MailSlave {
      * @return ?string The template content if the file exists, null otherwise.
      */
     private function getMailTemplate(string $file): ?string {
-        $path = realpath(Bee::buildProjectPath(ProjectFolderType::SRC_WEB_VIEWS_MAILS, $file));
+        $path = realpath(Bee::buildProjectPath(ProjectFolderType::SRC_WEB_TEMPLATES_MAILS, $file));
         
         if($path !== false) return file_get_contents($path);
         else return null;
@@ -75,35 +78,38 @@ final class MailSlave {
     /**
      * Configures the basic SMTP settings for the PHPMailer instance.
      *
-     * @param PHPMailer $mailer The PHPMailer instance to configure.
      * @param int $timeout The timeout in milliseconds for the SMTP connection (default: 3000).
      */
-    private function setMailerBasic(PHPMailer &$mailer, int $timeout = 3000): void {
-        $mailer->isSMTP();
-        $mailer->SMTPAuth = true;
-        $mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mailer->Host = Bee::env("SMTP_HOST", "smtp.notvalid.com");
-        $mailer->Username = Bee::env("SMTP_USER", "notvalid");
-        $mailer->Password = Bee::env("SMTP_PASS", "notvalid");
-        $mailer->Port = Bee::env("SMTP_PORT", 587);
-        $mailer->Timeout = $timeout;
+    private function setMailerBasic(int $timeout = 3000): void {
+        $this->mailer->clearAllRecipients();
+        $this->mailer->clearAttachments();
+        $this->mailer->clearCustomHeaders();
+        $this->mailer->clearReplyTos();
+
+        $this->mailer->isSMTP();
+        $this->mailer->SMTPAuth = true;
+        $this->mailer->SMTPSecure = Bee::env("SMTP_ENCRYPTION", PHPMailer::ENCRYPTION_STARTTLS);
+        $this->mailer->Host = Bee::env("SMTP_HOST", "smtp.notvalid.com");
+        $this->mailer->Username = Bee::env("SMTP_USER", "notvalid");
+        $this->mailer->Password = Bee::env("SMTP_PASS", "notvalid");
+        $this->mailer->Port = Bee::env("SMTP_PORT", 587);
+        $this->mailer->Timeout = $timeout;
     }
 
     /**
      * Sets the sender, recipient, and BCC addresses for the PHPMailer instance.
      *
-     * @param PHPMailer $mailer The PHPMailer instance to configure.
-     * @param Item $origin The sender's email information (key: name, value: email address).
-     * @param Item $destination The recipient's email information (key: name, value: email address).
-     * @param ?Collection $bccMails Optional collection of BCC email addresses (key: name, value: email address).
+     * @param Pair $origin The sender's email information (key: name, value: email address).
+     * @param Pair $destination The recipient's email information (key: name, value: email address).
+     * @param ?Map $bccMails Optional collection of BCC email addresses (key: name, value: email address).
      */
-    private function setMailerAddress(PHPMailer &$mailer, Item $origin, Item $destination, ?Collection $bccMails): void {
-        $mailer->setFrom($origin->getValue(), $origin->getKey());
-        $mailer->addAddress($destination->getValue(), $destination->getKey());
+    private function setMailerAddress(Pair $origin, Pair $destination, ?Map $bccMails): void {
+        $this->mailer->setFrom($origin->getValue(), $origin->getKey());
+        $this->mailer->addAddress($destination->getValue(), $destination->getKey());
 
         if($bccMails) {
             foreach($bccMails->getRawData() as $bcc) {
-                $mailer->addBCC($bcc->getValue(), $bcc->getKey());
+                $this->mailer->addBCC($bcc->getValue(), $bcc->getKey());
             }
         }
     }
@@ -111,34 +117,32 @@ final class MailSlave {
     /**
      * Sets the email subject and body for the PHPMailer instance with optional placeholder replacements.
      *
-     * @param PHPMailer $mailer The PHPMailer instance to configure.
      * @param string $template The HTML template content.
      * @param string $subject The email subject line.
-     * @param ?Collection $replaceValues Optional collection of placeholder replacements (key: placeholder, value: replacement).
+     * @param ?Map $replaceValues Optional collection of placeholder replacements (key: placeholder, value: replacement).
      */
-    private function setMailerBody(PHPMailer &$mailer, string $template, string $subject, ?Collection $replaceValues): void {
-        $mailer->isHTML(true);
-        $mailer->Subject = $subject;
+    private function setMailerBody(string $template, string $subject, ?Map $replaceValues): void {
+        $this->mailer->isHTML(true);
+        $this->mailer->Subject = $subject;
 
         if($replaceValues) {
             $template = str_replace($replaceValues->getAllKeys(), $replaceValues->getAllValues(), $template);
         }
         
-        $mailer->Body = $template;
+        $this->mailer->Body = $template;
     }
 
     /**
      * Adds attachments to the PHPMailer instance from the storage/uploads directory.
      *
-     * @param PHPMailer $mailer The PHPMailer instance to configure.
-     * @param ?Collection $attachments Optional collection of attachments (key: display name, value: file path relative to src/assets/).
+     * @param ?Map $attachments Optional collection of attachments (key: display name, value: file path relative to src/assets/).
      */
-    private function setMailerAttachments(PHPMailer &$mailer, ?Collection $attachments): void {
+    private function setMailerAttachments(?Map $attachments): void {
         if($attachments) {
             foreach($attachments->getRawData() as $attachment) {
                 $path = realpath(Bee::buildProjectPath(ProjectFolderType::STORAGE_UPLOADS, $attachment->getValue()));
                 
-                if($path !== false) $mailer->addAttachment($path, $attachment->getKey());
+                if($path !== false) $this->mailer->addAttachment($path, $attachment->getKey());
                 else LogWorker::error("Attachment not found: " . $attachment->getValue());
             }
         }
@@ -160,28 +164,76 @@ final class MailSlave {
      *
      * @return bool True if the email was sent successfully, false otherwise.
      */
-    public function sendMail(Mail $mail): bool {
+    public function send(Mail $mail): bool {
         $template = $this->getMailTemplate($mail->getBodyFile());
         if(!$template) return false;
         
-        $mailer = new PHPMailer(true);
+        if($this->mailer === null) $this->mailer = new PHPMailer(true);
 
         try {
+            $this->setMailerBasic($mail->getTimeout());
+            $this->setMailerAddress($mail->getOrigin(), $mail->getDestination(), $mail->getBccMails());
+            $this->setMailerBody($template, $mail->getSubject(), $mail->getReplaceValues());
+            $this->setMailerAttachments($mail->getAttachments());
 
-            $this->setMailerBasic($mailer, $mail->getTimeout());
-            $this->setMailerAddress($mailer, $mail->getOrigin(), $mail->getDestination(), $mail->getBccMails());
-            $this->setMailerBody($mailer, $template, $mail->getSubject(), $mail->getReplaceValues());
-            $this->setMailerAttachments($mailer, $mail->getAttachments());
+            $res = $this->mailer->send();
 
-            $res = $mailer->send();
-
-            if(!$res) LogWorker::error("PHPMailer Error: " . $mailer->ErrorInfo);
+            if(!$res) LogWorker::error("PHPMailer Error: " . $this->mailer->ErrorInfo);
             return $res;
 
         } catch (\Exception $e) {
             LogWorker::error("PHPMailer Exception: " . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Queues an email to be sent after the response is sent to the client.
+     * This method does NOT block the request.
+     *
+     * @param Mail $mail The Mail instance to queue.
+     *
+     * @return bool True if the email was queued successfully, false otherwise.
+     */
+    public function fireAndForget(Mail $mail): bool {
+        $template = $this->getMailTemplate($mail->getBodyFile());
+        if(!$template) return false;
+        
+        $this->deferredMails[] = [
+            "template" => $template,
+            "mail" => $mail
+        ];
+
+        return true;
+    }
+
+    /**
+     * Processes all queued fire-and-forget emails.
+     * 
+     * This method should be called after fastcgi_finish_request() to ensure
+     * that emails are sent in the background without blocking the response.
+     *
+     */
+    public function processDeferredMails(): void {
+        if(empty($this->deferredMails)) return;
+
+        foreach($this->deferredMails as $item) {
+            $mail = $item["mail"];
+            $template = $item["template"];
+            
+            if($this->mailer === null) $this->mailer = new PHPMailer(false);
+
+            $this->setMailerBasic($mail->getTimeout());
+            $this->setMailerAddress($mail->getOrigin(), $mail->getDestination(), $mail->getBccMails());
+            $this->setMailerBody($template, $mail->getSubject(), $mail->getReplaceValues());
+            $this->setMailerAttachments($mail->getAttachments());
+
+            if(!$this->mailer->send()) {
+                LogWorker::error("Deferred PHPMailer Error: " . $this->mailer->ErrorInfo);
+            }
+        }
+
+        $this->deferredMails = [];
     }
 
     #/ METHODS

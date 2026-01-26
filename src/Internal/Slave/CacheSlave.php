@@ -160,13 +160,14 @@ final class CacheSlave {
 
     /**
      * Converts a string key to an integer key for shmop.
+     * Uses xxHash32 for speed. Masked to 31 bits (shmop requires positive int).
      * 
      * @param string $key The string key.
      * 
-     * @return int The integer key.
+     * @return int The integer key (positive 31-bit).
      */
     private function shmopKey(string $key): int {
-        return crc32(SITE_PATH . ":" . $key) & 0x7FFFFFFF;
+        return hexdec(hash("xxh32", SITE_PATH . ":" . $key)) & 0x7FFFFFFF;
     }
 
     /**
@@ -240,7 +241,7 @@ final class CacheSlave {
                 shmop_close($shm);
 
                 if ($data !== false) {
-                    $item = @unserialize(rtrim($data, "\0"));
+                    $item = @unserialize(rtrim($data, "\0"), ["allowed_classes" => false]);
 
                     if (is_array($item) && isset($item["expires"])) {
                         if ($item["expires"] > time()) return $item;
@@ -317,7 +318,7 @@ final class CacheSlave {
                 shmop_close($shm);
 
                 if ($data !== false) {
-                    $item = @unserialize(rtrim($data, "\0"));
+                    $item = @unserialize(rtrim($data, "\0"), ["allowed_classes" => false]);
 
                     if (is_array($item) && isset($item["value"]) && is_int($item["value"])) {
                         if ($item["expires"] > time()) {

@@ -49,9 +49,9 @@ final class MailWorker {
      *
      * @return bool True if the email was sent successfully, false otherwise.
      */
-    public static function sendMail(Mail $mail): bool {
+    public static function send(Mail $mail, bool $fireAndForget = false): bool {
         if(self::$busy) {
-            return self::$slave->sendMail($mail);
+            return $fireAndForget ? self::$slave->fireAndForget($mail) : self::$slave->send($mail);
         }
 
         return false;

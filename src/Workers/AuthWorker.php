@@ -92,7 +92,7 @@ final class AuthWorker {
             self::ensureSession();
             if(self::$slave->validateSession()) {
                 if($request && in_array($request->getMethod(), ["POST", "PUT", "DELETE", "PATCH"], true)) {
-                    if(!self::$slave->validateCSRF($_SESSION["sgas_csrf"], $request->post("csrf_token"))) {
+                    if(!self::$slave->validateCSRF($_SESSION["sgas_csrf"], $_SERVER["HTTP_X_CSRF_TOKEN"] ?? null)) {
                         LogWorker::warning("Restricted action for authenticated user was called without a valid csrf_token.");
                         return false;
                     }

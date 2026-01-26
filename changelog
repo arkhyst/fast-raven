@@ -1,3 +1,67 @@
+### [v0.5] - 2026-01-26
+#### Added
+- View folder for endpoint handler files.
+- Templates folder for HTML/PHP template files.
+- Middleware component for handling per-endpoint middleware functions.
+- Template data methods for handling data passing to templates.
+- Template favicon methods for dark mode favicon support.
+- Template i18n support with setLangFile() and setDefaultLang() methods.
+- Bee::parseCSV() for parsing CSV files into structured arrays.
+- Bee::validateCallable() for validating callable signatures.
+- Lib.changeLanguage(lang) JS method for dynamic language switching.
+- BadMiddlewareException for middleware signature errors.
+- MiddlewareDeniedException for middleware access denial.
+- Error page inside pages/errors for handling view exceptions.
+- MailWorker::send() fireAndForget parameter for non-blocking email sending.
+- Bee::getCacheKey() for standardizing cache key generation.
+- Skeleton: ops/preload.php for OPcache preload script.
+- DataWorker JOIN support via join() and joinWhere() methods.
+- Condition component for handling SQL conditions.
+- ConditionList component for handling multiple conditions.
+- OperatorType enum for defining SQL operators.
+- Developer mistakes in endpoints are now catched by DeveloperException and registered in logs.
+- ValidationWorker::string(...) and ValidationWorker::number(...) methods for flexible validation.
+- ValidationType enum for defining what criteria to validate.
+- Environment variable added for dynamic SMTP encryption support.
+- DataSlave::raw() for executing raw SQL queries (no protection).
+
+#### Changed
+- View endpoints now return Template objects instead of referencing HTML files directly.
+- Template::new signature changed to (file, title, version).
+- ProjectFolderType enum restructured.
+- Endpoint factory methods now use middlewareId instead of guestOnly and rateLimit.
+- Exception handling simplified: View exceptions now render error template instead of redirecting.
+- CacheSlave shmop key generation now uses xxHash32 instead of CRC32 for better distribution.
+- MailWorker::sendMail() renamed to MailWorker::send().
+- Language files are now cached in memory for 1 hour to reuse them in other requests.
+- DataWorker methods renamed from get* to select* (getOneById → selectOneById).
+- Response::new() now accepts null for data parameter.
+- Collection component does not work with Item components anymore.
+- Collection component renamed to Map.
+- Item component renamed to Pair.
+- DataWorker methods signature changed to use ConditionList instead of Collections.
+- ValidationWorker now return result of validation using an array of ValidationType => bool.
+
+#### Fixed
+- Bee::getFileMimeType() returns string instead of DataType when file doesn't exist and returnType is true.
+- AuthWorker CSRF validation always returns false.
+- ValidationSlave fails length validation for multibyte characters.
+
+#### Removed
+- Template::flex() is no longer supported (nor needed).
+- Template::addAutofill() removed (use addData() instead).
+- Template::getLang() and Template::setLang() removed.
+- Endpoint::getTemplate() removed (templates returned by handlers).
+- Endpoint::getUnauthorizedExclusive() removed (use middleware instead).
+- Endpoint::getLimitPerMinute() removed (rate limit moved to Router).
+- AlreadyAuthorizedException removed (use middleware instead).
+- BadFilterException removed (replaced by BadMiddlewareException).
+- FilterDeniedException removed (replaced by MiddlewareDeniedException).
+- Server::addStarter() and Server::addFinisher() removed (use middleware).
+- filters.php configuration file removed (use middleware.php).
+- ValidationFlags class.
+- ValidationWorker unnecessary methods removed.
+
 ### [v0.4] - 2026-01-03
 #### Added
 - Kernel::handleRateLimit() for handling global rate limit configuration and endpoint specific rate limit.

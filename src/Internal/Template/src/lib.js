@@ -71,13 +71,18 @@ class Lib {
             });
         });
     }
-}
 
-for(const req of XXX_PHP_AUTOFILL) {
-    Lib.request(req["api"], "GET").then(data => {
-        const result = data.data;
-        if(result == null || result.length == 0) return;
-        
-        $(req["dom"]).html(result.toString());
-    });
-} 
+    /**
+     * Change the language of all elements with data-lang attribute.
+     * @param {string} lang - Language code (e.g., 'en', 'es').
+     */
+    static changeLanguage(lang) {
+        if (!window.LANG || !window.LANG[lang]) return;
+
+        const translations = window.LANG[lang];
+        $('[data-lang]').each(function() {
+            const key = $(this).data('lang');
+            if (translations[key] !== undefined) $(this).html(translations[key]);
+        });
+    }
+}

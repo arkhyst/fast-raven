@@ -9,7 +9,7 @@ final class Bee {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    
+    private static ?\finfo $finfoInstance = null;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -113,7 +113,7 @@ final class Bee {
     public static function hashPassword(string $password): string {
         return password_hash($password, PASSWORD_ARGON2ID, ['memory_cost' => 1 << 16, 'time_cost' => 4, 'threads' => 2]);
     }
-    
+
     /**
      * Returns the MIME type of a file.
      * 
@@ -123,16 +123,14 @@ final class Bee {
      * @return string|DataType the MIME type of the file. If the file does not exist or cannot be read, returns "application/octet-stream".
      */
     public static function getFileMimeType(string $file, bool $returnType = false): string|DataType {
-        if (!is_file($file)) {
-            return "application/octet-stream";
-        }
+        if(!is_file($file)) return $returnType ? DataType::BINARY : "application/octet-stream";
 
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mimeType = $finfo->file($file);
+        if(self::$finfoInstance === null) self::$finfoInstance = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = self::$finfoInstance->file($file);
 
         if($mimeType === false) return $returnType ? DataType::BINARY : "application/octet-stream";
 
-        if ($returnType) {
+        if($returnType) {
             try { return DataType::from($mimeType); }
             catch (\ValueError $e) { return DataType::BINARY; }
         }
@@ -142,6 +140,74 @@ final class Bee {
 
     public static function buildProjectPath(ProjectFolderType $folderType, string $file = ""): string {
         return SITE_PATH . $folderType->value . Bee::normalizePath($file);
+    }
+
+    /**
+     * Validates the callable signature.
+     *
+     * @return bool true if the callable signature is valid, false otherwise
+     */
+    public static function validateCallable(?callable $callable, array $params = []): bool {
+        if($callable === null || !is_callable($callable)) return false;
+
+        $reflection = new \ReflectionFunction(\Closure::fromCallable($callable));
+        $reflectionParams = $reflection->getParameters();
+        $paramCount = count($params);
+        
+        for($i = 0; $i < $paramCount; $i++) {
+            $type = $reflectionParams[$i]?->getType();
+            if($type instanceof \ReflectionNamedType && $type->getName() !== $params[$i]) return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Parses a CSV file and returns an array that represents the CSV file.
+     *
+     * @param string $csvPath the path to the CSV file absolute.
+     *
+     * @return array an array that represents the CSV file
+     */
+    public static function parseCSV(string $csvPath): array {
+        if (!file_exists($csvPath)) return [];
+        
+        $handle = fopen($csvPath, "r");
+        if (!$handle) return [];
+        
+        $result = [];
+        $cols = fgetcsv($handle);
+
+        if($cols === false || $cols[0] !== "key") {
+            fclose($handle);
+            return [];
+        }
+        
+        $cols = array_slice($cols, 1);
+        foreach($cols as $col) {
+            $result[$col] = [];
+        }
+
+        while(($row = fgetcsv($handle)) !== false) {
+            foreach($cols as $key => $col) {
+                $result[$col][$row[0]] = $row[$key+1];
+            }
+        }
+        
+        fclose($handle);
+        return $result;
+    }
+
+    /**
+     * Returns a standardized cache key based on the type and key.
+     *
+     * @param string $type the type of the cache key
+     * @param string $key the key of the cache key
+     *
+     * @return string the cache key
+     */
+    public static function getCacheKey(string $type, string $key): string {
+        return "fastraven:" . Bee::getBaseDomain() . ":" . $type . ":" . hash("xxh3", $key);
     }
 
     #/ METHODS
