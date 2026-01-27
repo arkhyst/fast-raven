@@ -120,8 +120,8 @@ final class Server {
             $response = $this->kernel->getTemplate()
                 ->setFile("errors/generic.php")
                 ->setTitle($this->kernel->getTemplate()->getTitle() . " - Error")
-                ->addData(Pair::new("errorCode", $e->getStatusCode()))
-                ->addData(Pair::new("errorMessage", $e->getPublicMessage()));
+                ->addData("errorCode", $e->getStatusCode())
+                ->addData("errorMessage", $e->getPublicMessage());
 
             if(is_subclass_of($e, NotFoundException::class)) {
                 HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultNotFoundPathRedirect());

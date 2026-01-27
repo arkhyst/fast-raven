@@ -211,7 +211,7 @@ return $template;
 | `addScript(filename)` | Add JS file from public/assets/js/ |
 | `setBeforeFragments(array)` | Fragments to render before main content |
 | `setAfterFragments(array)` | Fragments to render after main content |
-| `addData(Item)` | Add data for template rendering |
+| `addData(key, value)` | Add data for template rendering |
 | `getData(key)` | Get data value by key |
 | `hasData(key)` | Check if data key exists |
 | `merge(?Template)` | Merge another template (overwrites non-empty values) |
@@ -989,8 +989,8 @@ return function(Request $request, Template $baseTemplate): Template {
     $page = Template::new("dashboard.php", "Dashboard");
     
     // Add dynamic data for the template
-    $page->addData(Item::new("username", $user["name"]));
-    $page->addData(Item::new("notifications", $user["notifications"]));
+    $page->addData("username", $user["name"]);
+    $page->addData("notifications", $user["notifications"]);
     
     return $page;
 };

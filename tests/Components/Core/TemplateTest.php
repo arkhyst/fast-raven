@@ -81,8 +81,8 @@ class TemplateTest extends TestCase
     {
         $template = Template::new('main.php', 'Test', '1.0');
 
-        $template->addData(Pair::new('username', 'John'));
-        $template->addData(Pair::new('email', 'john@example.com'));
+        $template->addData("username", "John");
+        $template->addData("email", "john@example.com");
 
         $this->assertTrue($template->hasData('username'));
         $this->assertTrue($template->hasData('email'));
@@ -136,10 +136,10 @@ class TemplateTest extends TestCase
     public function testMergeCombinesData(): void
     {
         $template1 = Template::new('main.php', 'Page', '1.0');
-        $template1->addData(Pair::new('field1', 'value1'));
+        $template1->addData("field1", "value1");
 
         $template2 = Template::new('', '', '');
-        $template2->addData(Pair::new('field2', 'value2'));
+        $template2->addData("field2", "value2");
 
         $template1->merge($template2);
 
@@ -252,7 +252,7 @@ class TemplateTest extends TestCase
             ->addScript('script.js')
             ->setBeforeFragments(['header.php'])
             ->setAfterFragments(['footer.php'])
-            ->addData(Pair::new('key', 'value'));
+            ->addData("key", "value");
 
         $this->assertEquals('New Title', $template->getTitle());
         $this->assertEquals('new.php', $template->getFile());

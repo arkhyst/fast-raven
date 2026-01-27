@@ -53,7 +53,7 @@ final class Template {
     private Map $data;
         public function hasData(string $key): bool { return $this->data->has($key); }
         public function getData(string $key): string { return $this->hasData($key) ? strval($this->data->get($key)) : ""; }
-        public function addData(Pair $item): Template { $this->data->add($item->getKey(), $item->getValue()); return $this; }
+        public function addData(string $key, string $value): Template { $this->data->add($key, $value); return $this; }
 
     #/ VARIABLES
     #----------------------------------------------------------------------

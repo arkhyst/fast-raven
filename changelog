@@ -1,3 +1,16 @@
+### [v0.6] - 2026-02-XX
+#### Added
+- 
+
+#### Changed
+- Template::addData() now accepts string parameters instead of Pair objects.
+
+#### Fixed
+- 
+
+#### Removed
+- 
+
 ### [v0.5] - 2026-01-26
 #### Added
 - View folder for endpoint handler files.
