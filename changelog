@@ -6,7 +6,7 @@
 - Template::addData() now accepts string parameters instead of Pair objects.
 
 #### Fixed
-- 
+- PHP throws a warning when headers are sent before session_start().
 
 #### Removed
 - 
