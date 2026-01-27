@@ -117,21 +117,29 @@ final class Server {
         }
 
         if($this->kernel->isViewRequest()) {
-            $response = $this->kernel->getTemplate()
-                ->setFile("errors/generic.php")
-                ->setTitle($this->kernel->getTemplate()->getTitle() . " - Error")
-                ->addData("errorCode", $e->getStatusCode())
-                ->addData("errorMessage", $e->getPublicMessage());
-
-            if(is_subclass_of($e, NotFoundException::class)) {
-                HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultNotFoundPathRedirect());
-            } else if(is_subclass_of($e, NotAuthorizedException::class)) {
-                if($e->isDomainLevel()) {
-                    HeaderWorker::addHeader("Location", "https://".Bee::getBuiltDomain($this->kernel->getConfig()->getDefaultUnauthorizedSubdomainRedirect()));
-                } else {
-                    HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultUnauthorizedPathRedirect());
+            $status = $e->getStatusCode();
+            $config = $this->kernel->getConfig();
+            if($e instanceof NotFoundException || is_subclass_of($e, NotFoundException::class)) {
+                if($config->getDefaultNotFoundPathRedirect() !== null) {
+                    HeaderWorker::addHeader("Location", $config->getDefaultNotFoundPathRedirect());
+                    $status = 302;
+                }
+            } else if($e instanceof NotAuthorizedException || is_subclass_of($e, NotAuthorizedException::class)) {
+                if($e->isDomainLevel() && $config->getDefaultUnauthorizedSubdomainRedirect() !== null) {
+                    HeaderWorker::addHeader("Location", "https://".Bee::getBuiltDomain($config->getDefaultUnauthorizedSubdomainRedirect()));
+                    $status = 302;
+                } else if($config->getDefaultUnauthorizedPathRedirect() !== null) {
+                    HeaderWorker::addHeader("Location", $config->getDefaultUnauthorizedPathRedirect());
+                    $status = 302;
                 }
             }
+
+            $template = $this->kernel->getTemplate();
+            $response = $template
+                ->setFile($template->getErrorFile($status))
+                ->setTitle($template->getTitle() . " - Error")
+                ->addData("errorCode", $status)
+                ->addData("errorMessage", $e->getPublicMessage());
         }
 
         return $response;

@@ -7,7 +7,6 @@ use FastRaven\Workers\CacheWorker;
 use FastRaven\Workers\Bee;
 
 use FastRaven\Components\Data\Map;
-use FastRaven\Components\Data\Pair;
 
 use FastRaven\Types\ProjectFolderType;
 
@@ -49,12 +48,13 @@ final class Template {
     private array $afterFragments = [];
         public function getAfterFragments(): array { return $this->afterFragments; }
         public function setAfterFragments(array $fragments): Template { $this->afterFragments = $fragments; return $this; }
-    
     private Map $data;
         public function hasData(string $key): bool { return $this->data->has($key); }
         public function getData(string $key): string { return $this->hasData($key) ? strval($this->data->get($key)) : ""; }
         public function addData(string $key, string $value): Template { $this->data->add($key, $value); return $this; }
-
+    private array $errorFiles = [];
+        public function getErrorFile(int $code): string { return $this->errorFiles[$code] ?? "errors/generic.php"; }
+        public function setErrorFile(int $code, string $file): Template { $this->errorFiles[$code] = $file; return $this; }
     #/ VARIABLES
     #----------------------------------------------------------------------
 

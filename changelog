@@ -1,12 +1,13 @@
 ### [v0.6] - 2026-02-XX
 #### Added
-- 
+- Template::setErrorPage() for linking an error page to a specific error code.
 
 #### Changed
 - Template::addData() now accepts string parameters instead of Pair objects.
 
 #### Fixed
 - PHP throws a warning when headers are sent before session_start().
+- Redirects on error do not work.
 
 #### Removed
 - 
