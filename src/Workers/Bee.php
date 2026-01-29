@@ -207,7 +207,7 @@ final class Bee {
      * @return string the cache key
      */
     public static function getCacheKey(string $type, string $key): string {
-        return "fastraven:" . Bee::getBaseDomain() . ":" . $type . ":" . hash("xxh3", $key);
+        return "fastraven:" . Bee::getBaseDomain() . ":" . $type . ":" . Bee::env("VERSION", "0.0.1") . ":" . hash("xxh3", $key);
     }
 
     #/ METHODS

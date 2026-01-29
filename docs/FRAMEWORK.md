@@ -253,9 +253,9 @@ Lib.changeLanguage('en');
 ```
 
 **How it works:**
-- On page load, `window.LANG` is populated with all translations from the CSV
+- On page load, `window.LANG_INTERNAL` is populated with all translations from the CSV
 - `Lib.changeLanguage(lang)` updates all `data-lang` elements with translations for that language
-- **Performance:** Language data is cached for 1 hour to avoid re-parsing the CSV on every request
+- **Performance:** Language data is cached for 24 hours to avoid re-parsing the CSV on every request
 
 ---
 
@@ -434,8 +434,8 @@ $langs = Bee::parseCSV(
     )
 );  // Returns ["en" => ["KEY" => "value"], ...]
 
-// Cache Keys
-$key = Bee::getCacheKey("session", "user_1"); // → "fastraven:example.com:session:hash"
+// Cache Keys (includes project version for automatic cache invalidation)
+$key = Bee::getCacheKey("session", "user_1"); // → "fastraven:example.com:session:0.0.1:hash"
 ```
 
 ---
