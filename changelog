@@ -1,6 +1,8 @@
-### [v0.6] - 2026-02-XX
+## [v1.1] - 2026-03-??
+### [v1.0.0] - 2026-02-01
 #### Added
 - Template::setErrorPage() for linking an error page to a specific error code.
+- Configurable shmop max size via SHMOP_MAX_SIZE environment variable.
 
 #### Changed
 - Template::addData() now accepts string parameters instead of Pair objects.
@@ -8,6 +10,7 @@
 - Language data is now cached in memory for 24 hours.
 - Language JS object is renamed to LANG_INTERNAL.
 - Language current language is now stored in localStorage and retrieved on page load.
+- Shmop cache backend now uses dynamic segment sizing according to data size.
 
 #### Fixed
 - PHP throws a warning when headers are sent before session_start().
@@ -16,7 +19,9 @@
 #### Removed
 - Stashes and by extension LogStash.
 
-### [v0.5] - 2026-01-26
+---
+
+## [v0.5] - 2026-01-26
 #### Added
 - View folder for endpoint handler files.
 - Templates folder for HTML/PHP template files.
@@ -80,7 +85,9 @@
 - ValidationFlags class.
 - ValidationWorker unnecessary methods removed.
 
-### [v0.4] - 2026-01-03
+---
+
+## [v0.4] - 2026-01-03
 #### Added
 - Kernel::handleRateLimit() for handling global rate limit configuration and endpoint specific rate limit.
 - HeaderSlave::writeRateLimitHeaders() for writing rate limit headers.
@@ -160,7 +167,7 @@
 
 ---
 
-### [v0.3] - 2025-12-17
+## [v0.3] - 2025-12-17
 #### Added
 - Config::configurePrivacy(...) for defining whether to register logs or restrict what data to register.
 - Collection and Item components for handling key-value pair arrays.
@@ -210,7 +217,7 @@
 
 ---
 
-### [v0.2] - 2025-12-06
+## [v0.2] - 2025-12-06
 #### Added
 - Configuration of path redirects for 404 error.
 - Support for .html template injection before and after #main div.

@@ -160,14 +160,13 @@ final class CacheSlave {
 
     /**
      * Converts a string key to an integer key for shmop.
-     * Uses xxHash32 for speed. Masked to 31 bits (shmop requires positive int).
      * 
      * @param string $key The string key.
      * 
      * @return int The integer key (positive 31-bit).
      */
     private function shmopKey(string $key): int {
-        return hexdec(hash("xxh32", SITE_PATH . ":" . $key)) & 0x7FFFFFFF;
+        return hexdec(hash("xxh32", $key)) & 0x7FFFFFFF;
     }
 
     /**
@@ -276,17 +275,16 @@ final class CacheSlave {
             ];
             
             $data = serialize($item);
-
-            if (strlen($data) <= self::SHMOP_SEGMENT_SIZE) {
+            $requiredSize = (int) ceil(strlen($data) / self::SHMOP_SEGMENT_SIZE) * self::SHMOP_SEGMENT_SIZE;
+            
+            if($requiredSize <= Bee::env("SHMOP_MAX_SIZE", 1024) * 1024) {
                 $shmKey = $this->shmopKey($key);
                 $this->shmopRemoveInternal($shmKey);
+                $shm = @shmop_open($shmKey, "c", self::SHMOP_MODE, $requiredSize);
                 
-                $shm = @shmop_open($shmKey, "c", self::SHMOP_MODE, self::SHMOP_SEGMENT_SIZE);
-
                 if ($shm) {
-                    $res = shmop_write($shm, str_pad($data, self::SHMOP_SEGMENT_SIZE, "\0"), 0);
+                    $res = shmop_write($shm, str_pad($data, $requiredSize, "\0"), 0);
                     shmop_close($shm);
-                    
                     return $res !== false;
                 }
             }
