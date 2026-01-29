@@ -77,9 +77,9 @@ class Lib {
      * @param {string} lang - Language code (e.g., 'en', 'es').
      */
     static changeLanguage(lang) {
-        if (!window.LANG || !window.LANG[lang]) return;
+        if (!window.LANG_INTERNAL || !window.LANG_INTERNAL[lang]) return;
 
-        const translations = window.LANG[lang];
+        const translations = window.LANG_INTERNAL[lang];
         $('[data-lang]').each(function() {
             const key = $(this).data('lang');
             if (translations[key] !== undefined) $(this).html(translations[key]);

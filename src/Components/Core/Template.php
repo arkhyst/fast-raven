@@ -186,16 +186,13 @@ final class Template {
      */
     public function getHtmlLang(): string {
         $cacheKey = Bee::getCacheKey("lang", $this->langFile);
-        
         $langData = CacheWorker::read($cacheKey);
         if ($langData === null) {
-            $langData = Bee::parseCSV(Bee::buildProjectPath(
-                ProjectFolderType::SRC_WEB_ASSETS_LANG,
-                $this->langFile . ".csv"));
-            CacheWorker::write($cacheKey, $langData, 3600);
+            $langData = Bee::parseCSV(Bee::buildProjectPath(ProjectFolderType::SRC_WEB_ASSETS_LANG, $this->langFile . ".csv"));
+            CacheWorker::write($cacheKey, $langData, 86400);
         }
         
-        return "<script>window.LANG = " . json_encode($langData, JSON_UNESCAPED_UNICODE) . ";</script>";
+        return "<script>window.LANG_INTERNAL = " . json_encode($langData, JSON_UNESCAPED_UNICODE) . ";</script>";
     }
 
     /**

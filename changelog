@@ -5,7 +5,8 @@
 #### Changed
 - Template::addData() now accepts string parameters instead of Pair objects.
 - Bee::getCacheKey() now includes the project version in the cache key to avoid cache conflicts.
-
+- Language data is now cached in memory for 24 hours.
+- Language JS object is renamed to LANG_INTERNAL.
 
 #### Fixed
 - PHP throws a warning when headers are sent before session_start().
