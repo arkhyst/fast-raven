@@ -14,7 +14,7 @@
 - Redirects on error do not work.
 
 #### Removed
-- 
+- Stashes and by extension LogStash.
 
 ### [v0.5] - 2026-01-26
 #### Added

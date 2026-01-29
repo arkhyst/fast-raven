@@ -320,7 +320,7 @@ final class Kernel {
 
         if($this->logSlave) {
             $this->logSlave->writeCloseLogs($elapsedTime, $statusCode);
-            $this->logSlave->dumpLogStashIntoFile();
+            $this->logSlave->dumpLogsIntoFile();
         }
         
         if (random_int(0, 100) < $this->config->getCacheFileGCProbability()) { 

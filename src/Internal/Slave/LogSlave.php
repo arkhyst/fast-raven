@@ -4,8 +4,6 @@ namespace FastRaven\Internal\Slave;
 
 use FastRaven\Workers\LogWorker;
 
-use FastRaven\Internal\Stash\LogStash;
-
 use FastRaven\Components\Http\Request;
 
 use FastRaven\Types\ProjectFolderType;
@@ -17,7 +15,7 @@ final class LogSlave {
     #\ VARIABLES
 
     private static bool $busy = false;
-    private LogStash $stash;
+    private array $logs = [];
     private string $requestInternalId;
 
     #/ VARIABLES
@@ -48,7 +46,6 @@ final class LogSlave {
     }
 
     private function __construct(string $requestInternalId) {
-        $this->stash = new LogStash();
         $this->requestInternalId = $requestInternalId;
     }
 
@@ -81,9 +78,8 @@ final class LogSlave {
      *
      * @param string $text The log message to be inserted.
      */
-    public function insertLogIntoStash(string $text): void {
-        $date = date("Y-m-d H:i:s");
-        $this->stash->addLog("[{$date}]-({$this->requestInternalId}) {$text}"); 
+    public function log(string $text): void {
+        $this->logs[] = "[".date("Y-m-d H:i:s")."]-({$this->requestInternalId}) {$text}"; 
     }
 
     /**
@@ -104,8 +100,8 @@ final class LogSlave {
      * @param int $statusCode The status code of the response.
      */
     public function writeCloseLogs(float $elapsedTime, int $statusCode): void {
-        $this->stash->replaceLog(0, "ELAPSED_TIME", strval($elapsedTime));
-        $this->stash->replaceLog(0, "STATUS_CODE", strval($statusCode));
+        $this->logs[0] = str_replace("ELAPSED_TIME", strval($elapsedTime), $this->logs[0]);
+        $this->logs[0] = str_replace("STATUS_CODE", strval($statusCode), $this->logs[0]);
     }
 
     /**
@@ -114,12 +110,12 @@ final class LogSlave {
      * The function will lock the file while writing to ensure thread safety.
      * Finally, the stash will be emptied.
      */
-    public function dumpLogStashIntoFile(): void { 
-        if($this->stash->isEmpty()) return;
+    public function dumpLogsIntoFile(): void { 
+        if(empty($this->logs)) return;
 
-        $textBlock = implode("\n", $this->stash->getLogList()) . "\n";
+        $textBlock = implode("\n", $this->logs) . "\n";
         $this->writeIntoFile($textBlock);
-        $this->stash->empty();
+        $this->logs = [];
     }
 
     #/ METHODS

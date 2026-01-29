@@ -146,7 +146,7 @@ if($this->pdo !== null) return ...;
 ### PERF-03: Synchronous Log File Writing
 
 **Severity:** 🔴 Critical → 🟢 **OPTIMIZED (Informational)**  
-**Location:** `LogSlave.php:69-71, 117-122`  
+**Location:** `LogSlave.php:81, 109-117`  
 **Impact:** Log writing is post-response, reducing user latency to 0ms.
 
 **Original Issue:** Log writing uses `file_put_contents()` with `LOCK_EX`, which could cause lock contention under heavy load.
@@ -159,24 +159,24 @@ if($this->pdo !== null) return ...;
 **Optimizations Applied:**
 
 ```php
-// LogSlave.php - Optimized implementation
-public function dumpLogStashIntoFile(): void { 
-    if($this->stash->isEmpty()) return;  // Early exit if nothing to log
+// LogSlave.php - Simplified array-based implementation
+public function dumpLogsIntoFile(): void { 
+    if(empty($this->logs)) return;  // Early exit if nothing to log
 
-    $textBlock = implode("\n", $this->stash->getLogList()) . "\n";  // O(n) vs O(n²)
+    $textBlock = implode("\n", $this->logs) . "\n";  // O(n) single allocation
     $this->writeIntoFile($textBlock);
-    $this->stash->empty();
+    $this->logs = [];
 }
 ```
 
 **Improvements:**
-1. **Early exit** with `isEmpty()` check - avoids file operations when no logs
-2. **`implode()` instead of string concatenation** - O(n) single allocation vs O(n²) intermediate strings
-3. Added `LogStash::isEmpty()` method
+1. **Early exit** with `empty()` check - avoids file operations when no logs
+2. **`implode()` for efficient concatenation** - O(n) single allocation vs O(n²) intermediate strings
+3. **Removed LogStash abstraction** - Simple array is more efficient and easier to maintain
 
 **Future consideration:** For horizontally-scaled deployments (>5000 RPS), consider syslog integration via environment variable.
 
-**Status:** Optimized on January 24, 2026
+**Status:** Optimized on January 24-29, 2026
 
 ---
 

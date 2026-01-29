@@ -46,7 +46,7 @@ final class LogWorker {
      */
     public static function log(string $text): void {
         if(self::$busy) {
-            self::$slave->insertLogIntoStash($text);
+            self::$slave->log($text);
         }
     }
 
@@ -59,7 +59,7 @@ final class LogWorker {
      */
     public static function error(string $text): void {
         if(self::$busy) {
-            self::$slave->insertLogIntoStash("//ERROR// ".$text);
+            self::$slave->log("//ERROR// ".$text);
         }
     }
 
@@ -72,7 +72,7 @@ final class LogWorker {
      */
     public static function warning(string $text): void {
         if(self::$busy) {
-            self::$slave->insertLogIntoStash("//WARN// ".$text);
+            self::$slave->log("//WARN// ".$text);
         }
     }
 
@@ -85,7 +85,7 @@ final class LogWorker {
      */
     public static function debug(string $text): void {
         if(self::$busy && Bee::isDev()) {
-            self::$slave->insertLogIntoStash("/SG/ ".$text);
+            self::$slave->log("/SG/ ".$text);
         }
     }
 
