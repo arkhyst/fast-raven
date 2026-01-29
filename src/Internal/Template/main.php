@@ -43,10 +43,8 @@ use FastRaven\Types\ProjectFolderType;
         <?= $template->getHtmlLang(); ?>
         <?= $template->getHtmlCSRF(); ?>
         <script>
+            window.currentLanguage = localStorage.getItem("activeLang") || "<?= $template->getDefaultLang(); ?>";
             <?php include __DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "packedlib.js"; ?>
-        </script>
-        <script>
-            Lib.changeLanguage("<?= $template->getDefaultLang(); ?>");
         </script>
         <?= $template->getHtmlScripts(); ?>
     </body>

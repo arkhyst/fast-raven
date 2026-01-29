@@ -250,12 +250,19 @@ Lib.changeLanguage('es');
 
 // Switch to English  
 Lib.changeLanguage('en');
+
+// Check current language
+console.log(window.currentLanguage);  // Currently active language
 ```
 
 **How it works:**
 - On page load, `window.LANG_INTERNAL` is populated with all translations from the CSV
-- `Lib.changeLanguage(lang)` updates all `data-lang` elements with translations for that language
+- The framework automatically restores the user's last selected language from `localStorage` (key: `activeLang`)
+- If no language preference exists, defaults to the language set via `setDefaultLang()`
+- `window.currentLanguage` contains the active language code
+- `Lib.changeLanguage(lang)` updates all `data-lang` elements and persists the choice to `localStorage`
 - **Performance:** Language data is cached for 24 hours to avoid re-parsing the CSV on every request
+- **Persistence:** Language preference survives page reloads and browser sessions
 
 ---
 
