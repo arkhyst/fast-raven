@@ -78,7 +78,10 @@ class Lib {
      */
     static changeLanguage(lang) {
         if (!window.LANG_INTERNAL || !window.LANG_INTERNAL[lang]) return;
+
+        window.currentLanguage = lang;
         localStorage.setItem("activeLang", lang);
+
         const translations = window.LANG_INTERNAL[lang];
         $('[data-lang]').each(function() {
             const key = $(this).data('lang');
