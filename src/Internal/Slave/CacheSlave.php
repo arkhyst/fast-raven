@@ -7,6 +7,7 @@ use FastRaven\Workers\Bee;
 
 use FastRaven\Types\CacheType;
 use FastRaven\Types\ProjectFolderType;
+use FastRaven\Workers\LogWorker;
 
 final class CacheSlave {
     #----------------------------------------------------------------------
@@ -287,6 +288,8 @@ final class CacheSlave {
                     shmop_close($shm);
                     return $res !== false;
                 }
+            } else {
+                LogWorker::warning("Could not write cache key '{$key}'. Data exceeds maximum configured shmop size.");
             }
             
             return false;
