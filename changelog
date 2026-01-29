@@ -15,6 +15,7 @@
 #### Fixed
 - PHP throws a warning when headers are sent before session_start().
 - Redirects on error do not work.
+- When returning baseTemplate as a View response, it duplicates styles, scripts and fragments.
 
 #### Removed
 - Stashes and by extension LogStash.
