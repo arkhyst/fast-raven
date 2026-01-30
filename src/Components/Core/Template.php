@@ -186,6 +186,8 @@ final class Template {
      */
     public function getHtmlLang(): string {
         $cacheKey = Bee::getCacheKey("lang", $this->langFile);
+
+        if(Bee::isDev()) CacheWorker::remove($cacheKey);
         $langData = CacheWorker::read($cacheKey);
         if ($langData === null) {
             $langData = Bee::parseCSV(Bee::buildProjectPath(ProjectFolderType::SRC_WEB_ASSETS_LANG, $this->langFile . ".csv"));
