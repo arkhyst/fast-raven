@@ -7,7 +7,7 @@ use FastRaven\Workers\DataWorker;
 use FastRaven\Components\Data\ConditionList;
 use FastRaven\Components\Data\Condition;
 
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 final class AuthSlave {
     #----------------------------------------------------------------------

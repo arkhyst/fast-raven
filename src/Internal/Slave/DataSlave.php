@@ -6,7 +6,7 @@ use FastRaven\Exceptions\SecurityVulnerabilityException;
 
 use FastRaven\Workers\DataWorker;
 use FastRaven\Workers\LogWorker;
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 use FastRaven\Components\Data\ConditionList;
 use FastRaven\Components\Data\Map;

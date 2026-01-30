@@ -20,7 +20,7 @@ use FastRaven\Components\Data\Pair;
 use FastRaven\Workers\LogWorker;
 use FastRaven\Workers\HeaderWorker;
 
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 use FastRaven\Types\ProjectFolderType;
 

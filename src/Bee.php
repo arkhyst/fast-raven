@@ -1,6 +1,6 @@
 <?php
 
-namespace FastRaven\Workers;
+namespace FastRaven;
 
 use FastRaven\Types\DataType;
 use FastRaven\Types\ProjectFolderType;

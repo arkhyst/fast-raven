@@ -7,7 +7,7 @@ use FastRaven\Workers\AuthWorker;
 use FastRaven\Workers\FileWorker;
 use FastRaven\Workers\HeaderWorker;
 use FastRaven\Workers\CacheWorker;
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 use FastRaven\Internal\Slave\LogSlave;
 use FastRaven\Internal\Slave\HeaderSlave;

@@ -3,7 +3,7 @@
 namespace FastRaven\Tests\Workers;
 
 use PHPUnit\Framework\TestCase;
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 class BeeTest extends TestCase
 {

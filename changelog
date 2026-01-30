@@ -14,6 +14,7 @@
 - Shmop cache backend now uses dynamic segment sizing according to data size.
 - Skeleton: Operation script watch.sh is now called compile.sh.
 - Skeleton: Operation scripts improved significantly.
+- Bee namespace changed from FastRaven\Workers to FastRaven.
 
 #### Fixed
 - PHP throws a warning when headers are sent before session_start().

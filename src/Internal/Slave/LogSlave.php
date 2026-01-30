@@ -8,7 +8,7 @@ use FastRaven\Components\Http\Request;
 
 use FastRaven\Types\ProjectFolderType;
 
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 final class LogSlave {
     #----------------------------------------------------------------------

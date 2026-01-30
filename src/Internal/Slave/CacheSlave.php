@@ -3,7 +3,7 @@
 namespace FastRaven\Internal\Slave;
 
 use FastRaven\Workers\CacheWorker;
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 use FastRaven\Types\CacheType;
 use FastRaven\Types\ProjectFolderType;

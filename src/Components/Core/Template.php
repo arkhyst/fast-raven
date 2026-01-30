@@ -4,7 +4,7 @@ namespace FastRaven\Components\Core;
 
 use FastRaven\Workers\AuthWorker;
 use FastRaven\Workers\CacheWorker;
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 use FastRaven\Components\Data\Map;
 

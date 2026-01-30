@@ -11,7 +11,7 @@ use FastRaven\Components\Data\Pair;
 
 use FastRaven\Types\ProjectFolderType;
 
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 use PHPMailer\PHPMailer\PHPMailer;
 

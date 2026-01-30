@@ -6,7 +6,7 @@ use FastRaven\Workers\FileWorker;
 
 use FastRaven\Types\ProjectFolderType;
 
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 final class FileSlave {
     #----------------------------------------------------------------------
