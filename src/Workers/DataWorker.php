@@ -12,7 +12,7 @@ final class DataWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
     private static DataSlave $slave;
 
     #/ VARIABLES
@@ -22,8 +22,8 @@ final class DataWorker {
     #\ INIT
 
     public static function __getToWork(DataSlave &$slave): void {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             self::$slave = $slave;
         }
     }
@@ -53,7 +53,7 @@ final class DataWorker {
      * @return array|bool|int|null The result of the query, or null if an error occurred.
      */
     public static function sql(string $query, array $vars = []): array|bool|int|null {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->raw($query, $vars);
         }
 
@@ -74,7 +74,7 @@ final class DataWorker {
      * @return array|null The retrieved data, or null if an error occurred.
      */
     public static function select(string $table, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->select($table, $cols, null, $orderBy, $limit, $offset);
         }
 
@@ -96,7 +96,7 @@ final class DataWorker {
      * @return array|null The retrieved data, or null if an error occurred.
      */
     public static function selectWhere(string $table, array $cols, ConditionList $conditions, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->select($table, $cols, $conditions, $orderBy, $limit, $offset);
         }
 
@@ -115,7 +115,7 @@ final class DataWorker {
      * @return array|null The retrieved data, or null if an error occurred.
      */
     public static function selectOneWhere(string $table, array $cols, ConditionList $conditions): ?array {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->select($table, $cols, $conditions, "", 1)[0] ?? null;
         }
 
@@ -134,7 +134,7 @@ final class DataWorker {
      * @return array|null The retrieved data, or null if an error occurred.
      */
     public static function selectOneById(string $table, array $cols, int $id): ?array {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->select($table, $cols, ConditionList::new([Condition::equals("id", $id)]), "", 1)[0] ?? null;
         }
 
@@ -159,7 +159,7 @@ final class DataWorker {
      * @return array|null The retrieved data, or null if an error occurred.
      */
     public static function join(string $table, array $joinedTables, Map $joinedTablesLinks, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->join($table, $joinedTables, $joinedTablesLinks->getAllKeys(), $joinedTablesLinks->getAllValues(), $cols, null, $orderBy, $limit, $offset);
         }
 
@@ -185,7 +185,7 @@ final class DataWorker {
      * @return array|null The retrieved data, or null if an error occurred.
      */
     public static function joinWhere(string $table, array $joinedTables, Map $joinedTablesLinks, array $cols, ConditionList $conditions, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->join($table, $joinedTables, $joinedTablesLinks->getAllKeys(), $joinedTablesLinks->getAllValues(), $cols, $conditions, $orderBy, $limit, $offset);
         }
 
@@ -203,7 +203,7 @@ final class DataWorker {
      * @return bool True if the insertion was successful, false otherwise.
      */
     public static function insert(string $table, Map $columnValueMap) : bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->insert($table, $columnValueMap->getAllKeys(), $columnValueMap->getAllValues());
         }
 
@@ -222,7 +222,7 @@ final class DataWorker {
      * @return bool True if all insertions were successful, false otherwise.
      */
     public static function insertBatch(string $table, array $columnValueMapList): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             if(!empty($columnValueMapList)) {
                 $cols = $columnValueMapList[0]->getAllKeys();
                 $values = [];
@@ -242,7 +242,7 @@ final class DataWorker {
      * @return int|null The last insert ID, or null if an error occurred.
      */
     public static function getLastInsertId(): ?int {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->getLastInsertId();
         }
 
@@ -261,7 +261,7 @@ final class DataWorker {
      * @return bool True if the update was successful, false otherwise.
      */
     public static function updateWhere(string $table, Map $columnValueMap, ConditionList $conditions) : bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->update($table, $columnValueMap, $conditions);
         }
 
@@ -280,7 +280,7 @@ final class DataWorker {
      * @return bool True if the update was successful, false otherwise.
      */
     public static function updateById(string $table, int $id, Map $columnValueMap): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->update($table, $columnValueMap, ConditionList::new([Condition::equals("id", $id)]));
         }
 
@@ -298,7 +298,7 @@ final class DataWorker {
      * @return bool True if the deletion was successful, false otherwise.
      */
     public static function deleteById(string $table, int $id): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->delete($table, ConditionList::new([Condition::equals("id", $id)]));
         }
 
@@ -316,7 +316,7 @@ final class DataWorker {
      * @return bool True if the deletion was successful, false otherwise.
      */
     public static function deleteWhere(string $table, ConditionList $conditionList): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->delete($table, $conditionList);
         }
 
@@ -334,7 +334,7 @@ final class DataWorker {
      * @return int The number of rows that match the conditions.
      */
     public static function count(string $table, ConditionList $conditionList): int {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->count($table, $conditionList);
         }
 
@@ -351,7 +351,7 @@ final class DataWorker {
      * @return int The total number of rows in the table.
      */
     public static function countAll(string $table): int {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->count($table, null);
         }
 
@@ -369,7 +369,7 @@ final class DataWorker {
      * @return bool True if at least one row exists, false otherwise.
      */
     public static function exists(string $table, ConditionList $conditionList): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->count($table, $conditionList) > 0;
         }
 
@@ -387,7 +387,7 @@ final class DataWorker {
      * @return bool True if a row with the given ID exists, false otherwise.
      */
     public static function existsById(string $table, int $id): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->count($table, ConditionList::new([Condition::equals("id", $id)])) > 0;
         }
 

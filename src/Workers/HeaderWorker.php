@@ -8,7 +8,7 @@ final class HeaderWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
     private static HeaderSlave $slave;
 
     #/ VARIABLES
@@ -18,8 +18,8 @@ final class HeaderWorker {
     #\ INIT
 
     public static function __getToWork(HeaderSlave &$slave): void {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             self::$slave = $slave;
         }
     }
@@ -45,7 +45,7 @@ final class HeaderWorker {
      * @param string $value The value of the header.
      */
     public static function addHeader(string $key, string $value): void {
-        if(self::$busy) {
+        if(self::$ready) {
             self::$slave->addHeader($key, $value);
         }
     }
@@ -56,7 +56,7 @@ final class HeaderWorker {
      * @param string $key The key of the header to remove.
      */
     public static function removeHeader(string $key): void {
-        if(self::$busy) {
+        if(self::$ready) {
             self::$slave->removeHeader($key);
         }
     }

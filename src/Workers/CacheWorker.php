@@ -9,7 +9,7 @@ final class CacheWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
     private static CacheSlave $slave;
 
     #/ VARIABLES
@@ -19,8 +19,8 @@ final class CacheWorker {
     #\ INIT
 
     public static function __getToWork(CacheSlave &$slave): void {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             self::$slave = $slave;
         }
     }
@@ -45,7 +45,7 @@ final class CacheWorker {
      * @return CacheType The cache type (APCU, SHARED, or FILE).
      */
     public static function getUsedType(): CacheType {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->getType();
         }
 
@@ -59,7 +59,7 @@ final class CacheWorker {
      * @return bool True if the item exists.
      */
     public static function exists(string $key): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return match(self::$slave->getType()) {
                 CacheType::APCU => self::$slave->apcuExists($key),
                 CacheType::SHARED => self::$slave->shmopExists($key),
@@ -78,7 +78,7 @@ final class CacheWorker {
      * @return mixed The cached value, or null if not found/expired.
      */
     public static function read(string $key): mixed {
-        if(self::$busy) {
+        if(self::$ready) {
             return match(self::$slave->getType()) {
                 CacheType::APCU => self::$slave->apcuRead($key)["value"] ?? null,
                 CacheType::SHARED => self::$slave->shmopRead($key)["value"] ?? null,
@@ -96,7 +96,7 @@ final class CacheWorker {
      * @return ?array ["value" => mixed, "expires" => int] or null if not found.
      */
     public static function readWithMeta(string $key): ?array {
-        if(self::$busy) {
+        if(self::$ready) {
             return match(self::$slave->getType()) {
                 CacheType::APCU => self::$slave->apcuRead($key),
                 CacheType::SHARED => self::$slave->shmopRead($key),
@@ -116,7 +116,7 @@ final class CacheWorker {
      * @return bool True on success.
      */
     public static function write(string $key, mixed $value, int $expires): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return match(self::$slave->getType()) {
                 CacheType::APCU => self::$slave->apcuWrite($key, $value, $expires),
                 CacheType::SHARED => self::$slave->shmopWrite($key, $value, $expires),
@@ -135,7 +135,7 @@ final class CacheWorker {
      * @return int The incremented value or 0 on failure.
      */
     public static function increment(string $key, int $step = 1): int {
-        if(self::$busy) {
+        if(self::$ready) {
             return match(self::$slave->getType()) {
                 CacheType::APCU => self::$slave->apcuIncrement($key, $step),
                 CacheType::SHARED => self::$slave->shmopIncrement($key, $step),
@@ -154,7 +154,7 @@ final class CacheWorker {
      * @return int The decremented value or 0 on failure.
      */
     public static function decrement(string $key, int $step = 1): int {
-        if(self::$busy) {
+        if(self::$ready) {
             return match(self::$slave->getType()) {
                 CacheType::APCU => self::$slave->apcuIncrement($key, -$step),
                 CacheType::SHARED => self::$slave->shmopIncrement($key, -$step),
@@ -172,7 +172,7 @@ final class CacheWorker {
      * @return bool True if removed successfully.
      */
     public static function remove(string $key): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return match(self::$slave->getType()) {
                 CacheType::APCU => self::$slave->apcuRemove($key),
                 CacheType::SHARED => self::$slave->shmopRemove($key),
@@ -190,7 +190,7 @@ final class CacheWorker {
      * @return bool True on success.
      */
     public static function empty(): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return match(self::$slave->getType()) {
                 CacheType::APCU => self::$slave->apcuEmpty(),
                 CacheType::SHARED => false,
@@ -208,7 +208,7 @@ final class CacheWorker {
      * @param int $power Number of cache files to check for expiry.
      */
     public static function runGarbageCollector(int $power): void {
-        if(self::$busy) {
+        if(self::$ready) {
             match(self::$slave->getType()) {
                 CacheType::FILE => self::$slave->runGarbageCollector($power),
             };

@@ -13,7 +13,7 @@ final class CacheSlave {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
     private CacheType $type = CacheType::FILE;
 
     private const int SHMOP_SEGMENT_SIZE = 1024;
@@ -32,8 +32,8 @@ final class CacheSlave {
      * @return ?CacheSlave The CacheSlave object if it was successfully created, null otherwise.
      */
     public static function zap(): ?CacheSlave {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             $inst = new CacheSlave();
             
             if (function_exists("apcu_enabled") && apcu_enabled()) $inst->type = CacheType::APCU;

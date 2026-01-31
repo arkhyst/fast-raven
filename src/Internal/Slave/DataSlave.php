@@ -17,7 +17,7 @@ final class DataSlave {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
     private ?\PDO $pdo = null;
 
     #/ VARIABLES
@@ -34,8 +34,8 @@ final class DataSlave {
      * @return ?DataSlave The DataSlave object if it was successfully created, null otherwise.
      */
     public static function zap(): ?DataSlave {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             $inst = new DataSlave();
             DataWorker::__getToWork($inst);
 

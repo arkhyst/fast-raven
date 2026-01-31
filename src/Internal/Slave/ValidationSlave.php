@@ -9,7 +9,7 @@ final class ValidationSlave {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -27,8 +27,8 @@ final class ValidationSlave {
      * @return ?ValidationSlave The ValidationSlave object if it was successfully created, null otherwise.
      */
     public static function zap(): ?ValidationSlave {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             $inst = new ValidationSlave();
             ValidationWorker::__getToWork($inst);
 

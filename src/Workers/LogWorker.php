@@ -10,7 +10,7 @@ final class LogWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
     private static LogSlave $slave;
 
     #/ VARIABLES
@@ -20,8 +20,8 @@ final class LogWorker {
     #\ INIT
 
     public static function __getToWork(LogSlave &$slave): void {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             self::$slave = $slave;
         }
     }
@@ -47,7 +47,7 @@ final class LogWorker {
      * @param string $text The text to log.
      */
     public static function log(string $text): void {
-        if(self::$busy) {
+        if(self::$ready) {
             self::$slave->log($text);
         }
     }
@@ -60,7 +60,7 @@ final class LogWorker {
      * @param string $text The error text to log.
      */
     public static function error(string $text): void {
-        if(self::$busy) {
+        if(self::$ready) {
             self::$slave->log("//ERROR// ".$text);
         }
     }
@@ -73,7 +73,7 @@ final class LogWorker {
      * @param string $text The warning text to log.
      */
     public static function warning(string $text): void {
-        if(self::$busy) {
+        if(self::$ready) {
             self::$slave->log("//WARN// ".$text);
         }
     }
@@ -86,7 +86,7 @@ final class LogWorker {
      * @param string $text The debug text to log.
      */
     public static function debug(string $text): void {
-        if(self::$busy && Bee::isDev()) {
+        if(self::$ready && Bee::isDev()) {
             self::$slave->log("/SG/ ".$text);
         }
     }

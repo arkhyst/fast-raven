@@ -13,7 +13,7 @@ final class AuthSlave {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -31,8 +31,8 @@ final class AuthSlave {
      * @return ?AuthSlave The AuthSlave object if it was successfully created, null otherwise.
      */
     public static function zap(): ?AuthSlave {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             $inst = new AuthSlave();
             AuthWorker::__getToWork($inst);
 

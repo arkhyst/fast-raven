@@ -9,7 +9,7 @@ final class AuthWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
     private static AuthSlave $slave;
 
     #/ VARIABLES
@@ -19,8 +19,8 @@ final class AuthWorker {
     #\ INIT
 
     public static function __getToWork(AuthSlave &$slave): void {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             self::$slave = $slave;
         }
     }
@@ -54,7 +54,7 @@ final class AuthWorker {
      * @param array $customData Custom data to store in the session.
      */
     public static function createAuthorization(int $id, array $customData = []): void {
-        if(self::$busy) {
+        if(self::$ready) {
             self::ensureSession();
             self::$slave->createAuthorizedSession($id, $customData, bin2hex(random_bytes(32)));
             LogWorker::debug("Authorized session created for user {$id}.");
@@ -68,7 +68,7 @@ final class AuthWorker {
      * It will then log a message indicating that the authorized session was destroyed.
      */
     public static function destroyAuthorization(): void {
-        if(self::$busy) {
+        if(self::$ready) {
             self::ensureSession();
             self::$slave->destroyAuthorizedSession();
             LogWorker::debug("Authorized session destroyed.");
@@ -88,7 +88,7 @@ final class AuthWorker {
      * @return bool True if the user is authorized and has a valid csrf_token, false otherwise.
      */
     public static function isAuthorized(?Request $request = null): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             self::ensureSession();
             if(self::$slave->validateSession()) {
                 if($request && in_array($request->getMethod(), ["POST", "PUT", "DELETE", "PATCH"], true)) {
@@ -114,7 +114,7 @@ final class AuthWorker {
      * @return ?int The ID of the authorized user if an authorized session exists, null otherwise.
      */
     public static function getAuthorizedUserId(): ?int {
-        if(self::$busy) {
+        if(self::$ready) {
             self::ensureSession();
             if(self::$slave->validateSession()) {
                 return $_SESSION["sgas_uid"];
@@ -137,7 +137,7 @@ final class AuthWorker {
      * @return bool True if the login is successful, false otherwise.
      */
     public static function autologin(?string $user, ?string $pass, string $dbTable = "users", string $dbIdCol = "id", string $dbNameCol = "name", string $dbPassCol = "password"): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             self::ensureSession();
             if(!$user || !$pass) return false;
 
@@ -167,7 +167,7 @@ final class AuthWorker {
      * @return ?string The new CSRF token if the authorized session exists, null otherwise.
      */
     public static function regenerateCSRF(): ?string {
-        if(self::$busy) {
+        if(self::$ready) {
             self::ensureSession();
             if(self::$slave->validateSession()) {
                 LogWorker::debug("CSRF token has been regenerated for user " . self::getAuthorizedUserId());

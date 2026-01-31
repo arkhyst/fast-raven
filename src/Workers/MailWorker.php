@@ -9,7 +9,7 @@ final class MailWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
     private static MailSlave $slave;
 
     #/ VARIABLES
@@ -19,8 +19,8 @@ final class MailWorker {
     #\ INIT
 
     public static function __getToWork(MailSlave &$slave): void {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             self::$slave = $slave;
         }
     }
@@ -50,7 +50,7 @@ final class MailWorker {
      * @return bool True if the email was sent successfully, false otherwise.
      */
     public static function send(Mail $mail, bool $fireAndForget = false): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return $fireAndForget ? self::$slave->fireAndForget($mail) : self::$slave->send($mail);
         }
 

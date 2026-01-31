@@ -19,7 +19,7 @@ final class MailSlave {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
 
     private ?PHPMailer $mailer = null;
     private array $deferredMails = [];
@@ -40,8 +40,8 @@ final class MailSlave {
      * @return ?MailSlave The MailSlave object if it was successfully created, null otherwise.
      */
     public static function zap(): ?MailSlave {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             $inst = new MailSlave();
             MailWorker::__getToWork($inst);
 

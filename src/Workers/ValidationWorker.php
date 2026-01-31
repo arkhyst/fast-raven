@@ -9,7 +9,7 @@ final class ValidationWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
     private static ValidationSlave $slave;
 
     #/ VARIABLES
@@ -19,8 +19,8 @@ final class ValidationWorker {
     #\ INIT
 
     public static function __getToWork(ValidationSlave &$slave): void {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             self::$slave = $slave;
         }
     }
@@ -51,7 +51,7 @@ final class ValidationWorker {
      * @return bool True if the string is valid, false otherwise.
      */
     public static function string(?string $text, array $flags, ?array &$result = null): bool {
-        if(self::$busy && $text !== null) {
+        if(self::$ready && $text !== null) {
             return self::$slave->validateString($text, $flags, $result);
         }
 
@@ -70,7 +70,7 @@ final class ValidationWorker {
      * @return bool True if the number is valid, false otherwise.
      */
     public static function number(int|float|null $number, array $flags, ?array &$result = null): bool {
-        if(self::$busy && $number !== null) {
+        if(self::$ready && $number !== null) {
             return self::$slave->validateNumber($number, $flags, $result);
         }
 
@@ -88,7 +88,7 @@ final class ValidationWorker {
      * @return bool True if the email address is valid, false otherwise.
      */
     public static function email(?string $email): bool {
-        if(self::$busy && $email !== null) {
+        if(self::$ready && $email !== null) {
             return self::$slave->validateEmail($email);
         }
 
@@ -110,7 +110,7 @@ final class ValidationWorker {
      * @return bool True if the phone number is valid, false otherwise.
      */
     public static function phone(?int $countryCode, ?string $phone): bool {
-        if(self::$busy && $countryCode !== null && $phone !== null) {
+        if(self::$ready && $countryCode !== null && $phone !== null) {
             return self::$slave->validatePhone($countryCode, $phone);
         }
 

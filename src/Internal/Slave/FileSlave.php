@@ -12,7 +12,7 @@ final class FileSlave {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
     private int $fileUploadSizeLimit = -1;
 
     #/ VARIABLES
@@ -31,8 +31,8 @@ final class FileSlave {
      * @return ?FileSlave The FileSlave object if it was successfully created, null otherwise.
      */
     public static function zap(int $fileUploadSizeLimit = -1): ?FileSlave {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             $inst = new FileSlave($fileUploadSizeLimit);
             FileWorker::__getToWork($inst);
 

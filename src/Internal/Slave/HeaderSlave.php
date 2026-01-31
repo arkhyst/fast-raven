@@ -8,7 +8,7 @@ final class HeaderSlave {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -26,8 +26,8 @@ final class HeaderSlave {
      * @return ?HeaderSlave The HeaderSlave object if it was successfully created, null otherwise.
      */
     public static function zap(): ?HeaderSlave {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             $inst = new HeaderSlave();
             HeaderWorker::__getToWork($inst);
 

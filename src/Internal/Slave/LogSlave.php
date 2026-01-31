@@ -14,7 +14,7 @@ final class LogSlave {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
     private array $logs = [];
     private string $requestInternalId;
 
@@ -34,8 +34,8 @@ final class LogSlave {
      * @return ?LogSlave The LogSlave object if it was successfully created, null otherwise.
      */
     public static function zap(string $requestInternalId): ?LogSlave {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             $inst = new LogSlave($requestInternalId);
             LogWorker::__getToWork($inst);
 

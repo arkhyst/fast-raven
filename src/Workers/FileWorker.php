@@ -10,7 +10,7 @@ final class FileWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
-    private static bool $busy = false;
+    private static bool $ready = false;
     private static FileSlave $slave;
 
     #/ VARIABLES
@@ -20,8 +20,8 @@ final class FileWorker {
     #\ INIT
 
     public static function __getToWork(FileSlave &$slave): void {
-        if(!self::$busy) {
-            self::$busy = true;
+        if(!self::$ready) {
+            self::$ready = true;
             self::$slave = $slave;
         }
     }
@@ -40,7 +40,7 @@ final class FileWorker {
     #\ METHODS
 
     public static function getUploadFilePath(string $file): ?string {
-        if(self::$busy) { 
+        if(self::$ready) { 
             return self::$slave->getUploadFilePath($file);
         }
 
@@ -48,7 +48,7 @@ final class FileWorker {
     }
 
     public static function exists(string $path): bool {
-        if(self::$busy) { 
+        if(self::$ready) { 
             return self::$slave->exists($path); 
         }
 
@@ -64,7 +64,7 @@ final class FileWorker {
      * @return bool True if the file was successfully uploaded, false otherwise.
      */
     public static function upload(File $file, string $destPath): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->upload($file->getPath(), $destPath);
         }
 
@@ -79,7 +79,7 @@ final class FileWorker {
      * @return ?string File contents, or null if file doesn't exist.
      */
     public static function read(string $path): ?string {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->read($path);
         }
 
@@ -94,7 +94,7 @@ final class FileWorker {
      * @return bool True if file was deleted, false otherwise.
      */
     public static function delete(string $path): bool {
-        if(self::$busy) {
+        if(self::$ready) {
             return self::$slave->delete($path);
         }
 
