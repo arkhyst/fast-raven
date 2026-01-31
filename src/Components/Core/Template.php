@@ -136,12 +136,21 @@ final class Template {
      * Returns the HTML link element containing the favicon of the page.
      *
      * The favicon is retrieved from the public/assets directory.
+     * If the file is an external file (starts with "https://"), it is retrieved from the URL.
      *
      * @return string The HTML link element containing the favicon of the page.
      */
     public function getHtmlFavicon(): string {
-        $html = "<link rel=\"icon\" href=\"/public/assets/img/" . Bee::normalizePath($this->faviconLight) . "\" type=\"image/png\" media=\"(prefers-color-scheme: light)\">";
-        $html .= "<link rel=\"icon\" href=\"/public/assets/img/" . Bee::normalizePath($this->faviconDark) . "\" type=\"image/png\" media=\"(prefers-color-scheme: dark)\">";
+        $html = "";
+        if(str_starts_with($this->faviconLight, "https://"))
+            $html = "<link rel=\"icon\" href=\"" . $this->faviconLight . "\" type=\"image/png\" media=\"(prefers-color-scheme: light)\">";
+        else
+            $html = "<link rel=\"icon\" href=\"/public/assets/img/" . Bee::normalizePath($this->faviconLight) . "\" type=\"image/png\" media=\"(prefers-color-scheme: light)\">";
+        
+        if(str_starts_with($this->faviconDark, "https://"))
+            $html .= "<link rel=\"icon\" href=\"" . $this->faviconDark . "\" type=\"image/png\" media=\"(prefers-color-scheme: dark)\">";
+        else
+            $html .= "<link rel=\"icon\" href=\"/public/assets/img/" . Bee::normalizePath($this->faviconDark) . "\" type=\"image/png\" media=\"(prefers-color-scheme: dark)\">";
         return $html;
     }
 
@@ -149,13 +158,17 @@ final class Template {
      * Returns the HTML link elements containing the stylesheets of the page.
      *
      * The stylesheets are retrieved from the public/resources directory.
+     * If the file is an external file (starts with "https://"), it is retrieved from the URL.
      *
      * @return string The HTML link elements containing the stylesheets of the page.
      */
     public function getHtmlStyles(): string { 
         $html = "";
         foreach ($this->styles as $style) {
-            $html .= "<link rel=\"stylesheet\" href=\"/public/assets/css/" . Bee::normalizePath($style) . "?v=".$this->getVersion()."\">";
+            if(str_starts_with($style, "https://"))
+                $html .= "<link rel=\"stylesheet\" href=\"" . $style . "\">";
+            else
+                $html .= "<link rel=\"stylesheet\" href=\"/public/assets/css/" . Bee::normalizePath($style) . "?v=".$this->getVersion()."\">";
         }
 
         return $html;
@@ -165,13 +178,17 @@ final class Template {
      * Returns the HTML script elements containing the JavaScript files of the page.
      *
      * The JavaScript files are retrieved from the public/resources directory.
+     * If the file is an external file (starts with "https://"), it is retrieved from the URL.
      *
      * @return string The HTML script elements containing the JavaScript files of the page.
      */
     public function getHtmlScripts(): string { 
         $html = "";
         foreach ($this->scripts as $script) {
-            $html .= "<script src=\"/public/assets/js/" . Bee::normalizePath($script) . "?v=".$this->getVersion()."\" type=\"text/javascript\"></script>";
+            if(str_starts_with($script, "https://"))
+                $html .= "<script src=\"" . $script . "\" type=\"text/javascript\"></script>";
+            else
+                $html .= "<script src=\"/public/assets/js/" . Bee::normalizePath($script) . "?v=".$this->getVersion()."\" type=\"text/javascript\"></script>";
         }
 
         return $html;

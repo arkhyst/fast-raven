@@ -3,6 +3,8 @@
 #### Added
 - Template::setErrorPage() for linking an error page to a specific error code.
 - Configurable shmop max size via SHMOP_MAX_SIZE environment variable.
+- Support for external scripts and styles in Template::addScript() and Template::addStyle().
+- Support for external favicons in Template::setFavicon() and Template::setFaviconLight() and Template::setFaviconDark().
 
 #### Changed
 - Template::addData() now accepts string parameters instead of Pair objects.

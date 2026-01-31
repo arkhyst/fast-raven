@@ -204,12 +204,12 @@ return $template;
 |--------|-------------|
 | `new(file, title, version)` | Create new template |
 | `setFile/setTitle/setVersion` | Setters with chaining |
-| `setFavicon(filename)` | Set favicon for both light/dark mode |
-| `setFaviconLight/setFaviconDark(filename)` | Set mode-specific favicons |
+| `setFavicon(favicon)` | Set favicon for both light/dark mode from public/assets/img/ OR external URL (starts with https://) |
+| `setFaviconLight/setFaviconDark(favicon)` | Set mode-specific favicons from public/assets/img/ OR external URL (starts with https://) |
 | `setLangFile(filename)` | Set language CSV file (without .csv extension) |
 | `setDefaultLang(lang)` | Set default language column to use |
-| `addStyle(filename)` | Add CSS file from public/assets/css/ |
-| `addScript(filename)` | Add JS file from public/assets/js/ |
+| `addStyle(style)` | Add CSS file from public/assets/css/ OR external URL (starts with https://) |
+| `addScript(script)` | Add JS file from public/assets/js/ OR external URL (starts with https://) |
 | `setBeforeFragments(array)` | Fragments to render before main content |
 | `setAfterFragments(array)` | Fragments to render after main content |
 | `addData(key, value)` | Add data for template rendering |
