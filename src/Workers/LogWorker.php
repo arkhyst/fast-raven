@@ -4,6 +4,8 @@ namespace FastRaven\Workers;
 
 use FastRaven\Internal\Slave\LogSlave;
 
+use FastRaven\Bee;
+
 final class LogWorker {
     #----------------------------------------------------------------------
     #\ VARIABLES
