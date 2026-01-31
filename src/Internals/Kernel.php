@@ -1,22 +1,22 @@
 <?php
 
-namespace FastRaven\Internal\Core;
+namespace FastRaven\Internals;
 
 use FastRaven\Exceptions\DeveloperException;
-use FastRaven\Workers\AuthWorker;
-use FastRaven\Workers\FileWorker;
-use FastRaven\Workers\HeaderWorker;
-use FastRaven\Workers\CacheWorker;
+use FastRaven\Services\AuthService;
+use FastRaven\Services\FileService;
+use FastRaven\Services\HeaderService;
+use FastRaven\Services\CacheService;
 use FastRaven\Bee;
 
-use FastRaven\Internal\Slave\LogSlave;
-use FastRaven\Internal\Slave\HeaderSlave;
-use FastRaven\Internal\Slave\AuthSlave;
-use FastRaven\Internal\Slave\DataSlave;
-use FastRaven\Internal\Slave\ValidationSlave;
-use FastRaven\Internal\Slave\MailSlave;
-use FastRaven\Internal\Slave\FileSlave;
-use FastRaven\Internal\Slave\CacheSlave;
+use FastRaven\Internals\Engines\LogEngine;
+use FastRaven\Internals\Engines\HeaderEngine;
+use FastRaven\Internals\Engines\AuthEngine;
+use FastRaven\Internals\Engines\DataEngine;
+use FastRaven\Internals\Engines\ValidationEngine;
+use FastRaven\Internals\Engines\MailEngine;
+use FastRaven\Internals\Engines\FileEngine;
+use FastRaven\Internals\Engines\CacheEngine;
 
 use FastRaven\Components\Core\Config;
 use FastRaven\Components\Http\Response;
@@ -55,14 +55,14 @@ final class Kernel {
     private Router $apiRouter;
     private Router $cdnRouter;
 
-    private LogSlave $logSlave;
-    private HeaderSlave $headerSlave;
-    private AuthSlave $authSlave;
-    private DataSlave $dataSlave;
-    private ValidationSlave $validationSlave;
-    private MailSlave $mailSlave;
-    private FileSlave $fileSlave;
-    private CacheSlave $cacheSlave;
+    private LogEngine $logEngine;
+    private HeaderEngine $headerEngine;
+    private AuthEngine $authEngine;
+    private DataEngine $dataEngine;
+    private ValidationEngine $validationEngine;
+    private MailEngine $mailEngine;
+    private FileEngine $fileEngine;
+    private CacheEngine $cacheEngine;
 
     private float $startRequestTime;
     private int $rateLimitRemaining = 0;
@@ -122,11 +122,11 @@ final class Kernel {
         if ($limit > 0) {
             $rateLimitID = Bee::getCacheKey("ratelimit", $_SERVER["REMOTE_ADDR"]);
             
-            $cacheItem = CacheWorker::readWithMeta($rateLimitID);
+            $cacheItem = CacheService::readWithMeta($rateLimitID);
             $newValue = ($cacheItem["value"] ?? 0) + 1;
             $expires = $cacheItem["expires"] ?? time() + 60;
             
-            CacheWorker::write($rateLimitID, $newValue, $cacheItem ? max(1, $expires - time()) : 60);
+            CacheService::write($rateLimitID, $newValue, $cacheItem ? max(1, $expires - time()) : 60);
             $this->rateLimitRemaining = $limit - $newValue;
             $this->rateLimitTimeRemaining = max(0, $expires - time());
 
@@ -171,34 +171,34 @@ final class Kernel {
         );
         
         if($this->config->isPrivacyRegisterLogs()) {
-            $this->logSlave = LogSlave::zap($this->request->getInternalID());
-            $this->logSlave->writeOpenLogs($this->request);
+            $this->logEngine = LogEngine::zap($this->request->getInternalID());
+            $this->logEngine->writeOpenLogs($this->request);
         }
 
-        $this->cacheSlave = CacheSlave::zap();
+        $this->cacheEngine = CacheEngine::zap();
 
         if(!$this->handleRateLimit($this->config->getRateLimit($this->request->getType())))
             throw new RateLimitExceededException($this->request->getRemoteAddress(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
 
-        $this->authSlave = AuthSlave::zap();
-        $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->isAuthGlobal());
+        $this->authEngine = AuthEngine::zap();
+        $this->authEngine->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->isAuthGlobal());
         
-        $this->headerSlave = HeaderSlave::zap();
-        $this->headerSlave->writeSecurityHeaders($_SERVER["HTTPS"], $this->nonce);
-        $this->headerSlave->writeUtilityHeaders($this->request->getType() === EndpointType::API);
-        $this->headerSlave->writeRateLimitHeaders($this->config->getRateLimit($this->request->getType()), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
+        $this->headerEngine = HeaderEngine::zap();
+        $this->headerEngine->writeSecurityHeaders($_SERVER["HTTPS"], $this->nonce);
+        $this->headerEngine->writeUtilityHeaders($this->request->getType() === EndpointType::API);
+        $this->headerEngine->writeRateLimitHeaders($this->config->getRateLimit($this->request->getType()), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
 
         if($this->config->isRestricted()) {
-            if(!AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException(true);
+            if(!AuthService::isAuthorized($this->request)) throw new NotAuthorizedException(true);
         }
 
-        $this->dataSlave = DataSlave::zap();
+        $this->dataEngine = DataEngine::zap();
 
-        $this->validationSlave = ValidationSlave::zap();
+        $this->validationEngine = ValidationEngine::zap();
 
-        $this->mailSlave = MailSlave::zap();
+        $this->mailEngine = MailEngine::zap();
 
-        $this->fileSlave = FileSlave::zap($this->config->getLengthLimitFileUpload());
+        $this->fileEngine = FileEngine::zap($this->config->getLengthLimitFileUpload());
     }
 
     /**
@@ -225,7 +225,7 @@ final class Kernel {
         };
 
         if(!$this->handleRateLimit($router->getLimitPerMinute())) {
-            $this->headerSlave->writeRateLimitHeaders($router->getLimitPerMinute(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
+            $this->headerEngine->writeRateLimitHeaders($router->getLimitPerMinute(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
             throw new RateLimitExceededException($this->request->getRemoteAddress(), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
         }
 
@@ -233,7 +233,7 @@ final class Kernel {
         if(!$endpoint) throw new NotFoundException();
         
         if($endpoint->getRestricted())
-            if(!AuthWorker::isAuthorized($this->request)) throw new NotAuthorizedException();
+            if(!AuthService::isAuthorized($this->request)) throw new NotAuthorizedException();
 
         if($endpoint->getMiddlewareId() !== "") {
             $middleware = $this->middleware->get($endpoint->getMiddlewareId());
@@ -270,8 +270,8 @@ final class Kernel {
 
             if($this->request->getType() === EndpointType::CDN) {
                 $cdnFilePath = $response->getFrameworkMetadata()["path"];
-                if(!FileWorker::exists($cdnFilePath)) throw new UploadedFileNotFoundException(FileWorker::getUploadFilePath($cdnFilePath));
-                $response = File::new("cdn_file", FileWorker::getUploadFilePath($cdnFilePath));
+                if(!FileService::exists($cdnFilePath)) throw new UploadedFileNotFoundException(FileService::getUploadFilePath($cdnFilePath));
+                $response = File::new("cdn_file", FileService::getUploadFilePath($cdnFilePath));
             }
         }
 
@@ -293,20 +293,20 @@ final class Kernel {
         http_response_code($statusCode);
 
         if($response instanceof Template) {
-            HeaderWorker::addHeader("Content-Type", "text/html; charset=utf-8");
+            HeaderService::addHeader("Content-Type", "text/html; charset=utf-8");
             $template = $response;
             $nonce = $this->nonce;
-            require_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
+            require_once __DIR__ . DIRECTORY_SEPARATOR . "View" . DIRECTORY_SEPARATOR . "main.php";
         } else if ($response instanceof Response) {
-            HeaderWorker::addHeader("Content-Type", "application/json; charset=utf-8");
+            HeaderService::addHeader("Content-Type", "application/json; charset=utf-8");
             echo json_encode([
                 "success" => $response->getSuccess(),
                 "msg" => $response->getMessage(),
                 "data" => $response->getData()
             ]);
         } elseif($response instanceof File) {
-            HeaderWorker::addHeader("Content-Type", $response->getType()->value);
-            HeaderWorker::addHeader("Content-Length", filesize($response->getPath()));
+            HeaderService::addHeader("Content-Type", $response->getType()->value);
+            HeaderService::addHeader("Content-Length", filesize($response->getPath()));
             readfile($response->getPath());
         }
         
@@ -317,17 +317,17 @@ final class Kernel {
         $diff = microtime(true) - $this->startRequestTime;
         $elapsedTime = round(($diff - floor($diff)) * 1000);
 
-        if($this->mailSlave) {
-            $this->mailSlave->processDeferredMails();
+        if($this->mailEngine) {
+            $this->mailEngine->processDeferredMails();
         }
 
-        if($this->logSlave) {
-            $this->logSlave->writeCloseLogs($elapsedTime, $statusCode);
-            $this->logSlave->dumpLogsIntoFile();
+        if($this->logEngine) {
+            $this->logEngine->writeCloseLogs($elapsedTime, $statusCode);
+            $this->logEngine->dumpLogsIntoFile();
         }
         
         if (random_int(0, 100) < $this->config->getCacheFileGCProbability()) { 
-            CacheWorker::runGarbageCollector($this->config->getCacheFileGCPower());
+            CacheService::runGarbageCollector($this->config->getCacheFileGCPower());
         }
     }
 

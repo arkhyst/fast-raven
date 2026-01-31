@@ -1,15 +1,15 @@
 <?php
 
-namespace FastRaven\Internal\Slave;
+namespace FastRaven\Internals\Engines;
 
-use FastRaven\Workers\AuthWorker;
-use FastRaven\Workers\DataWorker;
+use FastRaven\Services\AuthService;
+use FastRaven\Services\DataService;
 use FastRaven\Components\Data\ConditionList;
 use FastRaven\Components\Data\Condition;
 
 use FastRaven\Bee;
 
-final class AuthSlave {
+final class AuthEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
@@ -22,19 +22,19 @@ final class AuthSlave {
     #\ INIT
 
     /**
-     * Initialize the AuthSlave.
+     * Initialize the AuthEngine.
      *
-     * This function will create a new AuthSlave if it is not already busy.
-     * It will then call AuthWorker::__getToWork() and pass the new AuthSlave object.
-     * The new AuthSlave object will be returned.
+     * This function will create a new AuthEngine if it is not already busy.
+     * It will then call AuthService::__getToWork() and pass the new AuthEngine object.
+     * The new AuthEngine object will be returned.
      *
-     * @return ?AuthSlave The AuthSlave object if it was successfully created, null otherwise.
+     * @return ?AuthEngine The AuthEngine object if it was successfully created, null otherwise.
      */
-    public static function zap(): ?AuthSlave {
+    public static function zap(): ?AuthEngine {
         if(!self::$ready) {
             self::$ready = true;
-            $inst = new AuthSlave();
-            AuthWorker::__getToWork($inst);
+            $inst = new AuthEngine();
+            AuthService::__getToWork($inst);
 
             return $inst;
         }
@@ -181,7 +181,7 @@ final class AuthSlave {
      * @return ?int The user's ID if the credentials are valid, null otherwise.
      */
     public function checkCredentials(string $user, string $pass, string $dbTable, string $dbIdCol, string $dbNameCol, string $dbPassCol): ?int {
-        $data = DataWorker::selectOneWhere($dbTable, [$dbIdCol, $dbNameCol, $dbPassCol], ConditionList::new([
+        $data = DataService::selectOneWhere($dbTable, [$dbIdCol, $dbNameCol, $dbPassCol], ConditionList::new([
            Condition::equals($dbNameCol, $user)
         ]));
 

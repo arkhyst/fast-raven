@@ -2,8 +2,8 @@
 
 namespace FastRaven\Components\Core;
 
-use FastRaven\Workers\AuthWorker;
-use FastRaven\Workers\CacheWorker;
+use FastRaven\Services\AuthService;
+use FastRaven\Services\CacheService;
 use FastRaven\Bee;
 
 use FastRaven\Components\Data\Map;
@@ -204,11 +204,11 @@ final class Template {
     public function getHtmlLang(): string {
         $cacheKey = Bee::getCacheKey("lang", $this->langFile);
 
-        if(Bee::isDev()) CacheWorker::remove($cacheKey);
-        $langData = CacheWorker::read($cacheKey);
+        if(Bee::isDev()) CacheService::remove($cacheKey);
+        $langData = CacheService::read($cacheKey);
         if ($langData === null) {
             $langData = Bee::parseCSV(Bee::buildProjectPath(ProjectFolderType::SRC_WEB_ASSETS_LANG, $this->langFile . ".csv"));
-            CacheWorker::write($cacheKey, $langData, 86400);
+            CacheService::write($cacheKey, $langData, 86400);
         }
         
         return "<script type=\"application/json\" id=\"__lang-internal\">" . json_encode($langData, JSON_UNESCAPED_UNICODE) . "</script>";
@@ -222,7 +222,7 @@ final class Template {
      * @return string The HTML script element containing the CSRF token of the page.
      */
     public function getHtmlCSRF(): string {
-        if(AuthWorker::isAuthorized()) return "<meta name=\"csrf-token\" content=\"" . $_SESSION["sgas_csrf"] . "\">";
+        if(AuthService::isAuthorized()) return "<meta name=\"csrf-token\" content=\"" . $_SESSION["sgas_csrf"] . "\">";
         
         return "";
     }

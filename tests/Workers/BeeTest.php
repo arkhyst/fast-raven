@@ -1,6 +1,6 @@
 <?php
 
-namespace FastRaven\Tests\Workers;
+namespace FastRaven\Tests\Services;
 
 use PHPUnit\Framework\TestCase;
 use FastRaven\Bee;

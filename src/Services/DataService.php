@@ -1,19 +1,19 @@
 <?php
 
-namespace FastRaven\Workers;
+namespace FastRaven\Services;
 
 use FastRaven\Components\Data\ConditionList;
-use FastRaven\Internal\Slave\DataSlave;
+use FastRaven\Internals\Engines\DataEngine;
 
 use FastRaven\Components\Data\Map;
 use FastRaven\Components\Data\Condition;
 
-final class DataWorker {
+final class DataService {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
     private static bool $ready = false;
-    private static DataSlave $slave;
+    private static DataEngine $engine;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -21,10 +21,10 @@ final class DataWorker {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public static function __getToWork(DataSlave &$slave): void {
+    public static function __getToWork(DataEngine &$engine): void {
         if(!self::$ready) {
             self::$ready = true;
-            self::$slave = $slave;
+            self::$engine = $engine;
         }
     }
 
@@ -54,7 +54,7 @@ final class DataWorker {
      */
     public static function sql(string $query, array $vars = []): array|bool|int|null {
         if(self::$ready) {
-            return self::$slave->raw($query, $vars);
+            return self::$engine->raw($query, $vars);
         }
 
         return false;
@@ -75,7 +75,7 @@ final class DataWorker {
      */
     public static function select(string $table, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
         if(self::$ready) {
-            return self::$slave->select($table, $cols, null, $orderBy, $limit, $offset);
+            return self::$engine->select($table, $cols, null, $orderBy, $limit, $offset);
         }
 
         return null;
@@ -97,7 +97,7 @@ final class DataWorker {
      */
     public static function selectWhere(string $table, array $cols, ConditionList $conditions, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
         if(self::$ready) {
-            return self::$slave->select($table, $cols, $conditions, $orderBy, $limit, $offset);
+            return self::$engine->select($table, $cols, $conditions, $orderBy, $limit, $offset);
         }
 
         return null;
@@ -116,7 +116,7 @@ final class DataWorker {
      */
     public static function selectOneWhere(string $table, array $cols, ConditionList $conditions): ?array {
         if(self::$ready) {
-            return self::$slave->select($table, $cols, $conditions, "", 1)[0] ?? null;
+            return self::$engine->select($table, $cols, $conditions, "", 1)[0] ?? null;
         }
 
         return null;
@@ -135,7 +135,7 @@ final class DataWorker {
      */
     public static function selectOneById(string $table, array $cols, int $id): ?array {
         if(self::$ready) {
-            return self::$slave->select($table, $cols, ConditionList::new([Condition::equals("id", $id)]), "", 1)[0] ?? null;
+            return self::$engine->select($table, $cols, ConditionList::new([Condition::equals("id", $id)]), "", 1)[0] ?? null;
         }
 
         return null;
@@ -160,7 +160,7 @@ final class DataWorker {
      */
     public static function join(string $table, array $joinedTables, Map $joinedTablesLinks, array $cols, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
         if(self::$ready) {
-            return self::$slave->join($table, $joinedTables, $joinedTablesLinks->getAllKeys(), $joinedTablesLinks->getAllValues(), $cols, null, $orderBy, $limit, $offset);
+            return self::$engine->join($table, $joinedTables, $joinedTablesLinks->getAllKeys(), $joinedTablesLinks->getAllValues(), $cols, null, $orderBy, $limit, $offset);
         }
 
         return null;
@@ -186,7 +186,7 @@ final class DataWorker {
      */
     public static function joinWhere(string $table, array $joinedTables, Map $joinedTablesLinks, array $cols, ConditionList $conditions, string $orderBy = "", int $limit = 0, int $offset = 0): ?array {
         if(self::$ready) {
-            return self::$slave->join($table, $joinedTables, $joinedTablesLinks->getAllKeys(), $joinedTablesLinks->getAllValues(), $cols, $conditions, $orderBy, $limit, $offset);
+            return self::$engine->join($table, $joinedTables, $joinedTablesLinks->getAllKeys(), $joinedTablesLinks->getAllValues(), $cols, $conditions, $orderBy, $limit, $offset);
         }
 
         return null;
@@ -204,7 +204,7 @@ final class DataWorker {
      */
     public static function insert(string $table, Map $columnValueMap) : bool {
         if(self::$ready) {
-            return self::$slave->insert($table, $columnValueMap->getAllKeys(), $columnValueMap->getAllValues());
+            return self::$engine->insert($table, $columnValueMap->getAllKeys(), $columnValueMap->getAllValues());
         }
 
         return false;
@@ -229,7 +229,7 @@ final class DataWorker {
                 foreach($columnValueMapList as $columnValueMap) {
                     $values[] = $columnValueMap->getAllValues();
                 }
-                return self::$slave->insertBatch($table, $cols, $values);
+                return self::$engine->insertBatch($table, $cols, $values);
             }
         }
 
@@ -243,7 +243,7 @@ final class DataWorker {
      */
     public static function getLastInsertId(): ?int {
         if(self::$ready) {
-            return self::$slave->getLastInsertId();
+            return self::$engine->getLastInsertId();
         }
 
         return null;
@@ -262,7 +262,7 @@ final class DataWorker {
      */
     public static function updateWhere(string $table, Map $columnValueMap, ConditionList $conditions) : bool {
         if(self::$ready) {
-            return self::$slave->update($table, $columnValueMap, $conditions);
+            return self::$engine->update($table, $columnValueMap, $conditions);
         }
 
         return false;
@@ -281,7 +281,7 @@ final class DataWorker {
      */
     public static function updateById(string $table, int $id, Map $columnValueMap): bool {
         if(self::$ready) {
-            return self::$slave->update($table, $columnValueMap, ConditionList::new([Condition::equals("id", $id)]));
+            return self::$engine->update($table, $columnValueMap, ConditionList::new([Condition::equals("id", $id)]));
         }
 
         return false;
@@ -299,7 +299,7 @@ final class DataWorker {
      */
     public static function deleteById(string $table, int $id): bool {
         if(self::$ready) {
-            return self::$slave->delete($table, ConditionList::new([Condition::equals("id", $id)]));
+            return self::$engine->delete($table, ConditionList::new([Condition::equals("id", $id)]));
         }
 
         return false;
@@ -317,7 +317,7 @@ final class DataWorker {
      */
     public static function deleteWhere(string $table, ConditionList $conditionList): bool {
         if(self::$ready) {
-            return self::$slave->delete($table, $conditionList);
+            return self::$engine->delete($table, $conditionList);
         }
 
         return false;   
@@ -335,7 +335,7 @@ final class DataWorker {
      */
     public static function count(string $table, ConditionList $conditionList): int {
         if(self::$ready) {
-            return self::$slave->count($table, $conditionList);
+            return self::$engine->count($table, $conditionList);
         }
 
         return 0;
@@ -352,7 +352,7 @@ final class DataWorker {
      */
     public static function countAll(string $table): int {
         if(self::$ready) {
-            return self::$slave->count($table, null);
+            return self::$engine->count($table, null);
         }
 
         return 0;
@@ -370,7 +370,7 @@ final class DataWorker {
      */
     public static function exists(string $table, ConditionList $conditionList): bool {
         if(self::$ready) {
-            return self::$slave->count($table, $conditionList) > 0;
+            return self::$engine->count($table, $conditionList) > 0;
         }
 
         return false;
@@ -388,7 +388,7 @@ final class DataWorker {
      */
     public static function existsById(string $table, int $id): bool {
         if(self::$ready) {
-            return self::$slave->count($table, ConditionList::new([Condition::equals("id", $id)])) > 0;
+            return self::$engine->count($table, ConditionList::new([Condition::equals("id", $id)])) > 0;
         }
 
         return false;

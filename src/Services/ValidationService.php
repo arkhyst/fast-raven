@@ -1,16 +1,16 @@
 <?php
 
-namespace FastRaven\Workers;
+namespace FastRaven\Services;
 
-use FastRaven\Internal\Slave\ValidationSlave;
+use FastRaven\Internals\Engines\ValidationEngine;
 use FastRaven\Types\ValidationType;
 
-final class ValidationWorker {
+final class ValidationService {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
     private static bool $ready = false;
-    private static ValidationSlave $slave;
+    private static ValidationEngine $engine;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -18,10 +18,10 @@ final class ValidationWorker {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public static function __getToWork(ValidationSlave &$slave): void {
+    public static function __getToWork(ValidationEngine &$engine): void {
         if(!self::$ready) {
             self::$ready = true;
-            self::$slave = $slave;
+            self::$engine = $engine;
         }
     }
 
@@ -52,7 +52,7 @@ final class ValidationWorker {
      */
     public static function string(?string $text, array $flags, ?array &$result = null): bool {
         if(self::$ready && $text !== null) {
-            return self::$slave->validateString($text, $flags, $result);
+            return self::$engine->validateString($text, $flags, $result);
         }
 
         return false;
@@ -71,7 +71,7 @@ final class ValidationWorker {
      */
     public static function number(int|float|null $number, array $flags, ?array &$result = null): bool {
         if(self::$ready && $number !== null) {
-            return self::$slave->validateNumber($number, $flags, $result);
+            return self::$engine->validateNumber($number, $flags, $result);
         }
 
         return false;
@@ -89,7 +89,7 @@ final class ValidationWorker {
      */
     public static function email(?string $email): bool {
         if(self::$ready && $email !== null) {
-            return self::$slave->validateEmail($email);
+            return self::$engine->validateEmail($email);
         }
 
         return false;
@@ -111,7 +111,7 @@ final class ValidationWorker {
      */
     public static function phone(?int $countryCode, ?string $phone): bool {
         if(self::$ready && $countryCode !== null && $phone !== null) {
-            return self::$slave->validatePhone($countryCode, $phone);
+            return self::$engine->validatePhone($countryCode, $phone);
         }
 
         return false;

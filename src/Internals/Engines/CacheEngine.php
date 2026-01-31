@@ -1,15 +1,15 @@
 <?php
 
-namespace FastRaven\Internal\Slave;
+namespace FastRaven\Internals\Engines;
 
-use FastRaven\Workers\CacheWorker;
+use FastRaven\Services\CacheService;
 use FastRaven\Bee;
 
 use FastRaven\Types\CacheType;
 use FastRaven\Types\ProjectFolderType;
-use FastRaven\Workers\LogWorker;
+use FastRaven\Services\LogService;
 
-final class CacheSlave {
+final class CacheEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
@@ -26,21 +26,21 @@ final class CacheSlave {
     #\ INIT
 
     /**
-     * Initializes the CacheSlave if it is not already busy.
+     * Initializes the CacheEngine if it is not already busy.
      * Auto-detects the best available backend: APCu > shmop > File.
      * 
-     * @return ?CacheSlave The CacheSlave object if it was successfully created, null otherwise.
+     * @return ?CacheEngine The CacheEngine object if it was successfully created, null otherwise.
      */
-    public static function zap(): ?CacheSlave {
+    public static function zap(): ?CacheEngine {
         if(!self::$ready) {
             self::$ready = true;
-            $inst = new CacheSlave();
+            $inst = new CacheEngine();
             
             if (function_exists("apcu_enabled") && apcu_enabled()) $inst->type = CacheType::APCU;
             elseif (function_exists("shmop_open")) $inst->type = CacheType::SHARED;
             else $inst->type = CacheType::FILE;
 
-            CacheWorker::__getToWork($inst);
+            CacheService::__getToWork($inst);
             return $inst;
         }
 
@@ -289,7 +289,7 @@ final class CacheSlave {
                     return $res !== false;
                 }
             } else {
-                LogWorker::warning("Could not write cache key '{$key}'. Data exceeds maximum configured shmop size.");
+                LogService::warning("Could not write cache key '{$key}'. Data exceeds maximum configured shmop size.");
             }
             
             return false;

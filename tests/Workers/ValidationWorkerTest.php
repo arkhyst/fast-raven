@@ -1,19 +1,19 @@
 <?php
 
-namespace FastRaven\Tests\Workers;
+namespace FastRaven\Tests\Services;
 
 use PHPUnit\Framework\TestCase;
-use FastRaven\Workers\ValidationWorker;
-use FastRaven\Internal\Slave\ValidationSlave;
+use FastRaven\Services\ValidationService;
+use FastRaven\Internals\Engines\ValidationEngine;
 use FastRaven\Types\ValidationType;
 
-class ValidationWorkerTest extends TestCase
+class ValidationServiceTest extends TestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
-        // Initialize ValidationSlave for each test
-        ValidationSlave::zap();
+        // Initialize ValidationEngine for each test
+        ValidationEngine::zap();
     }
 
     #----------------------------------------------------------------------
@@ -24,7 +24,7 @@ class ValidationWorkerTest extends TestCase
      */
     public function testEmailValidatesCorrectEmails(string $email): void
     {
-        $result = ValidationWorker::email($email);
+        $result = ValidationService::email($email);
 
         $this->assertTrue($result);
     }
@@ -49,7 +49,7 @@ class ValidationWorkerTest extends TestCase
      */
     public function testEmailRejectsInvalidEmails(string $email): void
     {
-        $result = ValidationWorker::email($email);
+        $result = ValidationService::email($email);
 
         $this->assertFalse($result);
     }
@@ -72,7 +72,7 @@ class ValidationWorkerTest extends TestCase
 
     public function testEmailReturnsFalseForNull(): void
     {
-        $result = ValidationWorker::email(null);
+        $result = ValidationService::email(null);
 
         $this->assertFalse($result);
     }
@@ -98,7 +98,7 @@ class ValidationWorkerTest extends TestCase
         ];
         $text = 'Passw0rd!';
 
-        $result = ValidationWorker::string($text, $flags);
+        $result = ValidationService::string($text, $flags);
 
         $this->assertTrue($result);
     }
@@ -108,7 +108,7 @@ class ValidationWorkerTest extends TestCase
         $flags = [ValidationType::MIN_LENGTH->value => 8];
         $text = 'short';
 
-        $result = ValidationWorker::string($text, $flags);
+        $result = ValidationService::string($text, $flags);
 
         $this->assertFalse($result);
     }
@@ -118,7 +118,7 @@ class ValidationWorkerTest extends TestCase
         $flags = [ValidationType::MAX_LENGTH->value => 10];
         $text = 'thisstringistoolong';
 
-        $result = ValidationWorker::string($text, $flags);
+        $result = ValidationService::string($text, $flags);
 
         $this->assertFalse($result);
     }
@@ -128,7 +128,7 @@ class ValidationWorkerTest extends TestCase
         $flags = [ValidationType::MIN_DIGITS->value => 1];
         $text = 'NoDigitsHere';
 
-        $result = ValidationWorker::string($text, $flags);
+        $result = ValidationService::string($text, $flags);
 
         $this->assertFalse($result);
     }
@@ -138,7 +138,7 @@ class ValidationWorkerTest extends TestCase
         $flags = [ValidationType::MIN_SPECIAL->value => 1];
         $text = 'NoSpecialChars123';
 
-        $result = ValidationWorker::string($text, $flags);
+        $result = ValidationService::string($text, $flags);
 
         $this->assertFalse($result);
     }
@@ -148,7 +148,7 @@ class ValidationWorkerTest extends TestCase
         $flags = [ValidationType::MIN_LOWERCASE->value => 1];
         $text = 'ALLUPPERCASE123!';
 
-        $result = ValidationWorker::string($text, $flags);
+        $result = ValidationService::string($text, $flags);
 
         $this->assertFalse($result);
     }
@@ -158,7 +158,7 @@ class ValidationWorkerTest extends TestCase
         $flags = [ValidationType::MIN_UPPERCASE->value => 1];
         $text = 'alllowercase123!';
 
-        $result = ValidationWorker::string($text, $flags);
+        $result = ValidationService::string($text, $flags);
 
         $this->assertFalse($result);
     }
@@ -168,7 +168,7 @@ class ValidationWorkerTest extends TestCase
         $flags = [ValidationType::MIN_LENGTH->value => 8];
         $text = 'exactly8';
 
-        $result = ValidationWorker::string($text, $flags);
+        $result = ValidationService::string($text, $flags);
 
         $this->assertTrue($result);
     }
@@ -178,7 +178,7 @@ class ValidationWorkerTest extends TestCase
         $flags = [ValidationType::MAX_LENGTH->value => 10];
         $text = '1234567890';
 
-        $result = ValidationWorker::string($text, $flags);
+        $result = ValidationService::string($text, $flags);
 
         $this->assertTrue($result);
     }
@@ -187,7 +187,7 @@ class ValidationWorkerTest extends TestCase
     {
         $flags = [];
 
-        $result = ValidationWorker::string(null, $flags);
+        $result = ValidationService::string(null, $flags);
 
         $this->assertFalse($result);
     }
@@ -197,7 +197,7 @@ class ValidationWorkerTest extends TestCase
         $flags = [];
         $text = 'пароль密码🔒';
 
-        $result = ValidationWorker::string($text, $flags);
+        $result = ValidationService::string($text, $flags);
 
         $this->assertTrue($result);
     }
@@ -207,7 +207,7 @@ class ValidationWorkerTest extends TestCase
         $flags = [ValidationType::MIN_DIGITS->value => 3];
         $text = 'text123';
 
-        $result = ValidationWorker::string($text, $flags);
+        $result = ValidationService::string($text, $flags);
 
         $this->assertTrue($result);
     }
@@ -217,7 +217,7 @@ class ValidationWorkerTest extends TestCase
         $flags = [ValidationType::MIN_DIGITS->value => 3];
         $text = 'text12';
 
-        $result = ValidationWorker::string($text, $flags);
+        $result = ValidationService::string($text, $flags);
 
         $this->assertFalse($result);
     }
@@ -231,7 +231,7 @@ class ValidationWorkerTest extends TestCase
         $text = 'abc1'; // Length 4 (fail), Digits 1 (fail)
         $details = [];
 
-        $result = ValidationWorker::string($text, $flags, $details);
+        $result = ValidationService::string($text, $flags, $details);
 
         $this->assertFalse($result);
         $this->assertArrayHasKey(ValidationType::MIN_LENGTH->value, $details);
@@ -241,7 +241,7 @@ class ValidationWorkerTest extends TestCase
         
         // Test mixed success
         $text = 'abc12'; // Length 5 (pass), Digits 2 (pass)
-        $result = ValidationWorker::string($text, $flags, $details);
+        $result = ValidationService::string($text, $flags, $details);
         $this->assertTrue($result);
         $this->assertTrue($details[ValidationType::MIN_LENGTH->value]);
         $this->assertTrue($details[ValidationType::MIN_DIGITS->value]);
@@ -264,7 +264,7 @@ class ValidationWorkerTest extends TestCase
         ];
         $number = 30;
 
-        $result = ValidationWorker::number($number, $flags);
+        $result = ValidationService::number($number, $flags);
 
         $this->assertTrue($result);
     }
@@ -277,7 +277,7 @@ class ValidationWorkerTest extends TestCase
         ];
         $number = 17;
 
-        $result = ValidationWorker::number($number, $flags);
+        $result = ValidationService::number($number, $flags);
 
         $this->assertFalse($result);
     }
@@ -290,7 +290,7 @@ class ValidationWorkerTest extends TestCase
         ];
         $number = 66;
 
-        $result = ValidationWorker::number($number, $flags);
+        $result = ValidationService::number($number, $flags);
 
         $this->assertFalse($result);
     }
@@ -303,7 +303,7 @@ class ValidationWorkerTest extends TestCase
         ];
         $number = 18;
 
-        $result = ValidationWorker::number($number, $flags);
+        $result = ValidationService::number($number, $flags);
 
         $this->assertTrue($result);
     }
@@ -316,7 +316,7 @@ class ValidationWorkerTest extends TestCase
         ];
         $number = 65;
 
-        $result = ValidationWorker::number($number, $flags);
+        $result = ValidationService::number($number, $flags);
 
         $this->assertTrue($result);
     }
@@ -328,7 +328,7 @@ class ValidationWorkerTest extends TestCase
             ValidationType::MAX_NUMBER->value => 65
         ];
 
-        $result = ValidationWorker::number(null, $flags);
+        $result = ValidationService::number(null, $flags);
 
         $this->assertFalse($result);
     }
@@ -340,7 +340,7 @@ class ValidationWorkerTest extends TestCase
             ValidationType::MAX_NUMBER->value => 100
         ];
 
-        $result = ValidationWorker::number(0, $flags);
+        $result = ValidationService::number(0, $flags);
 
         $this->assertFalse($result);
     }
@@ -353,7 +353,7 @@ class ValidationWorkerTest extends TestCase
         ];
         $number = 15.5;
 
-        $result = ValidationWorker::number($number, $flags);
+        $result = ValidationService::number($number, $flags);
 
         $this->assertTrue($result);
     }
@@ -371,7 +371,7 @@ class ValidationWorkerTest extends TestCase
         $countryCode = 1;
         $phone = '5551234567';
 
-        $result = ValidationWorker::phone($countryCode, $phone);
+        $result = ValidationService::phone($countryCode, $phone);
 
         $this->assertTrue($result);
     }
@@ -381,7 +381,7 @@ class ValidationWorkerTest extends TestCase
         $countryCode = 1;
         $phone = '123456';  // 6 digits, min is 7
 
-        $result = ValidationWorker::phone($countryCode, $phone);
+        $result = ValidationService::phone($countryCode, $phone);
 
         $this->assertFalse($result);
     }
@@ -391,7 +391,7 @@ class ValidationWorkerTest extends TestCase
         $countryCode = 1;
         $phone = '1234567890123456';
 
-        $result = ValidationWorker::phone($countryCode, $phone);
+        $result = ValidationService::phone($countryCode, $phone);
 
         $this->assertFalse($result);
     }
@@ -401,7 +401,7 @@ class ValidationWorkerTest extends TestCase
         $countryCode = 1;
         $phone = '1234567890';
 
-        $result = ValidationWorker::phone($countryCode, $phone);
+        $result = ValidationService::phone($countryCode, $phone);
 
         $this->assertTrue($result);
     }
@@ -411,7 +411,7 @@ class ValidationWorkerTest extends TestCase
         $countryCode = 1;
         $phone = '123456789012345';
 
-        $result = ValidationWorker::phone($countryCode, $phone);
+        $result = ValidationService::phone($countryCode, $phone);
 
         $this->assertTrue($result);
     }
@@ -421,7 +421,7 @@ class ValidationWorkerTest extends TestCase
         $countryCode = 0;
         $phone = '5551234567';
 
-        $result = ValidationWorker::phone($countryCode, $phone);
+        $result = ValidationService::phone($countryCode, $phone);
 
         $this->assertFalse($result);
     }
@@ -431,7 +431,7 @@ class ValidationWorkerTest extends TestCase
         $countryCode = 1000;
         $phone = '5551234567';
 
-        $result = ValidationWorker::phone($countryCode, $phone);
+        $result = ValidationService::phone($countryCode, $phone);
 
         $this->assertFalse($result);
     }
@@ -441,7 +441,7 @@ class ValidationWorkerTest extends TestCase
         $countryCode = 999;
         $phone = '5551234567';
 
-        $result = ValidationWorker::phone($countryCode, $phone);
+        $result = ValidationService::phone($countryCode, $phone);
 
         $this->assertTrue($result);
     }
@@ -450,7 +450,7 @@ class ValidationWorkerTest extends TestCase
     {
         $countryCode = 1;
 
-        $result = ValidationWorker::phone($countryCode, null);
+        $result = ValidationService::phone($countryCode, null);
 
         $this->assertFalse($result);
     }
@@ -459,14 +459,14 @@ class ValidationWorkerTest extends TestCase
     {
         $phone = '5551234567';
 
-        $result = ValidationWorker::phone(null, $phone);
+        $result = ValidationService::phone(null, $phone);
 
         $this->assertFalse($result);
     }
 
     public function testPhoneReturnsFalseForBothNull(): void
     {
-        $result = ValidationWorker::phone(null, null);
+        $result = ValidationService::phone(null, null);
 
         $this->assertFalse($result);
     }

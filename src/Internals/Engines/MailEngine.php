@@ -1,9 +1,9 @@
 <?php
 
-namespace FastRaven\Internal\Slave;
+namespace FastRaven\Internals\Engines;
 
-use FastRaven\Workers\MailWorker;
-use FastRaven\Workers\LogWorker;
+use FastRaven\Services\MailService;
+use FastRaven\Services\LogService;
 
 use FastRaven\Components\Core\Mail;
 use FastRaven\Components\Data\Map;
@@ -15,7 +15,7 @@ use FastRaven\Bee;
 
 use PHPMailer\PHPMailer\PHPMailer;
 
-final class MailSlave {
+final class MailEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
@@ -31,19 +31,19 @@ final class MailSlave {
     #\ INIT
 
     /**
-     * Initializes the MailSlave if it is not already busy.
+     * Initializes the MailEngine if it is not already busy.
      * 
-     * This function will create a new MailSlave if it is not already busy.
-     * It will then call MailWorker::__getToWork() and pass the new MailSlave object.
-     * The new MailSlave object will be returned.
+     * This function will create a new MailEngine if it is not already busy.
+     * It will then call MailService::__getToWork() and pass the new MailEngine object.
+     * The new MailEngine object will be returned.
      * 
-     * @return ?MailSlave The MailSlave object if it was successfully created, null otherwise.
+     * @return ?MailEngine The MailEngine object if it was successfully created, null otherwise.
      */
-    public static function zap(): ?MailSlave {
+    public static function zap(): ?MailEngine {
         if(!self::$ready) {
             self::$ready = true;
-            $inst = new MailSlave();
-            MailWorker::__getToWork($inst);
+            $inst = new MailEngine();
+            MailService::__getToWork($inst);
 
             return $inst;
         }
@@ -143,7 +143,7 @@ final class MailSlave {
                 $path = realpath(Bee::buildProjectPath(ProjectFolderType::STORAGE_UPLOADS, $attachment->getValue()));
                 
                 if($path !== false) $this->mailer->addAttachment($path, $attachment->getKey());
-                else LogWorker::error("Attachment not found: " . $attachment->getValue());
+                else LogService::error("Attachment not found: " . $attachment->getValue());
             }
         }
     }
@@ -158,7 +158,7 @@ final class MailSlave {
      * Sends an email using the provided Mail configuration.
      *
      * This function retrieves the email template, configures PHPMailer with the Mail settings,
-     * and attempts to send the email. Any errors are logged via LogWorker.
+     * and attempts to send the email. Any errors are logged via LogService.
      *
      * @param Mail $mail The Mail instance containing email configuration.
      *
@@ -178,11 +178,11 @@ final class MailSlave {
 
             $res = $this->mailer->send();
 
-            if(!$res) LogWorker::error("PHPMailer Error: " . $this->mailer->ErrorInfo);
+            if(!$res) LogService::error("PHPMailer Error: " . $this->mailer->ErrorInfo);
             return $res;
 
         } catch (\Exception $e) {
-            LogWorker::error("PHPMailer Exception: " . $e->getMessage());
+            LogService::error("PHPMailer Exception: " . $e->getMessage());
             return false;
         }
     }
@@ -229,7 +229,7 @@ final class MailSlave {
             $this->setMailerAttachments($mail->getAttachments());
 
             if(!$this->mailer->send()) {
-                LogWorker::error("Deferred PHPMailer Error: " . $this->mailer->ErrorInfo);
+                LogService::error("Deferred PHPMailer Error: " . $this->mailer->ErrorInfo);
             }
         }
 

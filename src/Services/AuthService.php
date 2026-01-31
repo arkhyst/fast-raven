@@ -1,16 +1,16 @@
 <?php
 
-namespace FastRaven\Workers;
+namespace FastRaven\Services;
 
-use FastRaven\Internal\Slave\AuthSlave;
+use FastRaven\Internals\Engines\AuthEngine;
 use FastRaven\Components\Http\Request;
 
-final class AuthWorker {
+final class AuthService {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
     private static bool $ready = false;
-    private static AuthSlave $slave;
+    private static AuthEngine $engine;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -18,10 +18,10 @@ final class AuthWorker {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public static function __getToWork(AuthSlave &$slave): void {
+    public static function __getToWork(AuthEngine &$engine): void {
         if(!self::$ready) {
             self::$ready = true;
-            self::$slave = $slave;
+            self::$engine = $engine;
         }
     }
 
@@ -47,7 +47,7 @@ final class AuthWorker {
      * Creates an authorized session for the given user ID.
      *
      * This function will create an authorized session for the given user ID.
-     * It will then call AuthSlave::createAuthorizedSession() and pass the user ID, custom data, and a randomly generated CSRF token.
+     * It will then call AuthEngine::createAuthorizedSession() and pass the user ID, custom data, and a randomly generated CSRF token.
      * It will then log a message indicating that an authorized session was created for the user.
      *
      * @param int $id The ID of the user to authorize or any other unique identifier.
@@ -56,8 +56,8 @@ final class AuthWorker {
     public static function createAuthorization(int $id, array $customData = []): void {
         if(self::$ready) {
             self::ensureSession();
-            self::$slave->createAuthorizedSession($id, $customData, bin2hex(random_bytes(32)));
-            LogWorker::debug("Authorized session created for user {$id}.");
+            self::$engine->createAuthorizedSession($id, $customData, bin2hex(random_bytes(32)));
+            LogService::debug("Authorized session created for user {$id}.");
         }
     }
 
@@ -70,8 +70,8 @@ final class AuthWorker {
     public static function destroyAuthorization(): void {
         if(self::$ready) {
             self::ensureSession();
-            self::$slave->destroyAuthorizedSession();
-            LogWorker::debug("Authorized session destroyed.");
+            self::$engine->destroyAuthorizedSession();
+            LogService::debug("Authorized session destroyed.");
         }
     }
 
@@ -90,14 +90,14 @@ final class AuthWorker {
     public static function isAuthorized(?Request $request = null): bool {
         if(self::$ready) {
             self::ensureSession();
-            if(self::$slave->validateSession()) {
+            if(self::$engine->validateSession()) {
                 if($request && in_array($request->getMethod(), ["POST", "PUT", "DELETE", "PATCH"], true)) {
-                    if(!self::$slave->validateCSRF($_SESSION["sgas_csrf"], $_SERVER["HTTP_X_CSRF_TOKEN"] ?? null)) {
-                        LogWorker::warning("Restricted action for authenticated user was called without a valid csrf_token.");
+                    if(!self::$engine->validateCSRF($_SESSION["sgas_csrf"], $_SERVER["HTTP_X_CSRF_TOKEN"] ?? null)) {
+                        LogService::warning("Restricted action for authenticated user was called without a valid csrf_token.");
                         return false;
                     }
                 }
-                LogWorker::debug("Verified authorization for user " . self::getAuthorizedUserId() . ".");
+                LogService::debug("Verified authorization for user " . self::getAuthorizedUserId() . ".");
                 return true;
             }
         }
@@ -116,7 +116,7 @@ final class AuthWorker {
     public static function getAuthorizedUserId(): ?int {
         if(self::$ready) {
             self::ensureSession();
-            if(self::$slave->validateSession()) {
+            if(self::$engine->validateSession()) {
                 return $_SESSION["sgas_uid"];
             }
         }
@@ -141,15 +141,15 @@ final class AuthWorker {
             self::ensureSession();
             if(!$user || !$pass) return false;
 
-            $id = self::$slave->checkCredentials($user, $pass, $dbTable, $dbIdCol, $dbNameCol, $dbPassCol);
+            $id = self::$engine->checkCredentials($user, $pass, $dbTable, $dbIdCol, $dbNameCol, $dbPassCol);
             
             if($id) {
-                LogWorker::debug("User {$user} logged in via autologin.");
-                AuthWorker::createAuthorization($id);
+                LogService::debug("User {$user} logged in via autologin.");
+                AuthService::createAuthorization($id);
                 return true;
             } else {
-                LogWorker::warning("Failed autologin attempt for user {$user}.");
-                AuthWorker::destroyAuthorization();
+                LogService::warning("Failed autologin attempt for user {$user}.");
+                AuthService::destroyAuthorization();
                 return false;
             }
         }
@@ -169,9 +169,9 @@ final class AuthWorker {
     public static function regenerateCSRF(): ?string {
         if(self::$ready) {
             self::ensureSession();
-            if(self::$slave->validateSession()) {
-                LogWorker::debug("CSRF token has been regenerated for user " . self::getAuthorizedUserId());
-                return self::$slave->regenerateCSRF();
+            if(self::$engine->validateSession()) {
+                LogService::debug("CSRF token has been regenerated for user " . self::getAuthorizedUserId());
+                return self::$engine->regenerateCSRF();
             }
         }
 

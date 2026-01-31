@@ -1,9 +1,9 @@
-# FastRaven  
-**State:** use only for non-critical projects
-**Version:** v0.5  
+# Fast Raven  
+**State:** production ready
+**Version:** v1.0.0
 
-FastRaven is a minimalistic and fast PHP framework for **monolithic apps**.  
-It focuses on simplicity, clarity, and raw performance: no unnecessary layers, no dependencies you don’t control.
+**Fast Raven** is a **high-performance PHP** framework for building **fast, monolithic applications**. 
+Optimized for **multi-site subdomain architectures**, it delivers <1ms API responses and makes **agile development** feel effortless. No bloat. No magic. Just speed.
 
 ---
 
@@ -13,8 +13,8 @@ It focuses on simplicity, clarity, and raw performance: no unnecessary layers, n
 - **Composer** ^2.9.2  
 - **Apache** ^2.4 (if using Apache)  
 
-> **Note:** Remember that web server user should have full permissions to the project folder.
-> **Note:** You need to install PHP modules for MySQL, Apache, and other optional extensions.
+> **Note:** Remember that web server user should have full permissions to the project folder.  
+> **Note:** You need to install PHP modules for MySQL, Apache, and other optional extensions.  
 
 ---
 
@@ -29,9 +29,9 @@ OR (not recommended)
 
 ---
 
-### Potential features for v1.0
-- Implementation of Multi-DB support for DataSlave.
-- Upgrade of DataSlave: addition of ORM-like component to create complex queries. Refactor of whole class.
+### Documentation
+- **[Documentation](docs/FRAMEWORK.md)** - Complete API reference and framework usage guide
+- **[Roadmap](docs/ROADMAP.md)** - Future features and planned improvements
 
 ---
 

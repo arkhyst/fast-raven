@@ -1,16 +1,16 @@
 <?php
 
-namespace FastRaven\Workers;
+namespace FastRaven\Services;
 
 use FastRaven\Components\Core\Mail;
-use FastRaven\Internal\Slave\MailSlave;
+use FastRaven\Internals\Engines\MailEngine;
 
-final class MailWorker {
+final class MailService {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
     private static bool $ready = false;
-    private static MailSlave $slave;
+    private static MailEngine $engine;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -18,10 +18,10 @@ final class MailWorker {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public static function __getToWork(MailSlave &$slave): void {
+    public static function __getToWork(MailEngine &$engine): void {
         if(!self::$ready) {
             self::$ready = true;
-            self::$slave = $slave;
+            self::$engine = $engine;
         }
     }
 
@@ -42,8 +42,8 @@ final class MailWorker {
     /**
      * Sends an email using the provided Mail configuration.
      *
-     * This function delegates the email sending operation to the MailSlave instance.
-     * The MailSlave must be properly initialized before calling this function.
+     * This function delegates the email sending operation to the MailEngine instance.
+     * The MailEngine must be properly initialized before calling this function.
      *
      * @param Mail $mail The Mail instance containing email configuration (sender, recipient, subject, body template, etc.).
      *
@@ -51,7 +51,7 @@ final class MailWorker {
      */
     public static function send(Mail $mail, bool $fireAndForget = false): bool {
         if(self::$ready) {
-            return $fireAndForget ? self::$slave->fireAndForget($mail) : self::$slave->send($mail);
+            return $fireAndForget ? self::$engine->fireAndForget($mail) : self::$engine->send($mail);
         }
 
         return false;

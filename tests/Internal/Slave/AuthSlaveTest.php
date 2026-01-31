@@ -1,46 +1,46 @@
 <?php
 
-namespace FastRaven\Tests\Internal\Slave;
+namespace FastRaven\Tests\Internals\Engines;
 
 use PHPUnit\Framework\TestCase;
-use FastRaven\Internal\Slave\AuthSlave;
+use FastRaven\Internals\Engines\AuthEngine;
 use ReflectionClass;
 
-class AuthSlaveTest extends TestCase
+class AuthEngineTest extends TestCase
 {
     public function testValidateCSRFReturnsTrueWhenTokensMatch(): void
     {
-        $authSlave = $this->createAuthSlaveInstance();
+        $authEngine = $this->createAuthEngineInstance();
 
-        $result = $authSlave->validateCSRF('token123', 'token123');
+        $result = $authEngine->validateCSRF('token123', 'token123');
 
         $this->assertTrue($result);
     }
 
     public function testValidateCSRFReturnsFalseWhenTokensDontMatch(): void
     {
-        $authSlave = $this->createAuthSlaveInstance();
+        $authEngine = $this->createAuthEngineInstance();
 
-        $result = $authSlave->validateCSRF('token123', 'token456');
+        $result = $authEngine->validateCSRF('token123', 'token456');
 
         $this->assertFalse($result);
     }
 
     public function testValidateCSRFReturnsFalseWhenBothTokensAreNull(): void
     {
-        $authSlave = $this->createAuthSlaveInstance();
+        $authEngine = $this->createAuthEngineInstance();
 
-        $result = $authSlave->validateCSRF(null, null);
+        $result = $authEngine->validateCSRF(null, null);
 
         $this->assertFalse($result);
     }
 
     public function testValidateCSRFReturnsFalseWhenOneTokenIsNull(): void
     {
-        $authSlave = $this->createAuthSlaveInstance();
+        $authEngine = $this->createAuthEngineInstance();
 
-        $result1 = $authSlave->validateCSRF('token123', null);
-        $result2 = $authSlave->validateCSRF(null, 'token123');
+        $result1 = $authEngine->validateCSRF('token123', null);
+        $result2 = $authEngine->validateCSRF(null, 'token123');
 
         $this->assertFalse($result1);
         $this->assertFalse($result2);
@@ -48,39 +48,39 @@ class AuthSlaveTest extends TestCase
 
     public function testValidateCSRFIsCaseSensitive(): void
     {
-        $authSlave = $this->createAuthSlaveInstance();
+        $authEngine = $this->createAuthEngineInstance();
 
-        $result = $authSlave->validateCSRF('Token123', 'token123');
+        $result = $authEngine->validateCSRF('Token123', 'token123');
 
         $this->assertFalse($result);
     }
 
     public function testValidateCSRFHandlesEmptyStrings(): void
     {
-        $authSlave = $this->createAuthSlaveInstance();
+        $authEngine = $this->createAuthEngineInstance();
 
-        $result = $authSlave->validateCSRF('', '');
+        $result = $authEngine->validateCSRF('', '');
 
         $this->assertTrue($result);
     }
 
     public function testValidateCSRFHandlesSpecialCharacters(): void
     {
-        $authSlave = $this->createAuthSlaveInstance();
+        $authEngine = $this->createAuthEngineInstance();
         $token = 'token!@#$%^&*()_+-=[]{}|;:,.<>?';
 
-        $result = $authSlave->validateCSRF($token, $token);
+        $result = $authEngine->validateCSRF($token, $token);
 
         $this->assertTrue($result);
     }
 
     /**
-     * Helper method to create an AuthSlave instance using reflection
+     * Helper method to create an AuthEngine instance using reflection
      * since the constructor is private
      */
-    private function createAuthSlaveInstance(): AuthSlave
+    private function createAuthEngineInstance(): AuthEngine
     {
-        $reflection = new ReflectionClass(AuthSlave::class);
+        $reflection = new ReflectionClass(AuthEngine::class);
         $instance = $reflection->newInstanceWithoutConstructor();
 
         return $instance;

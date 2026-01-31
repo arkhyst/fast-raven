@@ -1,15 +1,15 @@
 <?php
 
-namespace FastRaven\Workers;
+namespace FastRaven\Services;
 
-use FastRaven\Internal\Slave\HeaderSlave;
+use FastRaven\Internals\Engines\HeaderEngine;
 
-final class HeaderWorker {
+final class HeaderService {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
     private static bool $ready = false;
-    private static HeaderSlave $slave;
+    private static HeaderEngine $engine;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -17,10 +17,10 @@ final class HeaderWorker {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public static function __getToWork(HeaderSlave &$slave): void {
+    public static function __getToWork(HeaderEngine &$engine): void {
         if(!self::$ready) {
             self::$ready = true;
-            self::$slave = $slave;
+            self::$engine = $engine;
         }
     }
 
@@ -46,7 +46,7 @@ final class HeaderWorker {
      */
     public static function addHeader(string $key, string $value): void {
         if(self::$ready) {
-            self::$slave->addHeader($key, $value);
+            self::$engine->addHeader($key, $value);
         }
     }
 
@@ -57,7 +57,7 @@ final class HeaderWorker {
      */
     public static function removeHeader(string $key): void {
         if(self::$ready) {
-            self::$slave->removeHeader($key);
+            self::$engine->removeHeader($key);
         }
     }
 

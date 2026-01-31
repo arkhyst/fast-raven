@@ -1,8 +1,8 @@
 <?php
 
-namespace FastRaven\Internal\Slave;
+namespace FastRaven\Internals\Engines;
 
-use FastRaven\Workers\LogWorker;
+use FastRaven\Services\LogService;
 
 use FastRaven\Components\Http\Request;
 
@@ -10,7 +10,7 @@ use FastRaven\Types\ProjectFolderType;
 
 use FastRaven\Bee;
 
-final class LogSlave {
+final class LogEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
@@ -25,19 +25,19 @@ final class LogSlave {
     #\ INIT
 
     /**
-     * Initializes the LogSlave if it is not already busy.
+     * Initializes the LogEngine if it is not already busy.
      * 
-     * This function will create a new LogSlave if it is not already busy.
-     * It will then call LogWorker::__getToWork() and pass the new LogSlave object.
-     * The new LogSlave object will be returned.
+     * This function will create a new LogEngine if it is not already busy.
+     * It will then call LogService::__getToWork() and pass the new LogEngine object.
+     * The new LogEngine object will be returned.
      * 
-     * @return ?LogSlave The LogSlave object if it was successfully created, null otherwise.
+     * @return ?LogEngine The LogEngine object if it was successfully created, null otherwise.
      */
-    public static function zap(string $requestInternalId): ?LogSlave {
+    public static function zap(string $requestInternalId): ?LogEngine {
         if(!self::$ready) {
             self::$ready = true;
-            $inst = new LogSlave($requestInternalId);
-            LogWorker::__getToWork($inst);
+            $inst = new LogEngine($requestInternalId);
+            LogService::__getToWork($inst);
 
             return $inst;
         }
@@ -88,7 +88,7 @@ final class LogSlave {
      * @param Request $request The request object for which the open log entry should be written.
      */
     public function writeOpenLogs(Request $request): void {
-        LogWorker::log("{$request->getType()->value}[{$request->getMethod()}] > {$request->getPath()} < STATUS_CODE > {$request->getRemoteAddress()} < ELAPSED_TIMEms");
+        LogService::log("{$request->getType()->value}[{$request->getMethod()}] > {$request->getPath()} < STATUS_CODE > {$request->getRemoteAddress()} < ELAPSED_TIMEms");
     }
 
     /**

@@ -1,10 +1,10 @@
 <?php
 
-namespace FastRaven\Internal\Slave;
+namespace FastRaven\Internals\Engines;
 
-use FastRaven\Workers\HeaderWorker;
+use FastRaven\Services\HeaderService;
 
-final class HeaderSlave {
+final class HeaderEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
@@ -17,19 +17,19 @@ final class HeaderSlave {
     #\ INIT
 
     /**
-     * Initializes the HeaderSlave if it is not already busy.
+     * Initializes the HeaderEngine if it is not already busy.
      * 
-     * This function will create a new HeaderSlave if it is not already busy.
-     * It will then call HeaderWorker::__getToWork() and pass the new HeaderSlave object.
-     * The new HeaderSlave object will be returned.
+     * This function will create a new HeaderEngine if it is not already busy.
+     * It will then call HeaderService::__getToWork() and pass the new HeaderEngine object.
+     * The new HeaderEngine object will be returned.
      * 
-     * @return ?HeaderSlave The HeaderSlave object if it was successfully created, null otherwise.
+     * @return ?HeaderEngine The HeaderEngine object if it was successfully created, null otherwise.
      */
-    public static function zap(): ?HeaderSlave {
+    public static function zap(): ?HeaderEngine {
         if(!self::$ready) {
             self::$ready = true;
-            $inst = new HeaderSlave();
-            HeaderWorker::__getToWork($inst);
+            $inst = new HeaderEngine();
+            HeaderService::__getToWork($inst);
 
             return $inst;
         }
@@ -82,17 +82,17 @@ final class HeaderSlave {
      * @param string $nonce The nonce to use for the Content-Security-Policy header.
      */
     public function writeSecurityHeaders(string $https, string $nonce): void {
-        HeaderWorker::removeHeader("X-Powered-By");
-        HeaderWorker::removeHeader("Server");
+        HeaderService::removeHeader("X-Powered-By");
+        HeaderService::removeHeader("Server");
 
-        HeaderWorker::addHeader("X-Content-Type-Options", "nosniff");
-        HeaderWorker::addHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-        HeaderWorker::addHeader("Cross-Origin-Resource-Policy", "same-origin");
-        HeaderWorker::addHeader("X-Frame-Options", "DENY");
-        HeaderWorker::addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        HeaderWorker::addHeader("Access-Control-Allow-Headers", "Content-Type");
+        HeaderService::addHeader("X-Content-Type-Options", "nosniff");
+        HeaderService::addHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+        HeaderService::addHeader("Cross-Origin-Resource-Policy", "same-origin");
+        HeaderService::addHeader("X-Frame-Options", "DENY");
+        HeaderService::addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        HeaderService::addHeader("Access-Control-Allow-Headers", "Content-Type");
 
-        HeaderWorker::addHeader("Content-Security-Policy",
+        HeaderService::addHeader("Content-Security-Policy",
             "default-src 'self'; " .
             "script-src 'self' 'nonce-$nonce' https:; " .
             "style-src 'self' 'unsafe-inline' https:; " .
@@ -106,7 +106,7 @@ final class HeaderSlave {
         );
 
         if (!empty($https) && $https !== 'off') {
-            HeaderWorker::addHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+            HeaderService::addHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
         }
     }
 
@@ -116,8 +116,8 @@ final class HeaderSlave {
      * @param bool $isApi Whether the request is an API request.
      */
     public function writeUtilityHeaders(bool $isApi): void {
-        if($isApi) HeaderWorker::addHeader("Cache-Control", "private, no-store, must-revalidate");
-        else HeaderWorker::addHeader("Cache-Control", "private, max-age=600, stale-while-revalidate=30");
+        if($isApi) HeaderService::addHeader("Cache-Control", "private, no-store, must-revalidate");
+        else HeaderService::addHeader("Cache-Control", "private, max-age=600, stale-while-revalidate=30");
     }
 
     /**
@@ -129,9 +129,9 @@ final class HeaderSlave {
      */
     public function writeRateLimitHeaders(int $configuredRateLimit, int $rateLimitRemaining, int $rateLimitTimeRemaining): void {
         if($configuredRateLimit >= 0) {
-            HeaderWorker::addHeader("RateLimit-Limit", $configuredRateLimit);
-            HeaderWorker::addHeader("RateLimit-Remaining", max(0, $rateLimitRemaining));
-            HeaderWorker::addHeader("RateLimit-Reset", time() + $rateLimitTimeRemaining);
+            HeaderService::addHeader("RateLimit-Limit", $configuredRateLimit);
+            HeaderService::addHeader("RateLimit-Remaining", max(0, $rateLimitRemaining));
+            HeaderService::addHeader("RateLimit-Reset", time() + $rateLimitTimeRemaining);
         }
     }
 

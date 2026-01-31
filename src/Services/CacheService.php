@@ -1,16 +1,16 @@
 <?php
 
-namespace FastRaven\Workers;
+namespace FastRaven\Services;
 
-use FastRaven\Internal\Slave\CacheSlave;
+use FastRaven\Internals\Engines\CacheEngine;
 use FastRaven\Types\CacheType;
 
-final class CacheWorker {
+final class CacheService {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
     private static bool $ready = false;
-    private static CacheSlave $slave;
+    private static CacheEngine $engine;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -18,10 +18,10 @@ final class CacheWorker {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public static function __getToWork(CacheSlave &$slave): void {
+    public static function __getToWork(CacheEngine &$engine): void {
         if(!self::$ready) {
             self::$ready = true;
-            self::$slave = $slave;
+            self::$engine = $engine;
         }
     }
 
@@ -46,7 +46,7 @@ final class CacheWorker {
      */
     public static function getUsedType(): CacheType {
         if(self::$ready) {
-            return self::$slave->getType();
+            return self::$engine->getType();
         }
 
         return CacheType::FILE;
@@ -60,10 +60,10 @@ final class CacheWorker {
      */
     public static function exists(string $key): bool {
         if(self::$ready) {
-            return match(self::$slave->getType()) {
-                CacheType::APCU => self::$slave->apcuExists($key),
-                CacheType::SHARED => self::$slave->shmopExists($key),
-                CacheType::FILE => self::$slave->fileExists($key),
+            return match(self::$engine->getType()) {
+                CacheType::APCU => self::$engine->apcuExists($key),
+                CacheType::SHARED => self::$engine->shmopExists($key),
+                CacheType::FILE => self::$engine->fileExists($key),
             };
         }
 
@@ -79,10 +79,10 @@ final class CacheWorker {
      */
     public static function read(string $key): mixed {
         if(self::$ready) {
-            return match(self::$slave->getType()) {
-                CacheType::APCU => self::$slave->apcuRead($key)["value"] ?? null,
-                CacheType::SHARED => self::$slave->shmopRead($key)["value"] ?? null,
-                CacheType::FILE => self::$slave->fileRead($key)["value"] ?? null,
+            return match(self::$engine->getType()) {
+                CacheType::APCU => self::$engine->apcuRead($key)["value"] ?? null,
+                CacheType::SHARED => self::$engine->shmopRead($key)["value"] ?? null,
+                CacheType::FILE => self::$engine->fileRead($key)["value"] ?? null,
             };
         }
 
@@ -97,10 +97,10 @@ final class CacheWorker {
      */
     public static function readWithMeta(string $key): ?array {
         if(self::$ready) {
-            return match(self::$slave->getType()) {
-                CacheType::APCU => self::$slave->apcuRead($key),
-                CacheType::SHARED => self::$slave->shmopRead($key),
-                CacheType::FILE => self::$slave->fileRead($key),
+            return match(self::$engine->getType()) {
+                CacheType::APCU => self::$engine->apcuRead($key),
+                CacheType::SHARED => self::$engine->shmopRead($key),
+                CacheType::FILE => self::$engine->fileRead($key),
             };
         }
 
@@ -117,10 +117,10 @@ final class CacheWorker {
      */
     public static function write(string $key, mixed $value, int $expires): bool {
         if(self::$ready) {
-            return match(self::$slave->getType()) {
-                CacheType::APCU => self::$slave->apcuWrite($key, $value, $expires),
-                CacheType::SHARED => self::$slave->shmopWrite($key, $value, $expires),
-                CacheType::FILE => self::$slave->fileWrite($key, $value, $expires),
+            return match(self::$engine->getType()) {
+                CacheType::APCU => self::$engine->apcuWrite($key, $value, $expires),
+                CacheType::SHARED => self::$engine->shmopWrite($key, $value, $expires),
+                CacheType::FILE => self::$engine->fileWrite($key, $value, $expires),
             };
         }
 
@@ -136,10 +136,10 @@ final class CacheWorker {
      */
     public static function increment(string $key, int $step = 1): int {
         if(self::$ready) {
-            return match(self::$slave->getType()) {
-                CacheType::APCU => self::$slave->apcuIncrement($key, $step),
-                CacheType::SHARED => self::$slave->shmopIncrement($key, $step),
-                CacheType::FILE => self::$slave->fileIncrement($key, $step),
+            return match(self::$engine->getType()) {
+                CacheType::APCU => self::$engine->apcuIncrement($key, $step),
+                CacheType::SHARED => self::$engine->shmopIncrement($key, $step),
+                CacheType::FILE => self::$engine->fileIncrement($key, $step),
             };
         }
 
@@ -155,10 +155,10 @@ final class CacheWorker {
      */
     public static function decrement(string $key, int $step = 1): int {
         if(self::$ready) {
-            return match(self::$slave->getType()) {
-                CacheType::APCU => self::$slave->apcuIncrement($key, -$step),
-                CacheType::SHARED => self::$slave->shmopIncrement($key, -$step),
-                CacheType::FILE => self::$slave->fileIncrement($key, -$step),
+            return match(self::$engine->getType()) {
+                CacheType::APCU => self::$engine->apcuIncrement($key, -$step),
+                CacheType::SHARED => self::$engine->shmopIncrement($key, -$step),
+                CacheType::FILE => self::$engine->fileIncrement($key, -$step),
             };
         }
 
@@ -173,10 +173,10 @@ final class CacheWorker {
      */
     public static function remove(string $key): bool {
         if(self::$ready) {
-            return match(self::$slave->getType()) {
-                CacheType::APCU => self::$slave->apcuRemove($key),
-                CacheType::SHARED => self::$slave->shmopRemove($key),
-                CacheType::FILE => self::$slave->fileRemove($key),
+            return match(self::$engine->getType()) {
+                CacheType::APCU => self::$engine->apcuRemove($key),
+                CacheType::SHARED => self::$engine->shmopRemove($key),
+                CacheType::FILE => self::$engine->fileRemove($key),
             };
         }
 
@@ -191,10 +191,10 @@ final class CacheWorker {
      */
     public static function empty(): bool {
         if(self::$ready) {
-            return match(self::$slave->getType()) {
-                CacheType::APCU => self::$slave->apcuEmpty(),
+            return match(self::$engine->getType()) {
+                CacheType::APCU => self::$engine->apcuEmpty(),
                 CacheType::SHARED => false,
-                CacheType::FILE => self::$slave->fileEmpty(),
+                CacheType::FILE => self::$engine->fileEmpty(),
             };
         }
 
@@ -209,8 +209,8 @@ final class CacheWorker {
      */
     public static function runGarbageCollector(int $power): void {
         if(self::$ready) {
-            match(self::$slave->getType()) {
-                CacheType::FILE => self::$slave->runGarbageCollector($power),
+            match(self::$engine->getType()) {
+                CacheType::FILE => self::$engine->runGarbageCollector($power),
             };
         }
     }

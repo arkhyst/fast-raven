@@ -1,11 +1,11 @@
 <?php
 
-namespace FastRaven\Internal\Slave;
+namespace FastRaven\Internals\Engines;
 
-use FastRaven\Workers\ValidationWorker;
+use FastRaven\Services\ValidationService;
 use FastRaven\Types\ValidationType;
 
-final class ValidationSlave {
+final class ValidationEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
@@ -18,19 +18,19 @@ final class ValidationSlave {
     #\ INIT
 
     /**
-     * Initializes the ValidationSlave if it is not already busy.
+     * Initializes the ValidationEngine if it is not already busy.
      * 
-     * This function will create a new ValidationSlave if it is not already busy.
-     * It will then call ValidationWorker::__getToWork() and pass the new ValidationSlave object.
-     * The new ValidationSlave object will be returned.
+     * This function will create a new ValidationEngine if it is not already busy.
+     * It will then call ValidationService::__getToWork() and pass the new ValidationEngine object.
+     * The new ValidationEngine object will be returned.
      * 
-     * @return ?ValidationSlave The ValidationSlave object if it was successfully created, null otherwise.
+     * @return ?ValidationEngine The ValidationEngine object if it was successfully created, null otherwise.
      */
-    public static function zap(): ?ValidationSlave {
+    public static function zap(): ?ValidationEngine {
         if(!self::$ready) {
             self::$ready = true;
-            $inst = new ValidationSlave();
-            ValidationWorker::__getToWork($inst);
+            $inst = new ValidationEngine();
+            ValidationService::__getToWork($inst);
 
             return $inst;
         }

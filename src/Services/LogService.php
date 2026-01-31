@@ -1,17 +1,17 @@
 <?php
 
-namespace FastRaven\Workers;
+namespace FastRaven\Services;
 
-use FastRaven\Internal\Slave\LogSlave;
+use FastRaven\Internals\Engines\LogEngine;
 
 use FastRaven\Bee;
 
-final class LogWorker {
+final class LogService {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
     private static bool $ready = false;
-    private static LogSlave $slave;
+    private static LogEngine $engine;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -19,10 +19,10 @@ final class LogWorker {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public static function __getToWork(LogSlave &$slave): void {
+    public static function __getToWork(LogEngine &$engine): void {
         if(!self::$ready) {
             self::$ready = true;
-            self::$slave = $slave;
+            self::$engine = $engine;
         }
     }
 
@@ -48,7 +48,7 @@ final class LogWorker {
      */
     public static function log(string $text): void {
         if(self::$ready) {
-            self::$slave->log($text);
+            self::$engine->log($text);
         }
     }
 
@@ -61,7 +61,7 @@ final class LogWorker {
      */
     public static function error(string $text): void {
         if(self::$ready) {
-            self::$slave->log("//ERROR// ".$text);
+            self::$engine->log("//ERROR// ".$text);
         }
     }
 
@@ -74,7 +74,7 @@ final class LogWorker {
      */
     public static function warning(string $text): void {
         if(self::$ready) {
-            self::$slave->log("//WARN// ".$text);
+            self::$engine->log("//WARN// ".$text);
         }
     }
 
@@ -87,7 +87,7 @@ final class LogWorker {
      */
     public static function debug(string $text): void {
         if(self::$ready && Bee::isDev()) {
-            self::$slave->log("/SG/ ".$text);
+            self::$engine->log("/SG/ ".$text);
         }
     }
 

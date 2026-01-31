@@ -1,17 +1,17 @@
 <?php
 
-namespace FastRaven\Workers;
+namespace FastRaven\Services;
 
-use FastRaven\Internal\Slave\FileSlave;
+use FastRaven\Internals\Engines\FileEngine;
 
 use FastRaven\Components\Core\File;
 
-final class FileWorker {
+final class FileService {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
     private static bool $ready = false;
-    private static FileSlave $slave;
+    private static FileEngine $engine;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -19,10 +19,10 @@ final class FileWorker {
     #----------------------------------------------------------------------
     #\ INIT
 
-    public static function __getToWork(FileSlave &$slave): void {
+    public static function __getToWork(FileEngine &$engine): void {
         if(!self::$ready) {
             self::$ready = true;
-            self::$slave = $slave;
+            self::$engine = $engine;
         }
     }
 
@@ -41,7 +41,7 @@ final class FileWorker {
 
     public static function getUploadFilePath(string $file): ?string {
         if(self::$ready) { 
-            return self::$slave->getUploadFilePath($file);
+            return self::$engine->getUploadFilePath($file);
         }
 
         return null;
@@ -49,7 +49,7 @@ final class FileWorker {
 
     public static function exists(string $path): bool {
         if(self::$ready) { 
-            return self::$slave->exists($path); 
+            return self::$engine->exists($path); 
         }
 
         return false;
@@ -65,7 +65,7 @@ final class FileWorker {
      */
     public static function upload(File $file, string $destPath): bool {
         if(self::$ready) {
-            return self::$slave->upload($file->getPath(), $destPath);
+            return self::$engine->upload($file->getPath(), $destPath);
         }
 
         return false;
@@ -80,7 +80,7 @@ final class FileWorker {
      */
     public static function read(string $path): ?string {
         if(self::$ready) {
-            return self::$slave->read($path);
+            return self::$engine->read($path);
         }
 
         return null;
@@ -95,7 +95,7 @@ final class FileWorker {
      */
     public static function delete(string $path): bool {
         if(self::$ready) {
-            return self::$slave->delete($path);
+            return self::$engine->delete($path);
         }
 
         return false;

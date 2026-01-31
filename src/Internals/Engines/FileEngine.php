@@ -1,14 +1,14 @@
 <?php
 
-namespace FastRaven\Internal\Slave;
+namespace FastRaven\Internals\Engines;
 
-use FastRaven\Workers\FileWorker;
+use FastRaven\Services\FileService;
 
 use FastRaven\Types\ProjectFolderType;
 
 use FastRaven\Bee;
 
-final class FileSlave {
+final class FileEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
@@ -22,19 +22,19 @@ final class FileSlave {
     #\ INIT
 
     /**
-     * Initializes the FileSlave if it is not already busy.
+     * Initializes the FileEngine if it is not already busy.
      * 
-     * This function will create a new FileSlave if it is not already busy.
-     * It will then call FileWorker::__getToWork() and pass the new FileSlave object.
-     * The new FileSlave object will be returned.
+     * This function will create a new FileEngine if it is not already busy.
+     * It will then call FileService::__getToWork() and pass the new FileEngine object.
+     * The new FileEngine object will be returned.
      * 
-     * @return ?FileSlave The FileSlave object if it was successfully created, null otherwise.
+     * @return ?FileEngine The FileEngine object if it was successfully created, null otherwise.
      */
-    public static function zap(int $fileUploadSizeLimit = -1): ?FileSlave {
+    public static function zap(int $fileUploadSizeLimit = -1): ?FileEngine {
         if(!self::$ready) {
             self::$ready = true;
-            $inst = new FileSlave($fileUploadSizeLimit);
-            FileWorker::__getToWork($inst);
+            $inst = new FileEngine($fileUploadSizeLimit);
+            FileService::__getToWork($inst);
 
             return $inst;
         }

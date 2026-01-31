@@ -1,11 +1,11 @@
 <?php
 
-namespace FastRaven\Internal\Slave;
+namespace FastRaven\Internals\Engines;
 
 use FastRaven\Exceptions\SecurityVulnerabilityException;
 
-use FastRaven\Workers\DataWorker;
-use FastRaven\Workers\LogWorker;
+use FastRaven\Services\DataService;
+use FastRaven\Services\LogService;
 use FastRaven\Bee;
 
 use FastRaven\Components\Data\ConditionList;
@@ -13,7 +13,7 @@ use FastRaven\Components\Data\Map;
 
 use FastRaven\Types\QueryType;
 
-final class DataSlave {
+final class DataEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
@@ -27,17 +27,17 @@ final class DataSlave {
     #\ INIT
 
     /**
-     * This function will create a new DataSlave if it is not already busy.
-     * It will then call DataWorker::__getToWork() and pass the new DataSlave object.
-     * The new DataSlave object will be returned.
+     * This function will create a new DataEngine if it is not already busy.
+     * It will then call DataService::__getToWork() and pass the new DataEngine object.
+     * The new DataEngine object will be returned.
      *
-     * @return ?DataSlave The DataSlave object if it was successfully created, null otherwise.
+     * @return ?DataEngine The DataEngine object if it was successfully created, null otherwise.
      */
-    public static function zap(): ?DataSlave {
+    public static function zap(): ?DataEngine {
         if(!self::$ready) {
             self::$ready = true;
-            $inst = new DataSlave();
-            DataWorker::__getToWork($inst);
+            $inst = new DataEngine();
+            DataService::__getToWork($inst);
 
             return $inst;
         }
@@ -69,7 +69,7 @@ final class DataSlave {
     }
 
     /**
-     * This function will initialize the PDO object for the DataSlave.
+     * This function will initialize the PDO object for the DataEngine.
      * If the PDO object is not already initialized, it will attempt to create a new PDO object with the database connection settings.
      * If the PDO object cannot be created, an error will be logged and the PDO object will be set to null.
      */
@@ -92,7 +92,7 @@ final class DataSlave {
                 $this->pdo = new \PDO($this->buildDatabaseDSN(Bee::env("DB_HOST"), Bee::env("DB_NAME")), Bee::env("DB_USER"), Bee::env("DB_PASS"), $options);
             } catch (\PDOException $e) {
                 $this->pdo = null;
-                LogWorker::error("PDOException: ".$e->getMessage());
+                LogService::error("PDOException: ".$e->getMessage());
             }
         }
     }
@@ -250,14 +250,14 @@ final class DataSlave {
                     else if($type == QueryType::DELETE) return $stmt->rowCount() > 0;
                     else if($type == QueryType::INSERT || $type == QueryType::UPDATE) return $ok;
                 } else {
-                    LogWorker::error("SQL Query was not successfull -> $query");
+                    LogService::error("SQL Query was not successfull -> $query");
                     if($type == QueryType::SELECT) return null;
                     else if($type == QueryType::COUNT) return 0;
                     else if($type == QueryType::INSERT || $type == QueryType::UPDATE || $type == QueryType::DELETE) return false;
                 }
 
             } catch (\PDOException $e) {
-                LogWorker::error("PDOException: ".$e->getMessage());
+                LogService::error("PDOException: ".$e->getMessage());
                 return null;
             }
         }
@@ -309,7 +309,7 @@ final class DataSlave {
             $query = $this->buildQuery(QueryType::SELECT, $table, $cols, $cond, $orderBy, $limit, $offset);
             return $this->simpleRequestToDatabase(QueryType::SELECT, $query, $cond === null ? [] : $cond->getAllRightValues());
         } catch (SecurityVulnerabilityException $e) {
-            LogWorker::error($e->getMessage());
+            LogService::error($e->getMessage());
             return null;
         }
     }
@@ -334,7 +334,7 @@ final class DataSlave {
             $query = $this->buildQuery(QueryType::SELECT, $table, $cols, $cond, $orderBy, $limit, $offset, $joined, $joinedLeftCols, $joinedRightCols);
             return $this->simpleRequestToDatabase(QueryType::SELECT, $query, $cond === null ? [] : $cond->getAllRightValues());
         } catch (SecurityVulnerabilityException $e) {
-            LogWorker::error($e->getMessage());
+            LogService::error($e->getMessage());
             return null;
         }
     }
@@ -354,7 +354,7 @@ final class DataSlave {
             $res = $this->simpleRequestToDatabase(QueryType::INSERT, $query, $values);
             return $res === true;
         } catch (SecurityVulnerabilityException $e) {
-            LogWorker::error($e->getMessage());
+            LogService::error($e->getMessage());
             return false;
         }
     }
@@ -386,7 +386,7 @@ final class DataSlave {
             $res = $this->simpleRequestToDatabase(QueryType::UPDATE, $query, array_merge($cols->getAllValues(), $cond->getAllRightValues()));
             return $res === true;
         } catch (SecurityVulnerabilityException $e) {
-            LogWorker::error($e->getMessage());
+            LogService::error($e->getMessage());
             return false;
         }
     }
@@ -405,7 +405,7 @@ final class DataSlave {
             $res = $this->simpleRequestToDatabase(QueryType::DELETE, $query, $cond->getAllRightValues());
             return $res === true;
         } catch (SecurityVulnerabilityException $e) {
-            LogWorker::error($e->getMessage());
+            LogService::error($e->getMessage());
             return false;
         }
     }
@@ -424,7 +424,7 @@ final class DataSlave {
             $res = $this->simpleRequestToDatabase(QueryType::COUNT, $query, $cond === null ? [] : $cond->getAllRightValues());
             return $res ?? 0;
         } catch (SecurityVulnerabilityException $e) {
-            LogWorker::error($e->getMessage());
+            LogService::error($e->getMessage());
             return 0;
         }
     }
@@ -458,10 +458,10 @@ final class DataSlave {
             return $this->pdo->commit();
         } catch (\PDOException $e) {
             if ($this->pdo?->inTransaction()) $this->pdo->rollBack();
-            LogWorker::error("PDOException during batch insert: ".$e->getMessage());
+            LogService::error("PDOException during batch insert: ".$e->getMessage());
             return false;
         } catch (SecurityVulnerabilityException $e) {
-            LogWorker::error($e->getMessage());
+            LogService::error($e->getMessage());
             return false;
         }
     }
