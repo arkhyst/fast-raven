@@ -100,7 +100,7 @@ class ConfigTest extends TestCase
     {
         $config = Config::new('test', false);
 
-        $this->assertEquals('/', $config->getDefaultNotFoundPathRedirect());
+        $this->assertNull($config->getDefaultNotFoundPathRedirect());
     }
 
     public function testConfigureRedirectsSetsNotFoundPath(): void
@@ -116,14 +116,14 @@ class ConfigTest extends TestCase
     {
         $config = Config::new('test', false);
 
-        $this->assertEquals('/login', $config->getDefaultUnauthorizedPathRedirect());
+        $this->assertNull($config->getDefaultUnauthorizedPathRedirect());
     }
 
     public function testDefaultUnauthorizedSubdomainRedirect(): void
     {
         $config = Config::new('test', false);
 
-        $this->assertEquals('', $config->getDefaultUnauthorizedSubdomainRedirect());
+        $this->assertNull($config->getDefaultUnauthorizedSubdomainRedirect());
     }
 
     public function testConfigureRedirectsSetsUnauthorizedPath(): void
