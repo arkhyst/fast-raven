@@ -1,4 +1,8 @@
 class Lib {
+    static CSRF_TOKEN = null;
+    static LANG_INTERNAL = null;
+    static CURRENT_LANGUAGE = null;
+
     /**
      * Send a request to an API endpoint.
      * @param {string} api - URL of the API endpoint.
@@ -14,7 +18,7 @@ class Lib {
                 data: JSON.stringify(data) ?? data,
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': window.CSRF_TOKEN ?? ''
+                    'X-CSRF-TOKEN': Lib.CSRF_TOKEN ?? ''
                 },
                 success: function(response){
                     resolve(response);
@@ -50,8 +54,6 @@ class Lib {
                 formData.append(fieldName || 'file', file);
             }
             
-            formData.append('csrf_token', window.CSRF_TOKEN ?? '');
-            
             for (const [key, value] of Object.entries(extraData)) {
                 formData.append(key, value);
             }
@@ -60,6 +62,9 @@ class Lib {
                 url: api,
                 method: 'POST',
                 data: formData,
+                headers: {
+                    'X-CSRF-TOKEN': Lib.CSRF_TOKEN ?? ''
+                },
                 processData: false,
                 contentType: false,
                 success: function(response) {
@@ -77,12 +82,12 @@ class Lib {
      * @param {string} lang - Language code (e.g., 'en', 'es').
      */
     static changeLanguage(lang) {
-        if (!window.LANG_INTERNAL || !window.LANG_INTERNAL[lang]) return;
+        if (!Lib.LANG_INTERNAL || !Lib.LANG_INTERNAL[lang]) return;
 
-        window.currentLanguage = lang;
+        Lib.CURRENT_LANGUAGE = lang;
         localStorage.setItem("activeLang", lang);
 
-        const translations = window.LANG_INTERNAL[lang];
+        const translations = Lib.LANG_INTERNAL[lang];
         $('[data-lang]').each(function() {
             const key = $(this).data('lang');
             if (translations[key] !== undefined) $(this).html(translations[key]);
@@ -90,4 +95,9 @@ class Lib {
     }
 }
 
-Lib.changeLanguage(window.currentLanguage);
+$(document).ready(function() {
+    Lib.CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content;
+    Lib.LANG_INTERNAL = JSON.parse(document.getElementById("__lang-internal").textContent);
+    Lib.CURRENT_LANGUAGE = localStorage.getItem("activeLang") ?? document.documentElement.dataset.defaultLang;
+    Lib.changeLanguage(Lib.CURRENT_LANGUAGE);
+});

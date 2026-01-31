@@ -79,8 +79,9 @@ final class HeaderSlave {
      * Writes security headers to the response.
      * 
      * @param string $https The value of the HTTPS header.
+     * @param string $nonce The nonce to use for the Content-Security-Policy header.
      */
-    public function writeSecurityHeaders(string $https): void {
+    public function writeSecurityHeaders(string $https, string $nonce): void {
         HeaderWorker::removeHeader("X-Powered-By");
         HeaderWorker::removeHeader("Server");
 
@@ -91,16 +92,17 @@ final class HeaderSlave {
         HeaderWorker::addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
         HeaderWorker::addHeader("Access-Control-Allow-Headers", "Content-Type");
 
-        HeaderWorker::addHeader("Content-Security-Policy", 
+        HeaderWorker::addHeader("Content-Security-Policy",
             "default-src 'self'; " .
-            "script-src 'self' 'unsafe-inline' https:; " .
+            "script-src 'self' 'nonce-$nonce' https:; " .
             "style-src 'self' 'unsafe-inline' https:; " .
             "img-src 'self' data: https:; " .
             "font-src 'self' data: https:; " .
             "connect-src 'self' https:; " .
             "frame-ancestors 'none'; " .
-            "base-uri 'self'; " .
-            "form-action 'self'"
+            "base-uri 'none'; " .
+            "form-action 'self'; " .
+            "object-src 'none'"
         );
 
         if (!empty($https) && $https !== 'off') {

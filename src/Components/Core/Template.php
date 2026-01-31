@@ -194,7 +194,7 @@ final class Template {
             CacheWorker::write($cacheKey, $langData, 86400);
         }
         
-        return "<script>window.LANG_INTERNAL = " . json_encode($langData, JSON_UNESCAPED_UNICODE) . ";</script>";
+        return "<script type=\"application/json\" id=\"__lang-internal\">" . json_encode($langData, JSON_UNESCAPED_UNICODE) . "</script>";
     }
 
     /**
@@ -205,7 +205,7 @@ final class Template {
      * @return string The HTML script element containing the CSRF token of the page.
      */
     public function getHtmlCSRF(): string {
-        if(AuthWorker::isAuthorized()) return "<script>window.CSRF_TOKEN = \"" . $_SESSION["sgas_csrf"] . "\";</script>";
+        if(AuthWorker::isAuthorized()) return "<meta name=\"csrf-token\" content=\"" . $_SESSION["sgas_csrf"] . "\">";
         
         return "";
     }

@@ -67,6 +67,7 @@ final class Kernel {
     private float $startRequestTime;
     private int $rateLimitRemaining = 0;
     private int $rateLimitTimeRemaining = 0;
+    private string $nonce;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -158,6 +159,7 @@ final class Kernel {
      */
     public function open(): void {
         $this->startRequestTime = microtime(true);
+        $this->nonce = bin2hex(random_bytes(16));
 
         $inputLengthLimit = $this->config->getLengthLimitInput() >= 0 ? $this->config->getLengthLimitInput() : null;
         $this->request = new Request(
@@ -182,7 +184,7 @@ final class Kernel {
         $this->authSlave->initializeSessionCookie($this->config->getAuthSessionName(), $this->config->getAuthLifetime(), $this->config->isAuthGlobal());
         
         $this->headerSlave = HeaderSlave::zap();
-        $this->headerSlave->writeSecurityHeaders($_SERVER["HTTPS"]);
+        $this->headerSlave->writeSecurityHeaders($_SERVER["HTTPS"], $this->nonce);
         $this->headerSlave->writeUtilityHeaders($this->request->getType() === EndpointType::API);
         $this->headerSlave->writeRateLimitHeaders($this->config->getRateLimit($this->request->getType()), $this->rateLimitRemaining, $this->rateLimitTimeRemaining);
 
@@ -293,6 +295,7 @@ final class Kernel {
         if($response instanceof Template) {
             HeaderWorker::addHeader("Content-Type", "text/html; charset=utf-8");
             $template = $response;
+            $nonce = $this->nonce;
             require_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "Template" . DIRECTORY_SEPARATOR . "main.php";
         } else if ($response instanceof Response) {
             HeaderWorker::addHeader("Content-Type", "application/json; charset=utf-8");
