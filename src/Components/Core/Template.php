@@ -55,7 +55,11 @@ final class Template {
     private array $errorFiles = [];
         public function getErrorFile(int $code): string { return $this->errorFiles[$code] ?? "errors/generic.php"; }
         public function setErrorFile(int $code, string $file): Template { $this->errorFiles[$code] = $file; return $this; }
-    #/ VARIABLES
+    private string $nonce = "";
+        public function getNonce(): string { return $this->nonce; }
+        public function setNonce(string $nonce): Template { $this->nonce = $nonce; return $this; }
+    
+        #/ VARIABLES
     #----------------------------------------------------------------------
 
     #----------------------------------------------------------------------

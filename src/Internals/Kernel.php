@@ -258,6 +258,7 @@ final class Kernel {
             if($response === null || !$response instanceof Template) throw new BadImplementationException($endpoint->getFile(), "Template");
 
             if($this->template !== $response) $response = $this->template->merge($response);
+            $response->setNonce($this->nonce);
         } else {
             if(Bee::validateCallable($fn, [Request::class])) {
                 try {
