@@ -1,39 +1,43 @@
-# Fast Raven  
-**State:** production ready  
-**Version:** v1.0.0  
+# Fast Raven
 
-**Fast Raven** is a **high-performance PHP** framework for building **fast, monolithic applications**.  
-Optimized for **multi-site subdomain architectures**, it processes requests in 1ms (average speed in shared hosting) and makes **agile development** feel effortless. No bloat. No magic. Just speed.  
+<img src="docs/logo.png" align="right" width="180" alt="Fast Raven Logo">
 
----
+![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg) ![Status](https://img.shields.io/badge/status-production--ready-success.svg) ![PHP](https://img.shields.io/badge/php-%5E8.4-777BB4.svg) ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-### Requeriments  
-- **PHP** ^8.4  
-- **MySQL** ^8.0  
-- **Composer** ^2.9.2  
-- **Apache** ^2.4 (if using Apache)  
+*No bloat. No magic. Just speed.*
 
-> **Note:** Remember that web server user should have full permissions to the project folder.  
-> **Note:** You need to install PHP modules for MySQL, Apache, and optional fast-cgi and apcu to reach that 1ms sweet spot.  
+**Fast Raven** is a **high-performance PHP** framework for building **fast, monolithic applications**. Optimized for **subdomain architectures**, it processes requests in **1ms** (average speed in shared hosting) while allowing fast-paced and easy development.
 
----
+<br clear="all">
 
-### Installation  
-1. `composer create-project fast-raven/project app` : Creates an example project inside folder app.
-2. `cd app` : Move inside fast-raven project folder.
-3. `./bin/build.sh` : Install required packages.
+## Installation
 
-OR (not recommended)
+### Requirements
+- **PHP** ^8.4
+- **MySQL** ^8.0
+- **Composer** ^2.9.2
+- **Apache** ^2.4 (or Nginx/IIS with appropriate config)
 
-1. `composer require fast-raven/library` : Install fast-raven framework inside existing composer project.
+> **Pro Tip**: Enable `php-apcu` and configure `FastCGI` / `PHP-FPM` to reach peak performance.
 
----
-
-### Documentation
-- **[Documentation](docs/FRAMEWORK.md)** - Complete API reference and framework usage guide
-- **[Roadmap](docs/ROADMAP.md)** - Future features and planned improvements
+### Create Project
+```bash
+composer create-project fast-raven/project app
+cd app
+composer install
+npm install
+```
 
 ---
 
-**Author:** arkhyst  
-**License:** MIT (see LICENSE)  
+## Documentation
+
+- **[Documentation](docs/FRAMEWORK.md)**: Deep dive into the API, Architecture, and Usage.
+- **[Roadmap](docs/ROADMAP.md)**: Future plans and versioning strategy.
+- **[Contributing](CONTRIBUTING.md)**: Guidelines for contributing.
+
+## License
+
+Fast Raven is open-sourced software licensed under the **[MIT license](LICENSE)**.
+
+**Author**: Arkhyst
