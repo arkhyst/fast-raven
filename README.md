@@ -1,9 +1,9 @@
 # Fast Raven  
-**State:** production ready
-**Version:** v1.0.0
+**State:** production ready  
+**Version:** v1.0.0  
 
-**Fast Raven** is a **high-performance PHP** framework for building **fast, monolithic applications**. 
-Optimized for **multi-site subdomain architectures**, it delivers <1ms API responses and makes **agile development** feel effortless. No bloat. No magic. Just speed.
+**Fast Raven** is a **high-performance PHP** framework for building **fast, monolithic applications**.  
+Optimized for **multi-site subdomain architectures**, it processes requests in 1ms (average speed in shared hosting) and makes **agile development** feel effortless. No bloat. No magic. Just speed.  
 
 ---
 
@@ -14,7 +14,7 @@ Optimized for **multi-site subdomain architectures**, it delivers <1ms API respo
 - **Apache** ^2.4 (if using Apache)  
 
 > **Note:** Remember that web server user should have full permissions to the project folder.  
-> **Note:** You need to install PHP modules for MySQL, Apache, and other optional extensions.  
+> **Note:** You need to install PHP modules for MySQL, Apache, and optional fast-cgi and apcu to reach that 1ms sweet spot.  
 
 ---
 

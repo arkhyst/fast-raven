@@ -205,8 +205,8 @@ class TemplateTest extends TestCase
 
         $html = $template->getHtmlScripts();
 
-        $this->assertStringContainsString('<script src="/public/assets/js/app.js?v=1.0" type="text/javascript"></script>', $html);
-        $this->assertStringContainsString('<script src="/public/assets/js/utils.js?v=1.0" type="text/javascript"></script>', $html);
+        $this->assertStringContainsString('<script src="/public/assets/js/app.js?v=1.0" type="text/javascript" nonce=""></script>', $html);
+        $this->assertStringContainsString('<script src="/public/assets/js/utils.js?v=1.0" type="text/javascript" nonce=""></script>', $html);
     }
 
     public function testVersionInResourceUrls(): void
