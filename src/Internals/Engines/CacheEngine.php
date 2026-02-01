@@ -9,6 +9,9 @@ use FastRaven\Types\CacheType;
 use FastRaven\Types\ProjectFolderType;
 use FastRaven\Services\LogService;
 
+/**
+ * @internal
+ */
 final class CacheEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES

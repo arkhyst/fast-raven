@@ -10,6 +10,9 @@ use FastRaven\Types\ProjectFolderType;
 
 use FastRaven\Bee;
 
+/**
+ * @internal
+ */
 final class LogEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES

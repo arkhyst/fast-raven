@@ -39,6 +39,9 @@ use FastRaven\Exceptions\UploadedFileNotFoundException;
 use FastRaven\Types\EndpointType;
 use FastRaven\Types\ProjectFolderType;
 
+/**
+ * @internal
+ */
 final class Kernel {
     #----------------------------------------------------------------------
     #\ VARIABLES

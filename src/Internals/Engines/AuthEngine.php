@@ -9,6 +9,9 @@ use FastRaven\Components\Data\Condition;
 
 use FastRaven\Bee;
 
+/**
+ * @internal
+ */
 final class AuthEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES

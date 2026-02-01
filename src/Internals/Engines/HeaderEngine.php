@@ -4,6 +4,9 @@ namespace FastRaven\Internals\Engines;
 
 use FastRaven\Services\HeaderService;
 
+/**
+ * @internal
+ */
 final class HeaderEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES

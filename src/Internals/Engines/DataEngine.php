@@ -13,6 +13,9 @@ use FastRaven\Components\Data\Map;
 
 use FastRaven\Types\QueryType;
 
+/**
+ * @internal
+ */
 final class DataEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES

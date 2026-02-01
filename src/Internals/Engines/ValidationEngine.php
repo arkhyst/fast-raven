@@ -5,6 +5,9 @@ namespace FastRaven\Internals\Engines;
 use FastRaven\Services\ValidationService;
 use FastRaven\Types\ValidationType;
 
+/**
+ * @internal
+ */
 final class ValidationEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES

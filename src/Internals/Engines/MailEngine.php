@@ -15,6 +15,9 @@ use FastRaven\Bee;
 
 use PHPMailer\PHPMailer\PHPMailer;
 
+/**
+ * @internal
+ */
 final class MailEngine {
     #----------------------------------------------------------------------
     #\ VARIABLES
