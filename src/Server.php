@@ -23,14 +23,13 @@ use FastRaven\Bee;
 
 use FastRaven\Types\ProjectFolderType;
 
-use Dotenv\Dotenv;
-
 final class Server {
     #----------------------------------------------------------------------
     #\ VARIABLES
 
     private Kernel $kernel;
     private bool $ready = false;
+    private float $startRequestTime;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -66,23 +65,26 @@ final class Server {
      * Initializes the server.
      *
      * @param string $sitePath The local path of the site. Use __DIR__ unless you know what you are doing.
+     * @param float|null $startRequestTime The time when the request started. Use microtime(true).
      * 
      * @return Server
      */
-    public static function initialize(string $sitePath): Server {
+    public static function initialize(string $sitePath, ?float $startRequestTime = null): Server {
+        $startRequestTime ??= microtime(true);
         define("SITE_PATH", DIRECTORY_SEPARATOR . Bee::normalizePath($sitePath) . DIRECTORY_SEPARATOR);
 
-        foreach(ProjectFolderType::cases() as $folder)
-            if(!is_dir(Bee::buildProjectPath($folder))) throw new BadProjectSkeletonException($folder);
+        if(Bee::isDev()) {
+            foreach(ProjectFolderType::cases() as $folder)
+                if(!is_dir(Bee::buildProjectPath($folder))) throw new BadProjectSkeletonException($folder);
+        }
 
-        Dotenv::createImmutable(ProjectFolderType::CONFIG_ENV->value, ".env")->safeLoad();
-        Dotenv::createImmutable(ProjectFolderType::CONFIG_ENV->value, Bee::isDev() ? ".env.dev" : ".env.prod")->safeLoad();
+        require_once Bee::buildProjectPath(ProjectFolderType::CONFIG_ENV, "env.php");
 
-        return new Server();
+        return new Server($startRequestTime);
     }
 
-    private function __construct() {
-        
+    private function __construct(float $startRequestTime) {
+        $this->startRequestTime = $startRequestTime;
     }
 
     /**
@@ -162,7 +164,7 @@ final class Server {
         if ($this->ready) {
             $response = null;
             try {
-                $this->kernel->open(); // Services/Engines initialization
+                $this->kernel->open($this->startRequestTime); // Services/Engines initialization
                 $response = $this->kernel->process(); // Request processing
             } catch(SmartException $e) {
                 $response = $this->handleException($e); // Exception handling

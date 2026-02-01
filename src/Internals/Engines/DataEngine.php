@@ -61,11 +61,12 @@ final class DataEngine {
      * "mysql:host=$host;dbname=$db;charset=utf8mb4"
      *
      * @param string $host The host of the database server.
+     * @param string $port The port of the database server.
      * @param string $db The name of the database.
      * @return string The DSN string.
      */
-    private function buildDatabaseDSN(string $host, string $db): string {
-        return "mysql:host=$host;dbname=$db;charset=utf8mb4";
+    private function buildDatabaseDSN(string $host, string $port, string $db): string {
+        return "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4";
     }
 
     /**
@@ -89,7 +90,7 @@ final class DataEngine {
                     }
                 }
 
-                $this->pdo = new \PDO($this->buildDatabaseDSN(Bee::env("DB_HOST"), Bee::env("DB_NAME")), Bee::env("DB_USER"), Bee::env("DB_PASS"), $options);
+                $this->pdo = new \PDO($this->buildDatabaseDSN(Bee::env("DB_HOST", "localhost"), Bee::env("DB_PORT", "3306"), Bee::env("DB_NAME")), Bee::env("DB_USER", "root"), Bee::env("DB_PASS", ""), $options);
             } catch (\PDOException $e) {
                 $this->pdo = null;
                 LogService::error("PDOException: ".$e->getMessage());

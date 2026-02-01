@@ -34,6 +34,16 @@ final class Bee {
     #\ METHODS
 
     /**
+     * Defines an environment variable
+     * 
+     * @param string $key the key of the environment variable
+     * @param string $value the value of the environment variable
+     */
+    public static function defineEnv(string $key, string $value): void {
+        $_ENV[$key] = $value;
+    }
+
+    /**
      * Gets the value of the environment variable
      * 
      * @param string $key the key of the environment variable

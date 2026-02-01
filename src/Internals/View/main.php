@@ -16,20 +16,14 @@ use FastRaven\Types\ProjectFolderType;
         <meta name="format-detection" content="telephone=no">
         <?= $template->getHtmlCsrf(); ?>
 
-        <style>
-            <?php include __DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "packedstyle.css"; ?>
-        </style>
+        <link rel="stylesheet" href="/public/assets/css/base.css?v=<?= $template->getVersion(); ?>">
 
         <?= $template->getHtmlFavicon(); ?>
         <?= $template->getHtmlStyles(); ?>
 
         <?= $template->getHtmlLang(); ?>
-        <script nonce="<?= $nonce; ?>">
-            <?php include __DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "jquery.min.js"; ?>
-        </script>
-        <script nonce="<?= $nonce; ?>">
-            <?php include __DIR__ . DIRECTORY_SEPARATOR . "compiled" . DIRECTORY_SEPARATOR . "packedlib.js"; ?>
-        </script>
+        <script src="/public/assets/js/jquery.min.js?v=<?= $template->getVersion(); ?>"></script>
+        <script src="/public/assets/js/lib.js?v=<?= $template->getVersion(); ?>"></script>
         <?= $template->getHtmlScripts(); ?>
     </head>
     <body>

@@ -157,8 +157,8 @@ final class Kernel {
      * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
      * @throws RateLimitExceededException If the host exceeds its rate limit.
      */
-    public function open(): void {
-        $this->startRequestTime = microtime(true);
+    public function open(float $startRequestTime): void {
+        $this->startRequestTime = $startRequestTime;
         $this->nonce = bin2hex(random_bytes(16));
 
         $inputLengthLimit = $this->config->getLengthLimitInput() >= 0 ? $this->config->getLengthLimitInput() : null;
@@ -314,8 +314,7 @@ final class Kernel {
 
         if (function_exists("fastcgi_finish_request")) fastcgi_finish_request();
 
-        $diff = microtime(true) - $this->startRequestTime;
-        $elapsedTime = round(($diff - floor($diff)) * 1000);
+        $elapsedTime = round((microtime(true) - $this->startRequestTime) * 1000);
 
         if($this->mailEngine) {
             $this->mailEngine->processDeferredMails();
