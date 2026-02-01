@@ -34,6 +34,7 @@
 - *Page redirection on view error do not work.*
 - *When returning baseTemplate as a View response, it duplicates styles, scripts and fragments.*
 - *Request time in logs is not an accurate measurement of actual request processing time.*
+- *Any Database query without conditions throws a DeveloperException.*
 
 #### Removed features
 - Stashes and by extension LogStash do not exist anymore.

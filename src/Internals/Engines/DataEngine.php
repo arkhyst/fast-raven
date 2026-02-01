@@ -191,9 +191,9 @@ final class DataEngine {
         $q = "";
         
         try {
-            $condCols = $cond->getAllLeftValues();
+            $condCols = $cond !== null ? $cond->getAllLeftValues() : [];
             $this->sanitizeParameters($table, $cols, $condCols, $joined, $joinedLeftCols, $joinedRightCols, $orderBy);
-            $cond->replaceAllLeftValues($condCols);
+            if($cond !== null) $cond->replaceAllLeftValues($condCols);
         } catch (SecurityVulnerabilityException $e) {
             throw new SecurityVulnerabilityException("Possible SQL injection detected. Query not executed -> ".$e->getMessage());
         }
