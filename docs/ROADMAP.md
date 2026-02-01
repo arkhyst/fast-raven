@@ -4,12 +4,13 @@ This document outlines potential features and improvements for future versions o
 
 ---
 
-## v1.1.0 - "Just a little better" update
+## v1.1.0 - "Powerful API" update
 
 ### Features
 - [ ] Background job queue system
 - [ ] Built-in API rate limiting per user
 - [ ] API versioning support
+- [ ] Built-in API token management
 
 ### Performance
 - [ ] HTTP/3 support and optimization hints
@@ -19,7 +20,7 @@ This document outlines potential features and improvements for future versions o
 - [ ] Built-in database migrations system
 - [ ] Better error pages with stack traces in dev mode
 
-## v1.2.0 - "Raven evolution" update
+## v1.2.0 - "Advanced technologies" update
 
 ### Features
 - [ ] WebSocket support for real-time features
@@ -28,7 +29,6 @@ This document outlines potential features and improvements for future versions o
 - [ ] ORM-like component for DataService
 - [ ] NoSQL support
 - [ ] Two-factor authentication helpers
-- [ ] Built-in API token management
 
 ---
 
