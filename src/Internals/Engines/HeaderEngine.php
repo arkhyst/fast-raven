@@ -94,7 +94,9 @@ final class HeaderEngine {
 
         HeaderService::addHeader("Content-Security-Policy",
             "default-src 'self'; " .
-            "script-src 'self' 'nonce-$nonce' https:; " .
+            "script-src 'self' 'nonce-$nonce'; " .
+            "script-src-elem 'self' 'nonce-$nonce'; " .
+            "script-src-attr 'self' 'unsafe-inline'; " .
             "style-src 'self' 'unsafe-inline' https:; " .
             "img-src 'self' data: https:; " .
             "font-src 'self' data: https:; " .

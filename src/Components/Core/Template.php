@@ -190,9 +190,9 @@ final class Template {
         $html = "";
         foreach ($this->scripts as $script) {
             if(str_starts_with($script, "https://"))
-                $html .= "<script src=\"" . $script . "\" type=\"text/javascript\"></script>";
+                $html .= "<script src=\"" . $script . "\" type=\"text/javascript\" nonce=\"" . $this->nonce . "\"></script>";
             else
-                $html .= "<script src=\"/public/assets/js/" . Bee::normalizePath($script) . "?v=".$this->getVersion()."\" type=\"text/javascript\"></script>";
+                $html .= "<script src=\"/public/assets/js/" . Bee::normalizePath($script) . "?v=".$this->getVersion()."\" type=\"text/javascript\" nonce=\"" . $this->nonce . "\"></script>";
         }
 
         return $html;
