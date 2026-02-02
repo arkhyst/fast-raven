@@ -8,23 +8,20 @@ use FastRaven\Exceptions\NotAuthorizedException;
 use FastRaven\Exceptions\RateLimitExceededException;
 use FastRaven\Exceptions\SmartException;
 
-use FastRaven\Internal\Core\Kernel;
+use FastRaven\Internals\Kernel;
 
 use FastRaven\Components\Core\Config;
 use FastRaven\Components\Core\Template;
 use FastRaven\Components\Routing\Router;
 use FastRaven\Components\Http\Response;
 use FastRaven\Components\Routing\Middleware;
-use FastRaven\Components\Data\Pair;
 
-use FastRaven\Workers\LogWorker;
-use FastRaven\Workers\HeaderWorker;
+use FastRaven\Services\LogService;
+use FastRaven\Services\HeaderService;
 
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 use FastRaven\Types\ProjectFolderType;
-
-use Dotenv\Dotenv;
 
 final class Server {
     #----------------------------------------------------------------------
@@ -73,17 +70,18 @@ final class Server {
     public static function initialize(string $sitePath): Server {
         define("SITE_PATH", DIRECTORY_SEPARATOR . Bee::normalizePath($sitePath) . DIRECTORY_SEPARATOR);
 
-        foreach(ProjectFolderType::cases() as $folder)
-            if(!is_dir(Bee::buildProjectPath($folder))) throw new BadProjectSkeletonException($folder);
+        if(Bee::isDev()) {
+            foreach(ProjectFolderType::cases() as $folder)
+                if(!is_dir(Bee::buildProjectPath($folder))) throw new BadProjectSkeletonException($folder);
+        }
 
-        Dotenv::createImmutable(ProjectFolderType::CONFIG_ENV->value, ".env")->safeLoad();
-        Dotenv::createImmutable(ProjectFolderType::CONFIG_ENV->value, Bee::isDev() ? ".env.dev" : ".env.prod")->safeLoad();
+        require_once Bee::buildProjectPath(ProjectFolderType::CONFIG_ENV, "env.php");
 
         return new Server();
     }
 
     private function __construct() {
-        
+
     }
 
     /**
@@ -110,28 +108,36 @@ final class Server {
 
     private function handleException(SmartException $e): Response|Template {
         $response = Response::new(false, $e->getStatusCode(), $e->getPublicMessage());
-        LogWorker::error($e->getExceptionName() . ": " . $e->getMessage());
+        LogService::error($e->getExceptionName() . ": " . $e->getMessage());
 
         if($e instanceof RateLimitExceededException || is_subclass_of($e, RateLimitExceededException::class)) {
-            HeaderWorker::addHeader("Retry-After", $e->getTimeLeft());
+            HeaderService::addHeader("Retry-After", $e->getTimeLeft());
         }
 
         if($this->kernel->isViewRequest()) {
-            $response = $this->kernel->getTemplate()
-                ->setFile("errors/generic.php")
-                ->setTitle($this->kernel->getTemplate()->getTitle() . " - Error")
-                ->addData(Pair::new("errorCode", $e->getStatusCode()))
-                ->addData(Pair::new("errorMessage", $e->getPublicMessage()));
-
-            if(is_subclass_of($e, NotFoundException::class)) {
-                HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultNotFoundPathRedirect());
-            } else if(is_subclass_of($e, NotAuthorizedException::class)) {
-                if($e->isDomainLevel()) {
-                    HeaderWorker::addHeader("Location", "https://".Bee::getBuiltDomain($this->kernel->getConfig()->getDefaultUnauthorizedSubdomainRedirect()));
-                } else {
-                    HeaderWorker::addHeader("Location", $this->kernel->getConfig()->getDefaultUnauthorizedPathRedirect());
+            $status = $e->getStatusCode();
+            $config = $this->kernel->getConfig();
+            if($e instanceof NotFoundException || is_subclass_of($e, NotFoundException::class)) {
+                if($config->getDefaultNotFoundPathRedirect() !== null) {
+                    HeaderService::addHeader("Location", $config->getDefaultNotFoundPathRedirect());
+                    $status = 302;
+                }
+            } else if($e instanceof NotAuthorizedException || is_subclass_of($e, NotAuthorizedException::class)) {
+                if($e->isDomainLevel() && $config->getDefaultUnauthorizedSubdomainRedirect() !== null) {
+                    HeaderService::addHeader("Location", "https://".Bee::getBuiltDomain($config->getDefaultUnauthorizedSubdomainRedirect()));
+                    $status = 302;
+                } else if($config->getDefaultUnauthorizedPathRedirect() !== null) {
+                    HeaderService::addHeader("Location", $config->getDefaultUnauthorizedPathRedirect());
+                    $status = 302;
                 }
             }
+
+            $template = $this->kernel->getTemplate();
+            $response = $template
+                ->setFile($template->getErrorFile($status))
+                ->setTitle($template->getTitle() . " - Error")
+                ->addData("errorCode", $status)
+                ->addData("errorMessage", $e->getPublicMessage());
         }
 
         return $response;
@@ -155,7 +161,7 @@ final class Server {
         if ($this->ready) {
             $response = null;
             try {
-                $this->kernel->open(); // Workers/Slaves initialization
+                $this->kernel->open(); // Services/Engines initialization
                 $response = $this->kernel->process(); // Request processing
             } catch(SmartException $e) {
                 $response = $this->handleException($e); // Exception handling

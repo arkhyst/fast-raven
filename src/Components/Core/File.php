@@ -3,7 +3,7 @@
 namespace FastRaven\Components\Core;
 
 use FastRaven\Types\DataType;
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 final class File {
     #----------------------------------------------------------------------

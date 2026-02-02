@@ -2,7 +2,7 @@
 
 namespace FastRaven\Components\Http;
 
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 use FastRaven\Types\DataType;
 

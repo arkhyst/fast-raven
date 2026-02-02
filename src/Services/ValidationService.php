@@ -1,0 +1,122 @@
+<?php
+
+namespace FastRaven\Services;
+
+use FastRaven\Internals\Engines\ValidationEngine;
+use FastRaven\Types\ValidationType;
+
+final class ValidationService {
+    #----------------------------------------------------------------------
+    #\ VARIABLES
+
+    private static bool $ready = false;
+    private static ValidationEngine $engine;
+
+    #/ VARIABLES
+    #----------------------------------------------------------------------
+
+    #----------------------------------------------------------------------
+    #\ INIT
+
+    public static function __getToWork(ValidationEngine &$engine): void {
+        if(!self::$ready) {
+            self::$ready = true;
+            self::$engine = $engine;
+        }
+    }
+
+    #/ INIT
+    #----------------------------------------------------------------------
+    
+    #----------------------------------------------------------------------
+    #\ PRIVATE FUNCTIONS
+
+
+
+    #/ PRIVATE FUNCTIONS
+    #----------------------------------------------------------------------
+
+    #----------------------------------------------------------------------
+    #\ METHODS
+
+    /**
+     * Validates a string according to the given flags.
+     * 
+     * This function will validate a string based on the passed flags.
+     * 
+     * @param string $text The string to validate.
+     * @param array<ValidationType, int> $flags The flags to use for validation.
+     * @param array|null $result Pointer to an array that will be filled with the result of the validation.
+     * 
+     * @return bool True if the string is valid, false otherwise.
+     */
+    public static function string(?string $text, array $flags, ?array &$result = null): bool {
+        if(self::$ready && $text !== null) {
+            return self::$engine->validateString($text, $flags, $result);
+        }
+
+        return false;
+    }
+
+    /**
+     * Validates a number according to the given flags.
+     * 
+     * This function will validate a number based on the passed flags.
+     * 
+     * @param int|float $number The number to validate.
+     * @param array<ValidationType, int> $flags The flags to use for validation.
+     * @param array|null $result Pointer to an array that will be filled with the result of the validation.
+     * 
+     * @return bool True if the number is valid, false otherwise.
+     */
+    public static function number(int|float|null $number, array $flags, ?array &$result = null): bool {
+        if(self::$ready && $number !== null) {
+            return self::$engine->validateNumber($number, $flags, $result);
+        }
+
+        return false;
+    }
+
+    /**
+     * Validates an email address according to the Unicode standard.
+     * 
+     * This function will use the filter_var() function to validate the email address.
+     * It will return true if the email address is valid and false otherwise.
+     * 
+     * @param string $email The email address to validate.
+     * 
+     * @return bool True if the email address is valid, false otherwise.
+     */
+    public static function email(?string $email): bool {
+        if(self::$ready && $email !== null) {
+            return self::$engine->validateEmail($email);
+        }
+
+        return false;
+    }
+
+    /**
+     * Validates a phone number according to the given criteria.
+     * 
+     * This function will validate a phone number based on the following criteria:
+     * 
+     * - The phone number must be at least 10 characters long.
+     * - The phone number must be at most 15 characters long.
+     * - The country code must be at least 1 and at most 999.
+     * 
+     * @param int $countryCode The country code of the phone number.
+     * @param string $phone The phone number to validate.
+     * 
+     * @return bool True if the phone number is valid, false otherwise.
+     */
+    public static function phone(?int $countryCode, ?string $phone): bool {
+        if(self::$ready && $countryCode !== null && $phone !== null) {
+            return self::$engine->validatePhone($countryCode, $phone);
+        }
+
+        return false;
+    }
+
+    #/ METHODS
+    #----------------------------------------------------------------------
+}

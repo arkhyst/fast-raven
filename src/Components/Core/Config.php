@@ -21,12 +21,12 @@ final class Config {
     private bool $authGlobal = false;
         public function isAuthGlobal(): bool { return $this->authGlobal; }
 
-    private string $defaultNotFoundPathRedirect = "/";
-        public function getDefaultNotFoundPathRedirect(): string { return $this->defaultNotFoundPathRedirect; }
-    private string $defaultUnauthorizedPathRedirect = "/login";
-        public function getDefaultUnauthorizedPathRedirect(): string { return $this->defaultUnauthorizedPathRedirect; }
-    private string $defaultUnauthorizedSubdomainRedirect = "";
-        public function getDefaultUnauthorizedSubdomainRedirect(): string { return $this->defaultUnauthorizedSubdomainRedirect; }
+    private string|null $defaultNotFoundPathRedirect = null;
+        public function getDefaultNotFoundPathRedirect(): string|null { return $this->defaultNotFoundPathRedirect; }
+    private string|null $defaultUnauthorizedPathRedirect = null;
+        public function getDefaultUnauthorizedPathRedirect(): string|null { return $this->defaultUnauthorizedPathRedirect; }
+    private string|null $defaultUnauthorizedSubdomainRedirect = null;
+        public function getDefaultUnauthorizedSubdomainRedirect(): string|null { return $this->defaultUnauthorizedSubdomainRedirect; }
 
     private bool $privacyRegisterLogs = true;
         public function isPrivacyRegisterLogs(): bool { return $this->privacyRegisterLogs; }
@@ -55,8 +55,6 @@ final class Config {
         public function getLengthLimitInput(): int { return $this->lengthLimitInput; }
     private int $lengthLimitFileUpload = -1;
         public function getLengthLimitFileUpload(): int { return $this->lengthLimitFileUpload; }
-
-
     private int $cacheFileGCProbability = 0;
         public function getCacheFileGCProbability(): int { return $this->cacheFileGCProbability; }
     private int $cacheFileGCPower = 50;
@@ -116,11 +114,11 @@ final class Config {
     /**
      * Configure the default redirect settings.
      *
-     * @param string $notFoundPath      The path to redirect not found requests to.
-     * @param string $unauthorizedPath  The path to redirect unauthorized requests to.
-     * @param string $unauthorizedSubdomain The subdomain to redirect unauthorized requests to. Leave empty to use the main domain.
+     * @param string|null $notFoundPath      The path to redirect not found requests to.
+     * @param string|null $unauthorizedPath  The path to redirect unauthorized requests to.
+     * @param string|null $unauthorizedSubdomain The subdomain to redirect unauthorized requests to. Leave empty to use the main domain.
      */
-    public function configureRedirects(string $notFoundPath, string $unauthorizedPath, string $unauthorizedSubdomain = ""): Config {
+    public function configureRedirects(string|null $notFoundPath, string|null $unauthorizedPath, string|null $unauthorizedSubdomain = null): Config {
         $this->defaultNotFoundPathRedirect = $notFoundPath;
         $this->defaultUnauthorizedPathRedirect = $unauthorizedPath;
         $this->defaultUnauthorizedSubdomainRedirect = $unauthorizedSubdomain;

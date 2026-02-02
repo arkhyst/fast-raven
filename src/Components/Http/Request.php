@@ -4,7 +4,7 @@ namespace FastRaven\Components\Http;
 
 use FastRaven\Components\Core\File;
 
-use FastRaven\Workers\Bee;
+use FastRaven\Bee;
 
 use FastRaven\Types\EndpointType;
 use FastRaven\Types\SanitizeType;
