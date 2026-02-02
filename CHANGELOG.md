@@ -14,6 +14,7 @@
 - Support for external favicons in Template::setFavicon() and Template::setFaviconLight() and Template::setFaviconDark().
 - Bee::defineEnv() for defining environment variables.
 - Template::getNonce() for including inline scripts inside views.
+- Skeleton: added init.sh script for quick project setup.
 
 #### Changes
 - Template::addData() now accepts string parameters instead of Pair objects.

@@ -24,8 +24,7 @@
 ```bash
 composer create-project fast-raven/project app
 cd app
-composer install
-npm install
+./init.sh mysite.local
 ```
 
 ---
