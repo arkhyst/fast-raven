@@ -29,7 +29,6 @@ final class Server {
 
     private Kernel $kernel;
     private bool $ready = false;
-    private float $startRequestTime;
 
     #/ VARIABLES
     #----------------------------------------------------------------------
@@ -65,12 +64,10 @@ final class Server {
      * Initializes the server.
      *
      * @param string $sitePath The local path of the site. Use __DIR__ unless you know what you are doing.
-     * @param float|null $startRequestTime The time when the request started. Use microtime(true).
      * 
      * @return Server
      */
-    public static function initialize(string $sitePath, ?float $startRequestTime = null): Server {
-        $startRequestTime ??= microtime(true);
+    public static function initialize(string $sitePath): Server {
         define("SITE_PATH", DIRECTORY_SEPARATOR . Bee::normalizePath($sitePath) . DIRECTORY_SEPARATOR);
 
         if(Bee::isDev()) {
@@ -80,11 +77,11 @@ final class Server {
 
         require_once Bee::buildProjectPath(ProjectFolderType::CONFIG_ENV, "env.php");
 
-        return new Server($startRequestTime);
+        return new Server();
     }
 
-    private function __construct(float $startRequestTime) {
-        $this->startRequestTime = $startRequestTime;
+    private function __construct() {
+
     }
 
     /**
@@ -164,7 +161,7 @@ final class Server {
         if ($this->ready) {
             $response = null;
             try {
-                $this->kernel->open($this->startRequestTime); // Services/Engines initialization
+                $this->kernel->open(); // Services/Engines initialization
                 $response = $this->kernel->process(); // Request processing
             } catch(SmartException $e) {
                 $response = $this->handleException($e); // Exception handling

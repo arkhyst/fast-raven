@@ -67,7 +67,6 @@ final class Kernel {
     private FileEngine $fileEngine;
     private CacheEngine $cacheEngine;
 
-    private float $startRequestTime;
     private int $rateLimitRemaining = 0;
     private int $rateLimitTimeRemaining = 0;
     private string $nonce;
@@ -160,8 +159,7 @@ final class Kernel {
      * @throws NotAuthorizedException If the endpoint is restricted and the request is not authorized.
      * @throws RateLimitExceededException If the host exceeds its rate limit.
      */
-    public function open(float $startRequestTime): void {
-        $this->startRequestTime = $startRequestTime;
+    public function open(): void {
         $this->nonce = bin2hex(random_bytes(16));
 
         $inputLengthLimit = $this->config->getLengthLimitInput() >= 0 ? $this->config->getLengthLimitInput() : null;
@@ -318,7 +316,7 @@ final class Kernel {
 
         if (function_exists("fastcgi_finish_request")) fastcgi_finish_request();
 
-        $elapsedTime = round((microtime(true) - $this->startRequestTime) * 1000);
+        $elapsedTime = round((microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"]) * 1000);
 
         if($this->mailEngine) {
             $this->mailEngine->processDeferredMails();
