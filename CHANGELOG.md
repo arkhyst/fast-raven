@@ -1,5 +1,5 @@
 ## [v1.1] - 2026-03-??
-### [v1.0.0] - 2026-02-??
+### [v1.0.0] - 2026-02-01
 #### Architecture
 - **MAJOR CHANGE**: Workers are now called Services
 - **MAJOR CHANGE**: Slaves are now called Engines
@@ -37,5 +37,5 @@
 - *Any Database query without conditions throws a DeveloperException.*
 
 #### Removed features
-- Stashes and by extension LogStash do not exist anymore.
+- Stashes and by extension LogStash does not exist anymore.
 - .env, .env.dev and .env.prod files have been removed from config/env/ directory.
