@@ -1,4 +1,8 @@
 ## [v1.1] - 2026-03-??
+### [v1.0.1] - 2026-02-??
+#### New features
+- AuthService::getAuthorizedUserCustomData() for retrieving custom data from authorized sessions.
+
 ### [v1.0.0] - 2026-02-01
 #### Architecture
 - **MAJOR CHANGE**: Workers are now called Services

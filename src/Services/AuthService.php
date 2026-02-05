@@ -125,6 +125,25 @@ final class AuthService {
     }
 
     /**
+     * Retrieves the custom data of the authorized user if an authorized session exists.
+     *
+     * This function will return the custom data of the authorized user if an authorized session exists.
+     * If no authorized session exists, it will return null.
+     *
+     * @return ?array The custom data of the authorized user if an authorized session exists, null otherwise.
+     */
+    public static function getAuthorizedUserCustomData(): ?array {
+        if(self::$ready) {
+            self::ensureSession();
+            if(self::$engine->validateSession()) {
+                return $_SESSION["sgas_custom"];
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Automatically logs in a user via their username and password, and creates an authorized session if the login is successful.
      *
      * @param ?string $user The username of the user to login.
