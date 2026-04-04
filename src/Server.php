@@ -3,6 +3,7 @@
 namespace FastRaven;
 
 use FastRaven\Exceptions\BadProjectSkeletonException;
+use FastRaven\Exceptions\MiddlewareDeniedException;
 use FastRaven\Exceptions\NotFoundException;
 use FastRaven\Exceptions\NotAuthorizedException;
 use FastRaven\Exceptions\RateLimitExceededException;
@@ -122,6 +123,9 @@ final class Server {
                     HeaderService::addHeader("Location", $config->getDefaultNotFoundPathRedirect());
                     $status = 302;
                 }
+            } else if($e instanceof MiddlewareDeniedException || is_subclass_of($e, MiddlewareDeniedException::class)) {
+                HeaderService::addHeader("Location", "/");
+                $status = 302;
             } else if($e instanceof NotAuthorizedException || is_subclass_of($e, NotAuthorizedException::class)) {
                 if($e->isDomainLevel() && $config->getDefaultUnauthorizedSubdomainRedirect() !== null) {
                     HeaderService::addHeader("Location", "https://".Bee::getBuiltDomain($config->getDefaultUnauthorizedSubdomainRedirect()));

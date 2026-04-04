@@ -3,6 +3,9 @@
 #### New features
 - AuthService::getAuthorizedUserCustomData() for retrieving custom data from authorized sessions.
 
+#### Changes
+- MiddlewareDeniedException, exclusively thrown on views, now redirects to "/" page instead of showing generic error page.
+
 ### [v1.0.0] - 2026-02-01
 #### Architecture
 - **MAJOR CHANGE**: Workers are now called Services
