@@ -6,6 +6,9 @@
 #### Changes
 - MiddlewareDeniedException, exclusively thrown on views, now redirects to "/" page instead of showing generic error page.
 
+#### Fixes
+- *MailService does not set UTF-8 charset format when sending emails.*
+
 ### [v1.0.0] - 2026-02-01
 #### Architecture
 - **MAJOR CHANGE**: Workers are now called Services

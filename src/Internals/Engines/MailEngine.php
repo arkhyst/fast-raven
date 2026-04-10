@@ -97,6 +97,7 @@ final class MailEngine {
         $this->mailer->Password = Bee::env("SMTP_PASS", "notvalid");
         $this->mailer->Port = Bee::env("SMTP_PORT", 587);
         $this->mailer->Timeout = $timeout;
+        $this->mailer->CharSet = PHPMailer::CHARSET_UTF8;
     }
 
     /**
